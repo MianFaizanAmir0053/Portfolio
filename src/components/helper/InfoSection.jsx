@@ -7,8 +7,8 @@ function InfoSection() {
       opacity: 1,
       scale: 1,
       transition: {
-        delayChildren: 0.8,
-        staggerChildren: 0.2,
+        delayChildren: 0.3,
+        staggerChildren: 0.1,
       },
     },
   };
@@ -18,7 +18,7 @@ function InfoSection() {
     show: {
       transition: {
         ease: "easeInOut",
-        duration: 0.8,
+        duration: 0.4,
       },
       x: 0,
       y: 0,
