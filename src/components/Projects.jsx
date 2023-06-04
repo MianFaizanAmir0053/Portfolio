@@ -12,9 +12,10 @@ function Projects() {
 
   useEffect(() => {
     axios.get(url).then((response) => {
-      setProjects(() =>
-        response.data.filter((project) => project.homepage !== null)
-      );
+      setProjects(() => {
+        console.log(projects);
+        return response.data.filter((project) => project.homepage);
+      });
     });
   }, []);
 
@@ -40,20 +41,33 @@ function Projects() {
                 scale: 1.05,
                 transition: { duration: 0.2, ease: "easeInOut" },
               }}
-              className="p-[0.1rem] bg-[url('/tesla1.png')]   bg-no-repeat bg-cover bg-center min-[430px]:p-4  min-[620px]:text-md min-[728px]:text-lg  border border-[rgba(30,41,59,1)] hover:border-[rgba(30,41,59,.5)] hover:bg-[rgba(30,41,59,.5)] transition-[background-color] w-full cursor-pointer rounded-md h-full flex flex-col justify-center items-center"
+              // className="p-[0.1rem] bg-[url('/tesla1.png')]   bg-no-repeat bg-cover bg-center min-[430px]:p-4  min-[620px]:text-md min-[728px]:text-lg  border border-[rgba(30,41,59,1)] hover:border-[rgba(30,41,59,.5)] hover:bg-[rgba(30,41,59,.5)] transition-[background-color] w-full cursor-pointer rounded-md h-full flex flex-col justify-center items-center"
+              className="p-[0.1rem] bg-no-repeat bg-cover bg-center min-[430px]:p-4  min-[620px]:text-md min-[728px]:text-lg   hover:border-[rgba(30,41,59,.5)] hover:bg-[rgba(30,41,59,.5)] transition-[background-color] w-full cursor-pointer rounded-md h-full flex flex-col justify-center items-center"
               layoutId={project.id}
               onClick={() => {
                 setSelectedId(project.id);
               }}
             >
-              <span className="flex  min-[620px]:text-md min-[728px]:text-lg px-2 pt-2 mb-4 w-full  items-center ">
+              <div className="flex relative min-[620px]:text-md min-[728px]:text-lg px-2 pt-2 mb-4 w-full  items-center ">
                 <motion.h1 className=" transition-all hover:underline hover:text-teal-500 font-semibold tracking-wider">
                   {project.name}
                 </motion.h1>
                 <motion.div className="ml-2 w-2">
                   <img className="w-full" src="up-right-arrow.png" alt="" />
                 </motion.div>
-              </span>
+              </div>
+
+              <div className=" ">
+                <img
+                  className="w-full h-full object-cover"
+                  src={`https://raw.githubusercontent.com/MianFaizanAmir0053/${
+                    project.name
+                  }/${
+                    project.default_branch
+                  }/${project.name.toLowerCase()}.png`}
+                  alt=""
+                />
+              </div>
 
               <div className="flex  min-[620px]:text-md min-[728px]:text-lg text-[rgba(94,234,212,1)]  min-[820px]:mt-8 flex-wrap w-full h-full">
                 {project.topics.map((topic) => (
@@ -68,7 +82,7 @@ function Projects() {
 
         <AnimatePresence>
           {selectedId && (
-            <motion.div className="z-10 p-[3rem] min-[720px]:text-lg text-sm min-[620px]:p-[6rem] min-[440px]:p-[4rem]  absolute top-0 left-0 right-0 bottom-0  w-full h-full">
+            <motion.div className="z-10 text-xs p-[5rem] py-[10rem] min-[720px]:text-lg  min-[620px]:p-[12rem] min-[440px]:p-[6rem]  absolute top-0 left-0 right-0 bottom-0  w-full h-full">
               <motion.div
                 className=" bg-slate-800 py-4 pr-4  rounded-lg w-full h-full grid grid-cols-12 grid-rows-6 "
                 onClick={() => setSelectedId(null)}
