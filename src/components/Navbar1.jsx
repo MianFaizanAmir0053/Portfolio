@@ -43,7 +43,10 @@ function Navbar1() {
           </g>
         </svg>
       </a>
-      <a href="#Blogs" class="p-3 rounded-full hover:bg-[rgb(35,78,73)]">
+      <a
+        href="https://dev.to/mianfaizanamir0053"
+        class="p-3 rounded-full hover:bg-[rgb(35,78,73)]"
+      >
         <svg
           stroke="currentColor"
           fill="currentColor"
