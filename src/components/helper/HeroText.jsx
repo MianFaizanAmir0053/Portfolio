@@ -11,8 +11,8 @@ function HeroText() {
       opacity: 1,
       scale: 1,
       transition: {
-        delayChildren: 0.2,
-        staggerChildren: 0.3,
+        delayChildren: 0.1,
+        staggerChildren: 0.2,
       },
     },
   };
@@ -22,7 +22,7 @@ function HeroText() {
     show: {
       transition: {
         ease: "easeInOut",
-        duration: 0.7,
+        duration: 0.4,
       },
       y: 0,
       opacity: 1,

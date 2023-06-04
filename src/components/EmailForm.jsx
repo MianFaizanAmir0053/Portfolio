@@ -1,5 +1,6 @@
 import emailjs from "emailjs-com";
 import { Formik, Form, Field } from "formik";
+import { motion } from "framer-motion";
 import { useState } from "react";
 
 function EmailForm() {
@@ -38,15 +39,15 @@ function EmailForm() {
   return (
     <section
       id="Contact"
-      className="min-h-[100vh] mt-32 max-w-sm px-4 min-[1000px]:max-w-2xl mx-auto text-center text-lg bg-sl-200 text-white"
+      className=" min-h-[100vh] py-[5rem] max-w-sm px-8  min-[1000px]:max-w-2xl mx-auto text-center text-lg bg-sl-200 text-white"
     >
       <h5 className="text-sm min-[600px]:text-lg font-bold">Get in Touch</h5>
-      <h2 className="text-xl min-[600px]:text-3xl font-bold text-teal-500 pb-6">
+      <h2 className="text-xl tracking-widest min-[600px]:text-3xl font-bold text-teal-500 pb-6">
         Contact Me
       </h2>
       <div className="flex flex-col min-[1000px]:gap-12 min-[1000px]:justify-between   min-[1000px]:flex-row">
         <div className="">
-          <article className="border-2 font-bold min-[600px]:text-md text-sm border-teal-600 p-4 rounded-xl">
+          <article className="border-2 py-4 px-6 font-bold min-[600px]:text-md text-sm border-slate-700 bg-slate-700  rounded-xl">
             <h4>Email</h4>
             <h5>faizanamir0053@gmail.com</h5>
             <a
@@ -57,7 +58,7 @@ function EmailForm() {
               Send a Message
             </a>
           </article>
-          <article className="border-2 min-[600px]:text-md text-sm border-teal-700 p-4 my-4 rounded-xl ">
+          <article className="border-2 min-[600px]:text-md text-sm border-slate-700 bg-slate-700 py-4 px-6 my-4 rounded-xl ">
             <h4 className="font-bold">WhatsApp</h4>
             <h5 className="font-bold">+92 303 0649009</h5>
             <a
@@ -73,39 +74,49 @@ function EmailForm() {
         <Formik initialValues={{ name: "", email: "" }}>
           <Form
             onSubmit={handleSubmit}
-            className="flex w-full min-[600px]:text-md text-sm justify-between text-center flex-col"
+            className="flex w-full  min-[600px]:text-md text-sm justify-between text-center flex-col"
           >
             <Field
               type="text"
               name="name"
               placeholder="Your Full Name"
               onChange={(e) => setName(e.target.value)}
-              className="bg-slate-600   rounded-lg py-4 px-4"
-              required=""
+              className="bg-slate-800   rounded-lg py-4 px-4"
+              required="true"
+              value={name}
             />
             <Field
               type="email"
               name="email"
               placeholder="Your Email Address"
               onChange={(e) => setEmail(e.target.value)}
-              className="bg-slate-600 my-4 rounded-lg py-4 px-4"
-              required=""
+              className="bg-slate-800 my-4 rounded-lg py-4 px-4"
+              required="true"
+              value={email}
             />
             <Field
               name="message"
-              type="textarea"
-              rows="7"
+              as="textarea"
+              rows="5"
               placeholder="Your Message"
               onChange={(e) => setMessage(e.target.value)}
-              required=""
-              className="bg-slate-600 rounded-lg py-4 px-4"
+              required="true"
+              className="bg-slate-800 rounded-lg py-4 px-4"
+              value={message}
             />
-            <button
+            <motion.button
+              whileHover={{
+                scale: 1.1,
+                color: "white",
+                backgroundColor: "#475569",
+                transition: { duration: 0.2 },
+              }}
+              whileTap={{ scale: 0.9 }}
               type="submit"
-              className=" bg-slate-500 w-fit mx-auto rounded-lg px-6 py-4 my-4"
+              className=" bg-slate-800 w-fit mx-auto rounded-lg px-6 py-4 my-4"
             >
               Send Message
-            </button>
+            </motion.button>
           </Form>
         </Formik>
       </div>

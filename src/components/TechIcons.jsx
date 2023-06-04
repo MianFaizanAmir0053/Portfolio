@@ -26,8 +26,8 @@ function TechIcons() {
       opacity: 1,
       scale: 1,
       transition: {
-        delayChildren: 0.3,
-        staggerChildren: 0.2,
+        delayChildren: 0.1,
+        staggerChildren: 0.1,
       },
     },
   };
@@ -42,7 +42,7 @@ function TechIcons() {
       y: 0,
       opacity: 1,
       transition: {
-        duration: 0.8,
+        duration: 0.5,
         ease: "easeInOut",
       },
       clipPath: "circle(100.0% at 50% 50%)",
@@ -50,14 +50,14 @@ function TechIcons() {
   };
 
   return (
-    <div className="my-[10rem]">
-      <div className=" text-2xl text-center font-bold tracking-widest my-[4rem] pt-8 text-gray-100">
+    <div className="mb-[10rem] mt-4">
+      {/* <div className=" text-2xl text-center font-bold tracking-widest my-[4rem] pt-8 text-gray-100">
         <h1>Skills</h1>
-      </div>
+      </div> */}
       <motion.div
         variants={container}
         initial="hidden"
-        whileInView="visible"
+        animate="visible"
         className="flex flex-wrap items-center justify-center border-l border-r border-r-green-400  border-l-green-400"
       >
         {icons.map((icon, i) => (
