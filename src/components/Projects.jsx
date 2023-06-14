@@ -49,7 +49,7 @@ function Projects() {
               }}
             >
               <div className="flex relative min-[620px]:text-md min-[728px]:text-lg px-2 pt-2 mb-4 w-full  items-center ">
-                <motion.h1 className=" transition-all hover:underline hover:text-teal-500 font-semibold tracking-wider">
+                <motion.h1 className="transition-all hover:underline hover:text-teal-500 font-semibold tracking-wider">
                   {project.name}
                 </motion.h1>
                 <motion.div className="ml-2 w-2">
@@ -82,26 +82,28 @@ function Projects() {
 
         <AnimatePresence>
           {selectedId && (
-            <motion.div className="z-10 text-xs p-[5rem] py-[10rem] min-[720px]:text-lg  min-[620px]:p-[12rem] min-[440px]:p-[6rem]  absolute top-0 left-0 right-0 bottom-0  w-full h-full">
-              <motion.div
-                className=" bg-slate-800 py-4 pr-4  rounded-lg w-full h-full grid grid-cols-12 grid-rows-6 "
-                onClick={() => setSelectedId(null)}
-                layoutId={selectedId}
-              >
-                <motion.h1 className="col-[2/12] pt-4 text-teal-500 row-[1/2] font-semibold tracking-wider">
-                  {filtered[0]?.name}
-                </motion.h1>
-                <motion.p className="col-[2/13] row-[2/5]">
-                  {filtered[0]?.description}
-                </motion.p>
-                <motion.div className=" col-[2/12] row-[6/6] text-[rgba(94,234,212,1)] ">
-                  <Button link={filtered[0]?.clone_url} text="source code" />
-                </motion.div>
-                <motion.div className="col-[2/12] row-[7/7]  text-[rgba(94,234,212,1)] ">
-                  <Button link={filtered[0]?.homepage} text="view live" />
+            <>
+              <motion.div className="z-30 text-xs p-[5rem] py-[10rem] min-[720px]:text-lg  min-[620px]:p-[12rem] min-[440px]:p-[6rem]  absolute top-0 left-0 right-0 bottom-0  w-full h-full">
+                <motion.div
+                  className=" bg-slate-800 z-30 py-4 pr-4 rounded-lg w-full h-full grid grid-cols-12 grid-rows-6 "
+                  onClick={() => setSelectedId(null)}
+                  layoutId={selectedId}
+                >
+                  <motion.h1 className="col-[2/12] pt-4 text-teal-500 row-[1/2] font-semibold tracking-wider">
+                    {filtered[0]?.name}
+                  </motion.h1>
+                  <motion.p className="col-[2/13] row-[2/5]">
+                    {filtered[0]?.description}
+                  </motion.p>
+                  <motion.a className=" col-[2/12] row-[6/6] text-[rgba(94,234,212,1)] ">
+                    <Button link={filtered[0]?.clone_url} text="source code" />
+                  </motion.a>
+                  <motion.a className=" col-[2/12] row-[7/7]  text-[rgba(94,234,212,1)] ">
+                    <Button link={filtered[0]?.homepage} text="view live" />
+                  </motion.a>
                 </motion.div>
               </motion.div>
-            </motion.div>
+            </>
           )}
         </AnimatePresence>
       </div>

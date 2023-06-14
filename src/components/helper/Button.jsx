@@ -2,7 +2,8 @@ function Button({ link, text }) {
   return (
     <div>
       <a
-        src={link}
+        target="_blank"
+        href={link}
         className="btn btn-primary transition-[all] cursor-pointer text-white hover:text-teal-500 hover:underline"
       >
         {text}
