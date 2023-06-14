@@ -36,7 +36,7 @@ function InfoSection() {
         variants={container}
         whileInView="show"
         initial="hidden"
-        className=" font-light justify-center w-full flex my-6"
+        className=" font-light justify-center  w-full max-[600px]:w-[18rem] max-[600px]:mx-[auto]  max-[600px]:text-right max-[600px]:flex-col  flex my-6"
       >
         <div className=" text-xs min-[600px]:text-sm text-white ">
           {text.split(" ").map((char, index) => (

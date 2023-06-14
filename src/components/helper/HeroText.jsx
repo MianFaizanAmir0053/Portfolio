@@ -34,7 +34,7 @@ function HeroText() {
       variants={container}
       whileInView="show"
       initial="hidden"
-      className="text-left min-[600px]:p-[2rem]  min-[780px]:p-[5rem] min-[865px]:text-2xl  my-[2rem] uppercase overflow-hidden min-[600px]:leading-[2.5rem]  text-white font-semibold min-[600px]:text-xl min-[865px]:leading-[3rem] text-sm min-[600px]:tracking-widest "
+      className="text-left min-[600px]:p-[2rem] min-[780px]:p-[5rem] min-[865px]:text-2xl  my-[2rem] uppercase overflow-hidden min-[600px]:leading-[2.5rem]  text-white font-semibold min-[600px]:text-xl min-[865px]:leading-[3rem] text-sm min-[600px]:tracking-widest "
     >
       <div>
         {text1.split(" ").map((char, index) => (

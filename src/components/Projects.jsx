@@ -83,9 +83,12 @@ function Projects() {
         <AnimatePresence>
           {selectedId && (
             <>
-              <motion.div className="z-30 text-xs p-[5rem] py-[10rem] min-[720px]:text-lg  min-[620px]:p-[12rem] min-[440px]:p-[6rem]  absolute top-0 left-0 right-0 bottom-0  w-full h-full">
+              <motion.div
+                onClick={() => setSelectedId(null)}
+                className="z-50 text-xs p-[5rem] py-[10rem] min-[720px]:text-lg  min-[620px]:p-[12rem] min-[440px]:p-[6rem]  absolute top-0 left-0 right-0 bottom-0  w-full h-full"
+              >
                 <motion.div
-                  className=" bg-slate-800 z-30 py-4 pr-4 rounded-lg w-full h-full grid grid-cols-12 grid-rows-6 "
+                  className=" relative bg-slate-800 z-50 py-4 pr-4 rounded-lg w-full h-full grid grid-cols-12 grid-rows-6 "
                   onClick={() => setSelectedId(null)}
                   layoutId={selectedId}
                 >
@@ -101,8 +104,24 @@ function Projects() {
                   <motion.a className=" col-[2/12] row-[7/7]  text-[rgba(94,234,212,1)] ">
                     <Button link={filtered[0]?.homepage} text="view live" />
                   </motion.a>
+
+                  <motion.div>
+                    <motion.img
+                      className=" min-[720px]:w-8  min-[720px]:h-8 h-4 w-4 absolute  z-50  right-4 top-7 cursor-pointer"
+                      src="close.png"
+                      alt=""
+                      onClick={() => setSelectedId(null)}
+                    />
+                  </motion.div>
                 </motion.div>
               </motion.div>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0.7 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setSelectedId(null)}
+                className="w-full h-full bg-slate-900 opacity-70 z-10 top-0 left-0 fixed"
+              ></motion.div>
             </>
           )}
         </AnimatePresence>
