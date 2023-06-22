@@ -19,7 +19,7 @@ function About() {
         and build something exceptional!
       </p>
       <a
-        href="https://drive.google.com/file/d/1jDNztoIo9Av6tw3Ls3YDcj6TrsJkJe6r/view?usp=sharing"
+        href="https://drive.google.com/file/d/1Yhjje557eRmgdTvMBgcEurdTaDA4_e2S/view?usp=drive_link"
         target="_blank"
       >
         <button className="bg-teal-500 transition-all hover:bg-teal-600 text-white font-semibold py-2 px-4 rounded-md mt-4">
