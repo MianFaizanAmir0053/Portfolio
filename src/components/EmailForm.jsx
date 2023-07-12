@@ -2,6 +2,7 @@ import emailjs from "emailjs-com";
 import { Formik, Form, Field } from "formik";
 import { motion } from "framer-motion";
 import { useState } from "react";
+import NewButton from "./helper/NewButton";
 
 function EmailForm() {
   const [name, setName] = useState("");
@@ -29,6 +30,9 @@ function EmailForm() {
       .then(
         function (response) {
           console.log("SUCCESS!", response.status, response.text);
+          setEmail("");
+          setName("");
+          setMessage("");
         },
         function (error) {
           console.log("FAILED...", error);
@@ -104,18 +108,12 @@ function EmailForm() {
               className="bg-slate-800 rounded-lg py-4 px-4"
               value={message}
             />
-            <motion.button
-              whileHover={{
-                scale: 1.1,
-                color: "white",
-                backgroundColor: "#475569",
-                transition: { duration: 0.2 },
-              }}
-              whileTap={{ scale: 0.9 }}
-              type="submit"
-              className=" bg-slate-800 w-fit mx-auto rounded-lg px-6 py-4 my-4"
-            >
-              Send Message
+            <motion.button type="submit" className="mt-4">
+              <NewButton
+                href={"#"}
+                text1={"Let's connect"}
+                text2={"Send Message"}
+              />
             </motion.button>
           </Form>
         </Formik>

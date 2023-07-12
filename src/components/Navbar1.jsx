@@ -1,6 +1,6 @@
 function Navbar1() {
   return (
-    <nav class="flex z-[10000] fixed   items-center p-3  min-[600px]:text-xl min-[600px]:w-[18rem] w-[14rem]  left-[calc(50%-7rem)]  justify-between text-white rounded-full  min-[600px]:bottom-10 bottom-5  min-[600px]:left-[calc(50%-9rem)]   bg-[rgba(35,78,73,0.53)] backdrop-blur-sm">
+    <nav class=" flex z-[10000] fixed   items-center p-3  min-[600px]:text-xl min-[600px]:w-[18rem] w-[14rem]  left-[calc(50%-7rem)]  justify-between text-white rounded-full  min-[600px]:bottom-10 bottom-5  min-[600px]:left-[calc(50%-9rem)]   bg-[rgba(35,78,73,0.53)] backdrop-blur-sm">
       <a href="#" class="p-3  rounded-full hover:bg-[rgb(35,78,73)] ">
         <svg
           stroke="currentColor"

@@ -1,4 +1,5 @@
 import { animate, motion } from "framer-motion";
+import NewButton from "./helper/NewButton";
 
 function About() {
   return (
@@ -8,7 +9,7 @@ function About() {
       transition={{ duration: 0.5 }}
       className="text-white py-6 bg-slate-800 p-10 rounded-md mt-8"
     >
-      <p>
+      <p className="pb-4">
         Experienced Full Stack web developer specializing in React, Next,
         Typescript, Prisma, PostgreSQL, Node.js, Express.js, MongoDB, Firebase,
         Tailwind CSS, Sass, and WordPress. Passionate about blockchain
@@ -18,14 +19,14 @@ function About() {
         web applications. Open to exciting career opportunities. Let's connect
         and build something exceptional!
       </p>
-      <a
-        href="https://drive.google.com/file/d/1jDNztoIo9Av6tw3Ls3YDcj6TrsJkJe6r/view?usp=sharing"
-        target="_blank"
-      >
-        <button className="bg-teal-500 transition-all hover:bg-teal-600 text-white font-semibold py-2 px-4 rounded-md mt-4">
-          Download Resume
-        </button>
-      </a>
+      <NewButton
+        target={"_blank"}
+        href={
+          "https://drive.google.com/file/d/1Yhjje557eRmgdTvMBgcEurdTaDA4_e2S/view?usp=sharing"
+        }
+        text1={"Resume"}
+        text2={"Download"}
+      />
     </motion.div>
   );
 }

@@ -4,7 +4,7 @@ function Button({ link, text }) {
       <a
         target="_blank"
         href={link}
-        className="btn btn-primary transition-[all] cursor-pointer text-white hover:text-teal-500 hover:underline"
+        className="btn btn-primary transition-[all] cursor-pointer ml-2 items-center flex"
       >
         {text}
         <img

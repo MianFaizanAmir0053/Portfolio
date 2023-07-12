@@ -1,15 +1,23 @@
 import axios from "axios";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import Button from "./helper/Button";
+import GitHubIcon from "@mui/icons-material/GitHub";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 
 function Projects() {
   const [projects, setProjects] = useState([]);
-  const [clicked, setClicked] = useState(false);
+  const [mouseEnter, setMouseEnter] = useState(null);
+
+  const handleMouseEnter = ({ projectId }) => {
+    setMouseEnter(() => projectId);
+  };
+  const handleMouseLeave = () => {
+    setMouseEnter(null);
+  };
 
   const url =
     "https://api.github.com/users/MianFaizanAmir0053/repos?sort=created";
-
   useEffect(() => {
     axios.get(url).then((response) => {
       setProjects(() => {
@@ -19,30 +27,24 @@ function Projects() {
     });
   }, []);
 
-  const [selectedId, setSelectedId] = useState(null);
-  const [filtered, setFiltered] = useState(null);
-  useEffect(() => {
-    setFiltered(projects.filter((project) => project.id === selectedId));
-    setClicked((pre) => !pre);
-  }, [selectedId]);
-
   return (
     <section id="Portfolio" className="pt-2">
       <h1 className="text-2xl py-4 tracking-widest text-white font-bold text-center">
         Portfolio
       </h1>
       <div className=" text-slate-200  w-full h-full relative p-8 rounded-sm  ">
-        <motion.div className="grid w-full h-full  grid-cols-2 grid-rows-2 gap-4 ">
-          {projects.map((project) => (
+        <motion.div className="grid w-full h-full  grid-cols-1 min-[620px]:grid-cols-2 grid-rows-2 gap-4 ">
+          {projects.map((project, i) => (
             <motion.div
-              key={project.id}
+              onMouseEnter={() => handleMouseEnter({ projectId: project.id })}
+              onMouseLeave={handleMouseLeave}
+              key={i}
               initial={{ scale: 1 }}
               whileHover={{
                 scale: 1.05,
-                transition: { duration: 0.2, ease: "easeInOut" },
+                transition: { duration: 0.2, ease: "easeIn" },
               }}
-              // className="p-[0.1rem] bg-[url('/tesla1.png')]   bg-no-repeat bg-cover bg-center min-[430px]:p-4  min-[620px]:text-md min-[728px]:text-lg  border border-[rgba(30,41,59,1)] hover:border-[rgba(30,41,59,.5)] hover:bg-[rgba(30,41,59,.5)] transition-[background-color] w-full cursor-pointer rounded-md h-full flex flex-col justify-center items-center"
-              className="p-[0.1rem] bg-no-repeat bg-cover bg-center min-[430px]:p-4  min-[620px]:text-md min-[728px]:text-lg   hover:border-[rgba(30,41,59,.5)] hover:bg-[rgba(30,41,59,.5)] transition-[background-color] w-full cursor-pointer rounded-md h-full flex flex-col justify-center items-center"
+              className=" relative p-[0.1rem] bg-no-repeat bg-cover bg-center min-[430px]:p-4  min-[620px]:text-md min-[728px]:text-lg   hover:border-[rgba(30,41,59,.5)] hover:bg-[rgba(30,41,59,.5)] transition-[background-color] w-full cursor-pointer rounded-md h-full flex flex-col justify-center items-center"
               layoutId={project.id}
               onClick={() => {
                 setSelectedId(project.id);
@@ -57,7 +59,7 @@ function Projects() {
                 </motion.div>
               </div>
 
-              <div className=" ">
+              <div>
                 <img
                   className="w-full h-full object-cover"
                   src={`https://raw.githubusercontent.com/MianFaizanAmir0053/${
@@ -69,9 +71,36 @@ function Projects() {
                 />
               </div>
 
+              {mouseEnter === project.id && (
+                <motion.div className=" bg-slate-900/70 m-auto w-full h-full absolute">
+                  <motion.div className=" top-[calc(50%-1rem)] left-[calc(50%-5rem)] absolute">
+                    <motion.a
+                      href={project?.clone_url}
+                      target="_blank"
+                      className="flex items-center hover:text-teal-500 hover:underline"
+                    >
+                      <GitHubIcon />
+                      <Button text="source code" />
+                    </motion.a>
+
+                    <motion.a
+                      href={project?.homepage}
+                      target="_blank"
+                      className="flex items-center hover:text-teal-500 hover:underline"
+                    >
+                      <VisibilityIcon />
+                      <Button text="view live" />
+                    </motion.a>
+                  </motion.div>
+                </motion.div>
+              )}
+
               <div className="flex  min-[620px]:text-md min-[728px]:text-lg text-[rgba(94,234,212,1)]  min-[820px]:mt-8 flex-wrap w-full h-full">
-                {project.topics.map((topic) => (
-                  <motion.p className="px-2  min-[720px]:m-2 min-[620px]:px-4 min-[620px]:py-2 flex-auto text-center self-center py-1 m-1 bg-[rgba(45,212,191,.2)]  text-xs rounded-3xl">
+                {project.topics.map((topic, i) => (
+                  <motion.p
+                    key={i}
+                    className="px-2  min-[720px]:m-2 min-[620px]:px-4 min-[620px]:py-2 flex-auto text-center self-center py-1 m-1 bg-[rgba(45,212,191,.2)]  text-xs rounded-3xl"
+                  >
                     {topic}
                   </motion.p>
                 ))}
@@ -79,52 +108,6 @@ function Projects() {
             </motion.div>
           ))}
         </motion.div>
-
-        <AnimatePresence>
-          {selectedId && (
-            <>
-              <motion.div
-                onClick={() => setSelectedId(null)}
-                className="z-50 text-xs p-[5rem] py-[10rem] min-[720px]:text-lg  min-[620px]:p-[12rem] min-[440px]:p-[6rem]  absolute top-0 left-0 right-0 bottom-0  w-full h-full"
-              >
-                <motion.div
-                  className=" relative bg-slate-800 z-50 py-4 pr-4 rounded-lg w-full h-full grid grid-cols-12 grid-rows-6 "
-                  onClick={() => setSelectedId(null)}
-                  layoutId={selectedId}
-                >
-                  <motion.h1 className="col-[2/12] pt-4 text-teal-500 row-[1/2] font-semibold tracking-wider">
-                    {filtered[0]?.name}
-                  </motion.h1>
-                  <motion.p className="col-[2/13] row-[2/5]">
-                    {filtered[0]?.description}
-                  </motion.p>
-                  <motion.a className=" col-[2/12] row-[6/6] text-[rgba(94,234,212,1)] ">
-                    <Button link={filtered[0]?.clone_url} text="source code" />
-                  </motion.a>
-                  <motion.a className=" col-[2/12] row-[7/7]  text-[rgba(94,234,212,1)] ">
-                    <Button link={filtered[0]?.homepage} text="view live" />
-                  </motion.a>
-
-                  <motion.div>
-                    <motion.img
-                      className=" min-[720px]:w-8  min-[720px]:h-8 h-4 w-4 absolute  z-50  right-4 top-7 cursor-pointer"
-                      src="close.png"
-                      alt=""
-                      onClick={() => setSelectedId(null)}
-                    />
-                  </motion.div>
-                </motion.div>
-              </motion.div>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 0.7 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setSelectedId(null)}
-                className="w-full h-full bg-slate-900 opacity-70 z-10 top-0 left-0 fixed"
-              ></motion.div>
-            </>
-          )}
-        </AnimatePresence>
       </div>
     </section>
   );

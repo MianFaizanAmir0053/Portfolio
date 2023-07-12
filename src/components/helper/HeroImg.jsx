@@ -35,17 +35,17 @@ function HeroImg() {
   };
 
   return (
-    <div className="relative ">
+    <div className="relative min-[600px]:mt-[4rem] min-[600px]:mr-[0.5rem]">
       <motion.div
         variants={container}
         initial="hidden"
         whileInView="show"
-        className="flex max-w-[18rem] rounded-sm w-[auto] clip  bg-gradient-to-br from-gray-700 to-gray-500"
+        className="flex rounded-sm w-[auto] clip  bg-gradient-to-br from-gray-700 to-gray-500"
       >
         <motion.img
           variants={item}
-          className=" w-full h-full z-[1]"
-          src="myself.png"
+          className=" w-[14rem] z-[1]"
+          src="IMG_20230712_220219-removebg-preview.png"
           alt="myself"
         />
       </motion.div>

@@ -18,7 +18,7 @@ function TimeLine() {
             {/* <h1 class="text-lg">Experience</h1> */}
             <div className="flex justify-between items-baseline ">
               <h1 class="text-xl font-bold">NextJs Inter</h1>
-              <p className="text-teal-400 ">Remote</p>
+              {/* <p className="text-teal-400 ">Remote</p> */}
             </div>
             <h3 className=" text-slate-300">Bytewise Limited</h3>
             <p>Mar 2023 - Present · 6 mos</p>
