@@ -1,12 +1,22 @@
+import { motion } from "framer-motion";
+
 function TimeLine() {
   return (
-    <div class="w-10/12 mt-8 md:w-7/12 lg:6/12 mx-auto relative min-[720px]:text-base text-sm py-20">
-      <h1 class="text-2xl tracking-widest text-center font-bold text-white">
-        Experience
-      </h1>
+    <motion.div
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ duration: 1 }}
+      class="w-10/12 mt-[6rem] md:w-7/12 lg:6/12 mx-auto relative min-[720px]:text-base text-sm py-20"
+    >
+      <h1 class="text-3xl text-center font-extrabold text-white">Experience</h1>
       <div class="border-l-2 mt-10">
         {/* <!-- Card 1 --> */}
-        <div class="transform transition cursor-pointer hover:-translate-y-2 ml-10 relative flex items-center px-6 py-4 bg-slate-800 text-white rounded mb-10 flex-col md:flex-row space-y-4 md:space-y-0">
+        <motion.div
+          initial={{ right: -10 }}
+          whileInView={{ right: 0 }}
+          transition={{ duration: 1 }}
+          class="transform transition cursor-pointer hover:-translate-y-2 ml-10 relative flex items-center px-6 py-4 bg-slate-800 text-white rounded mb-10 flex-col md:flex-row space-y-4 md:space-y-0"
+        >
           {/* <!-- Dot Follwing the Left Vertical Line --> */}
           <div class="w-5 h-5 bg-teal-600 absolute -left-10 transform -translate-x-2/4 rounded-full z-10 mt-2 md:mt-0"></div>
 
@@ -34,9 +44,9 @@ function TimeLine() {
               <li>Learning and growing as part of the Bytewise team.</li>
             </ul>
           </div>
-        </div>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 

@@ -7,7 +7,7 @@ function GetToKnow() {
 
   return (
     <section id="About">
-      <div className="flex text-xl pt-[5rem] cursor-pointer justify-center text-white items-center">
+      <div className="flex text-xl  font-extrabold pt-[5rem] cursor-pointer justify-center text-white items-center">
         <div
           className={` border-b-2 px-4 py-2 hover:text-teal-500 ${
             select === "about" && "border-b-teal-500  text-teal-500"

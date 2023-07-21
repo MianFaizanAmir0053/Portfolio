@@ -40,11 +40,11 @@ function HeroImg() {
         variants={container}
         initial="hidden"
         whileInView="show"
-        className="flex rounded-sm w-[auto] clip  bg-gradient-to-br from-gray-700 to-gray-500"
+        className="flex min-[600px]:border-teal-800 min-[600px]:border w-[auto] min-[600px]:outline min-[600px]:outline-offset-8 min-[600px]:outline-teal-800 rounded-full bg-gradient-to-br from-slate-700  to-slate-500"
       >
         <motion.img
           variants={item}
-          className=" w-[14rem] z-[1]"
+          className=" min-[600px]:w-[20rem] w-[16rem] min-[600px]:rounded-t-none min-[600px]:rounded-full  z-[1]"
           src="IMG_20230712_220219-removebg-preview.png"
           alt="myself"
         />

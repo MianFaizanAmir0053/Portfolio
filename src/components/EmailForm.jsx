@@ -45,13 +45,15 @@ function EmailForm() {
       id="Contact"
       className=" min-h-[100vh] py-[5rem] max-w-sm px-8  min-[1000px]:max-w-2xl mx-auto text-center text-lg bg-sl-200 text-white"
     >
-      <h5 className="text-sm min-[600px]:text-lg font-bold">Get in Touch</h5>
-      <h2 className="text-xl tracking-widest min-[600px]:text-3xl font-bold text-teal-500 pb-6">
+      <h5 className="text-md min-[600px]:text-2xl font-semibold">
+        Get in Touch
+      </h5>
+      <h2 className="text-3xl tracking-wide min-[600px]:text-4xl font-extrabold text-teal-500 pb-12">
         Contact Me
       </h2>
       <div className="flex flex-col min-[1000px]:gap-12 min-[1000px]:justify-between   min-[1000px]:flex-row">
         <div className="">
-          <article className="border-2 py-4 px-6 font-bold min-[600px]:text-md text-sm border-slate-700 bg-slate-700  rounded-xl">
+          <article className="border-2 py-4 px-6 font-bold min-[600px]:text-md text-sm border-slate-700 bg-slate-700  rounded">
             <h4>Email</h4>
             <h5>faizanamir0053@gmail.com</h5>
             <a
@@ -62,7 +64,7 @@ function EmailForm() {
               Send a Message
             </a>
           </article>
-          <article className="border-2 min-[600px]:text-md text-sm border-slate-700 bg-slate-700 py-4 px-6 my-4 rounded-xl ">
+          <article className="border-2 min-[600px]:text-md text-sm border-slate-700 bg-slate-700 py-4 px-6 my-4 rounded ">
             <h4 className="font-bold">WhatsApp</h4>
             <h5 className="font-bold">+92 303 0649009</h5>
             <a
@@ -85,7 +87,7 @@ function EmailForm() {
               name="name"
               placeholder="Your Full Name"
               onChange={(e) => setName(e.target.value)}
-              className="bg-slate-800   rounded-lg py-4 px-4"
+              className="bg-slate-800   rounded py-4 px-4"
               required="true"
               value={name}
             />
@@ -94,7 +96,7 @@ function EmailForm() {
               name="email"
               placeholder="Your Email Address"
               onChange={(e) => setEmail(e.target.value)}
-              className="bg-slate-800 my-4 rounded-lg py-4 px-4"
+              className="bg-slate-800 my-4 rounded py-4 px-4"
               required="true"
               value={email}
             />
@@ -105,7 +107,7 @@ function EmailForm() {
               placeholder="Your Message"
               onChange={(e) => setMessage(e.target.value)}
               required="true"
-              className="bg-slate-800 rounded-lg py-4 px-4"
+              className="bg-slate-800 rounded py-4 px-4"
               value={message}
             />
             <motion.button type="submit" className="mt-4">

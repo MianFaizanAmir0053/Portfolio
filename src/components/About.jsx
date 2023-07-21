@@ -7,9 +7,14 @@ function About() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="text-white py-6 bg-slate-800 p-10 rounded-md mt-8"
+      className="text-white py-6 bg-slate-800 p-10 rounded mt-8"
     >
-      <p className="pb-4">
+      <motion.p
+        initial={{ opacity: 0, y: 15 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: 0.2 }}
+        className="text-lg font-light mb-4"
+      >
         Experienced Full Stack web developer specializing in React, Next,
         Typescript, Prisma, PostgreSQL, Node.js, Express.js, MongoDB, Firebase,
         Tailwind CSS, Sass, and WordPress. Passionate about blockchain
@@ -18,7 +23,7 @@ function About() {
         staying ahead of industry trends and delivering high-quality, performant
         web applications. Open to exciting career opportunities. Let's connect
         and build something exceptional!
-      </p>
+      </motion.p>
       <NewButton
         target={"_blank"}
         href={

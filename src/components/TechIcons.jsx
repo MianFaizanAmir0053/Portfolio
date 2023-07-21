@@ -51,9 +51,6 @@ function TechIcons() {
 
   return (
     <div className="mb-[10rem] mt-4">
-      {/* <div className=" text-2xl text-center font-bold tracking-widest my-[4rem] pt-8 text-gray-100">
-        <h1>Skills</h1>
-      </div> */}
       <motion.div
         variants={container}
         initial="hidden"
@@ -86,7 +83,7 @@ function TechIcons() {
               />
             </div>
 
-            <div className=" text-gray-200">
+            <div className=" text-xs text-gray-200">
               <p>{icon}</p>
             </div>
           </motion.div>

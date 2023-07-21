@@ -1,6 +1,6 @@
 function Svg2() {
   return (
-    <div className="absolute top-0 w-full h-full  left-[-12.5rem]">
+    <div className="absolute top-[3rem] min-[600px]:top-[0rem] w-full h-full  left-[-10.5rem]">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width="400"

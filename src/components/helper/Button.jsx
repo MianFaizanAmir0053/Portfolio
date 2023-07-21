@@ -1,10 +1,10 @@
 function Button({ link, text }) {
   return (
-    <div>
+    <div className=" text-sm">
       <a
         target="_blank"
         href={link}
-        className="btn btn-primary transition-[all] cursor-pointer ml-2 items-center flex"
+        className="text-xs min-[570px]:text-sm transition-[all] cursor-pointer ml-2 items-center flex"
       >
         {text}
         <img

@@ -11,8 +11,8 @@ function Test() {
       opacity: 1,
       scale: 1,
       transition: {
-        delayChildren: 0.1,
-        staggerChildren: 0.2,
+        delayChildren: 0,
+        staggerChildren: 0,
       },
     },
   };
@@ -22,7 +22,7 @@ function Test() {
     show: {
       transition: {
         ease: "easeInOut",
-        duration: 0.3,
+        duration: 1,
       },
       y: 0,
       opacity: 1,
@@ -34,30 +34,31 @@ function Test() {
       variants={container}
       whileInView="show"
       initial="hidden"
-      className="text-left relative min-[600px]:p-[2rem]  min-[780px]:p-[5rem] min-[865px]:text-2xl  my-[2rem] uppercase overflow-hidden min-[600px]:leadin-[2.5rem]  text-white font-semibold min-[600px]:text-xl text-sm min-[600px]:tracking-widest "
+      className="text-left font-bold relative mr-auto text-white w-full h-full min-[500px]:mt-[5rem] mt-[2rem] min-[375px]:text-2xl text-xl min-[600px]:text-4xl  mb-[12rem] ml-10 "
     >
       <motion.div variants={item} className="">
-        <motion.span variants={item} className="absolute top-0 left-0">
+        <motion.span variants={item} className=" absolute top-0 left-0">
           {text1}
         </motion.span>
         <motion.span
           initial={{ opacity: 1, top: 0 }}
-          whileInView={{ opacity: 1, top: 30 }}
-          transition={{ duration: 2 }}
-          className=" bg-slate-900 text-slate-900 absolute top-10 left-0"
+          whileInView={{ opacity: 1, top: 33 }}
+          transition={{ duration: 0.8, delay: 0.3 }}
+          exit={{ opacity: 1, top: 0 }}
+          className=" bg-slate-900 text-slate-900  left-0 absolute"
         >
           {text1}
         </motion.span>
       </motion.div>
 
-      <motion.div variants={item} className="">
+      <motion.div variants={item} className="font-bold">
         <motion.span variants={item} className="absolute top-10 left-0">
           {text2}
         </motion.span>
         <motion.span
-          initial={{ opacity: 1, top: 30 }}
-          whileInView={{ opacity: 1, top: 90 }}
-          transition={{ duration: 2.3 }}
+          initial={{ opacity: 1, top: 40 }}
+          whileInView={{ opacity: 1, top: 75 }}
+          transition={{ duration: 0.8, delay: 0.8 }}
           className=" bg-slate-900 text-slate-900 absolute top-10 left-0"
         >
           {text2}
@@ -69,9 +70,9 @@ function Test() {
           {text3}
         </motion.span>
         <motion.span
-          initial={{ opacity: 1, top: 70 }}
-          whileInView={{ opacity: 1, top: 130 }}
-          transition={{ duration: 2.9 }}
+          initial={{ opacity: 1, top: 80 }}
+          whileInView={{ opacity: 1, top: 115 }}
+          transition={{ duration: 0.8, delay: 1.5 }}
           className=" bg-slate-900  text-slate-900 absolute top-20 left-0"
         >
           {text3}
@@ -83,9 +84,9 @@ function Test() {
           {text4}
         </motion.span>
         <motion.span
-          initial={{ opacity: 1, top: 107 }}
-          whileInView={{ opacity: 1, top: 160 }}
-          transition={{ duration: 3.3 }}
+          initial={{ opacity: 1, top: 120 }}
+          whileInView={{ opacity: 1, top: 165 }}
+          transition={{ duration: 0.8, delay: 2 }}
           className=" bg-slate-900  text-slate-900 absolute top-[5rem] left-0"
         >
           {text4}
