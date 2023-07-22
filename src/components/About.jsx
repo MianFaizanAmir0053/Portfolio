@@ -15,12 +15,12 @@ function About() {
         transition={{ duration: 0.8, delay: 0.2 }}
         className="text-lg font-light mb-4"
       >
-        Experienced Full Stack web developer specializing in React, Next,
+        Experienced Full Stack web developer specialized in React, Next,
         Typescript, Prisma, PostgreSQL, Node.js, Express.js, MongoDB, Firebase,
-        Tailwind CSS, Sass, and WordPress. Passionate about blockchain
+        Tailwind CSS, Sass, and WordPress. Passionate about AI and Blockchain
         technology and creating innovative solutions. Strong problem-solving
         skills, attention to detail, and collaborative mindset. Committed to
-        staying ahead of industry trends and delivering high-quality, performant
+        staying ahead of industry trends and delivered high-quality, performant
         web applications. Open to exciting career opportunities. Let's connect
         and build something exceptional!
       </motion.p>
