@@ -103,7 +103,7 @@ function Projects() {
                     <Button text="view live" />
                   </a>
                 </div>
-                <div className="z-10  flex min-[520px]-mt-2  min-[570px]:text-md text-[rgba(94,234,212,1)] min-[820px]:mt-4 flex-wrap">
+                <div className="z-10 font-semibold flex min-[520px]-mt-2  min-[570px]:text-md text-[rgba(94,234,212,1)] min-[820px]:mt-4 flex-wrap">
                   {selectedProject.topics.map((topic, i) => (
                     <p
                       key={i}
