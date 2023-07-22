@@ -34,14 +34,17 @@ function TimeLine() {
             <p>Mar 2023 - Present · 6 mos</p>
             <ul className="list-disc">
               <li>
-                Developing and implementing React + Next.js components, pages,
+                Developed and implemented React + Next.js components, pages,
                 and applications.
               </li>
               <li>
-                Writing clean, efficient, and well-documented code using best
+                Written clean, efficient, and well-documented code using best
                 practices.
               </li>
-              <li>Learning and growing as part of the Bytewise team.</li>
+              <li>
+                Collaborated with the development team and other stakeholders to 
+                gather requirements, troubleshoot issues, and ensure timely delivery of projects.
+              </li>
             </ul>
           </div>
         </motion.div>
