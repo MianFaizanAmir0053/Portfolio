@@ -1,6 +1,42 @@
 import { motion } from "framer-motion";
+import TimelineCard from "./helper/TimelineCard";
+
+const calculateTotalMonths = (startDate, endDate) => {
+  let diff = endDate - startDate;
+  if (diff === 0) {
+    diff = 1;
+  }
+  return diff < 0 ? diff + 12 : diff;
+};
 
 function TimeLine() {
+  const d = new Date();
+  let month = d.getMonth();
+  const cardData = [
+    {
+      title: "NextJs Inter",
+      company: "Bytewise Limited",
+      startDate: "Mar 2023",
+      date: `Mar 2023 - Present · ${calculateTotalMonths(2, month)} months`,
+      description: [
+        "Developed and implemented React + Next.js components, pages, and applications.",
+        "Written clean, efficient, and well-documented code using best practices.",
+        "Collaborated with the development team and other stakeholders to gather requirements, troubleshoot issues, and ensure timely delivery of projects.",
+      ],
+    },
+    {
+      title: "Web Developer Intern",
+      company: "CodSoft",
+      date: `July 2023 - Present · ${calculateTotalMonths(6, month)} months`,
+      description: [
+        "Developing and maintaining robust web applications with clean code and efficient functionality.",
+        "Collaborating with the team to implement new features and enhancements.",
+        "Participating in design and development discussions.",
+        "Learning and applying new technologies in web development.",
+      ],
+    },
+  ];
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -10,44 +46,16 @@ function TimeLine() {
     >
       <h1 class="text-3xl text-center font-extrabold text-white">Experience</h1>
       <div class="border-l-2 mt-10">
-        {/* <!-- Card 1 --> */}
-        <motion.div
-          initial={{ right: -10 }}
-          whileInView={{ right: 0 }}
-          transition={{ duration: 1 }}
-          class="transform transition cursor-pointer hover:-translate-y-2 ml-10 relative flex items-center px-6 py-4 bg-slate-800 text-white rounded mb-10 flex-col md:flex-row space-y-4 md:space-y-0"
-        >
-          {/* <!-- Dot Follwing the Left Vertical Line --> */}
-          <div class="w-5 h-5 bg-teal-600 absolute -left-10 transform -translate-x-2/4 rounded-full z-10 mt-2 md:mt-0"></div>
-
-          {/* <!-- Line that connecting the box with the vertical line --> */}
-          <div class="w-10 h-1 bg-slate-300 absolute -left-10 z-0"></div>
-
-          {/* <!-- Content that showing in the box --> */}
-          <div class="flex-auto">
-            {/* <h1 class="text-lg">Experience</h1> */}
-            <div className="flex justify-between items-baseline ">
-              <h1 class="text-xl font-bold">NextJs Inter</h1>
-              {/* <p className="text-teal-400 ">Remote</p> */}
-            </div>
-            <h3 className=" text-slate-300">Bytewise Limited</h3>
-            <p>Mar 2023 - Present · 6 mos</p>
-            <ul className="list-disc">
-              <li>
-                Developed and implemented React + Next.js components, pages,
-                and applications.
-              </li>
-              <li>
-                Written clean, efficient, and well-documented code using best
-                practices.
-              </li>
-              <li>
-                Collaborated with the development team and other stakeholders to 
-                gather requirements, troubleshoot issues, and ensure timely delivery of projects.
-              </li>
-            </ul>
-          </div>
-        </motion.div>
+        {/* <!-- Cards --> */}
+        {cardData.map((data, i) => (
+          <TimelineCard
+            title={data.title}
+            i={i}
+            company={data.company}
+            date={data.date}
+            description={data.description}
+          />
+        ))}
       </div>
     </motion.div>
   );
