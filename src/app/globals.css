@@ -1,0 +1,361 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/*
+ * FAIZAN AMIR — editorial design system.
+ * Palette is locked: paper / paper-deep / ink / ink-muted / cobalt / cobalt-deep.
+ * No other colors. No gradients. No shadows.
+ *
+ * shadcn/ui semantic tokens are mapped onto this palette below, so any ui/
+ * component pulled in later inherits the design instead of the default theme.
+ */
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-paper-deep: var(--paper-deep);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-muted-light: var(--ink-muted-light);
+  --color-cobalt: var(--cobalt);
+  --color-cobalt-deep: var(--cobalt-deep);
+  --color-cobalt-ink: var(--cobalt-ink);
+  --color-cobalt-ink-deep: var(--cobalt-ink-deep);
+
+  /* Context-aware roles — flip automatically inside `.on-ink` (light surfaces) */
+  --color-link: var(--link);
+  --color-link-hover: var(--link-hover);
+  --color-subtle: var(--subtle);
+
+  --font-display: var(--font-bebas-neue), var(--font-barlow-condensed), sans-serif;
+  --font-serif: var(--font-instrument-serif), Georgia, serif;
+  --font-sans: var(--font-barlow), "Space Grotesk", sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  /* shadcn token surface */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+}
+
+:root {
+  /*
+   * Midnight Chrome — tuned for maximum contrast.
+   * Every text pairing below clears WCAG AAA (7:1); hairlines clear the
+   * 3:1 non-text minimum. Measured ratios are noted per token.
+   */
+  --paper: #060607;
+  --paper-deep: #131316;
+  --ink: #ffffff; /* 20.25:1 on paper */
+  --ink-muted: #9f9fa7; /* 7.71 on paper · 7.06 on paper-deep */
+  --ink-muted-light: #55555c; /* 7.39 on ink — muted text on light surfaces */
+  --cobalt: #c8ff3d; /* 17.19 on paper */
+  --cobalt-deep: #a6dc1f; /* button hover on dark */
+  --cobalt-ink: #4a5e17; /* 7.23 on ink — accent on light surfaces */
+  --cobalt-ink-deep: #354410; /* 10.58 on ink — its hover */
+  --hairline: color-mix(in oklab, var(--ink) 35%, transparent); /* 3.09 on paper */
+
+  /* Contextual roles for dark surfaces (the default) */
+  --link: var(--cobalt);
+  --link-hover: var(--cobalt-deep);
+  --focus: var(--cobalt);
+  --subtle: var(--ink-muted);
+
+  /* shadcn semantic tokens → locked palette */
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --card: var(--paper-deep);
+  --card-foreground: var(--ink);
+  --popover: var(--paper-deep);
+  --popover-foreground: var(--ink);
+  --primary: var(--cobalt);
+  --primary-foreground: var(--paper);
+  --secondary: var(--paper-deep);
+  --secondary-foreground: var(--ink);
+  --muted: var(--paper-deep);
+  --muted-foreground: var(--ink-muted);
+  --accent: var(--paper-deep);
+  --accent-foreground: var(--ink);
+  --destructive: #ff4d4d;
+  --border: var(--hairline);
+  --input: var(--hairline);
+  --ring: var(--cobalt);
+  --radius: 0px;
+}
+
+/*
+ * Inverted surfaces (the footer, the "next case study" panel) sit on `--ink`,
+ * a near-white ground. Cobalt scores 1.06:1 there — effectively invisible — so
+ * these surfaces re-point the contextual roles at their light-safe twins.
+ * Anything using text-link / text-subtle / .label adapts with no markup change.
+ */
+.on-ink {
+  --link: var(--cobalt-ink);
+  --link-hover: var(--cobalt-ink-deep);
+  --focus: var(--cobalt-ink);
+  --subtle: var(--ink-muted-light);
+  --hairline: color-mix(in oklab, var(--paper) 45%, transparent);
+}
+
+@layer base {
+  * {
+    border-color: var(--hairline);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background: var(--cobalt);
+    color: var(--paper);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 3px;
+  }
+}
+
+/* --- structural motifs --- */
+
+@utility label {
+  font-size: 12px;
+  line-height: 1.2;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--subtle);
+  font-family: var(--font-sans);
+  font-weight: 500;
+}
+
+@utility display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+
+@utility accent-word {
+  font-family: var(--font-serif);
+  font-style: italic;
+  text-transform: none;
+  letter-spacing: -0.01em;
+  color: var(--link);
+  font-weight: 400;
+}
+
+/* diagonal-cut panels: 45° clipped corner, never a rounded card */
+@utility cut-tr {
+  clip-path: polygon(0 0, calc(100% - 2.5rem) 0, 100% 2.5rem, 100% 100%, 0 100%);
+}
+
+@utility cut-bl {
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 2.5rem 100%, 0 calc(100% - 2.5rem));
+}
+
+@utility cut-br {
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 2.5rem), calc(100% - 2.5rem) 100%, 0 100%);
+}
+
+@utility rule-t {
+  border-top: 1px solid var(--hairline);
+}
+
+@utility rule-b {
+  border-bottom: 1px solid var(--hairline);
+}
+
+@utility wrap {
+  width: 100%;
+  max-width: 96rem;
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .wrap {
+    padding-inline: 2.5rem;
+  }
+}
+
+@utility outline-num {
+  font-family: var(--font-display);
+  color: transparent;
+  -webkit-text-stroke: 1px var(--ink);
+  line-height: 0.8;
+}
+
+/* --- liquid glass (dock chrome) ---
+ * The one place this system uses gradients and shadow. Glass is a lighting
+ * effect: without a specular rim and cast depth it just reads as a flat
+ * translucent box. Geometry stays editorial — diagonal cut, zero radius.
+ */
+
+@utility cut-sm {
+  clip-path: polygon(0 0, calc(100% - 0.85rem) 0, 100% 0.85rem, 100% 100%, 0 100%);
+}
+
+/* Outer 1px shell — the lit rim that follows the diagonal cut. */
+@utility glass-rim {
+  background: linear-gradient(
+    155deg,
+    color-mix(in oklab, var(--ink) 46%, transparent) 0%,
+    color-mix(in oklab, var(--ink) 15%, transparent) 26%,
+    color-mix(in oklab, var(--ink) 5%, transparent) 58%,
+    color-mix(in oklab, var(--ink) 24%, transparent) 100%
+  );
+}
+
+/* Inner pane — the actual refraction. */
+@utility glass-fill {
+  -webkit-backdrop-filter: blur(22px) saturate(185%) brightness(1.06);
+  backdrop-filter: blur(22px) saturate(185%) brightness(1.06);
+  background: linear-gradient(
+    to bottom,
+    color-mix(in oklab, var(--ink) 11%, transparent) 0%,
+    color-mix(in oklab, var(--ink) 4%, transparent) 42%,
+    color-mix(in oklab, var(--paper) 34%, transparent) 100%
+  );
+}
+
+/* Cast shadow — separates the pane from the page behind it. */
+@utility glass-lift {
+  box-shadow:
+    0 20px 55px -18px rgb(0 0 0 / 0.9),
+    0 4px 14px -6px rgb(0 0 0 / 0.7);
+}
+
+/* Specular streak along the top edge, hottest just off-centre. */
+@utility glass-sheen {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in oklab, var(--ink) 70%, transparent) 42%,
+    color-mix(in oklab, var(--ink) 32%, transparent) 62%,
+    transparent 100%
+  );
+}
+
+/* Grain, as an overlay that does not claim `position` like `grain` does. */
+@utility glass-grain {
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@keyframes marquee-left {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(5px);
+  }
+}
+
+.animate-bob {
+  animation: bob 1.6s ease-in-out infinite;
+}
+
+/* --- midnight chrome atmosphere --- */
+
+@utility grain {
+  position: relative;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.05;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+}
+
+@utility scanlines {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    color-mix(in oklab, var(--ink) 5%, transparent) 0 1px,
+    transparent 1px 4px
+  );
+}
+
+@keyframes ticker-flicker {
+  0%,
+  92%,
+  100% {
+    opacity: 1;
+  }
+  94% {
+    opacity: 0.35;
+  }
+  96% {
+    opacity: 1;
+  }
+}
+
+.animate-flicker {
+  animation: ticker-flicker 5s steps(1, end) infinite;
+}
+
+@keyframes drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -12px, 0);
+  }
+}
+
+.animate-drift {
+  animation: drift 7s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .animate-bob,
+  .animate-drift,
+  .animate-flicker,
+  .marquee-track {
+    animation: none !important;
+  }
+}
