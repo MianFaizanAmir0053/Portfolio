@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Marquee } from "./primitives";
+import { SOCIAL } from "@/data/social";
 
 export function Footer() {
   return (
@@ -58,12 +59,12 @@ export function Footer() {
             <p className="label mb-3">[CONNECT]</p>
             <ul className="space-y-2 text-sm">
               <li>
-                <a href="https://github.com" target="_blank" rel="noreferrer" className="hover:text-link">
+                <a href={SOCIAL.github} target="_blank" rel="noreferrer" className="hover:text-link">
                   * GitHub
                 </a>
               </li>
               <li>
-                <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="hover:text-link">
+                <a href={SOCIAL.linkedin} target="_blank" rel="noreferrer" className="hover:text-link">
                   * LinkedIn
                 </a>
               </li>

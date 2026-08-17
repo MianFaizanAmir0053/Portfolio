@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Briefcase, FileText } from "lucide-react";
 import { FloatingDock, type DockItem } from "@/components/ui/floating-dock";
 import { GithubIcon, LinkedinIcon } from "./BrandIcons";
+import { SOCIAL } from "@/data/social";
 
 const iconClass = "h-full w-full";
 
@@ -28,8 +29,8 @@ const links: DockItem[] = [
   { title: "Contact", icon: num("07"), href: "/#contact", group: "sections" },
   { title: "Work", icon: <Briefcase className={iconClass} />, href: "/#work", group: "extra" },
   { title: "Resume", icon: <FileText className={iconClass} />, href: "/resume.pdf", group: "extra" },
-  { title: "GitHub", icon: <GithubIcon className={iconClass} />, href: "https://github.com", group: "social" },
-  { title: "LinkedIn", icon: <LinkedinIcon className={iconClass} />, href: "https://linkedin.com", group: "social" },
+  { title: "GitHub", icon: <GithubIcon className={iconClass} />, href: SOCIAL.github, group: "social" },
+  { title: "LinkedIn", icon: <LinkedinIcon className={iconClass} />, href: SOCIAL.linkedin, group: "social" },
 ];
 
 /** Index sections the dock can highlight, in document order. */

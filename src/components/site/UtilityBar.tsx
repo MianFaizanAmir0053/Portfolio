@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { GithubIcon, LinkedinIcon } from "./BrandIcons";
 import { Tag } from "./primitives";
+import { SOCIAL } from "@/data/social";
 
 export function UtilityBar() {
   return (
@@ -25,7 +26,7 @@ export function UtilityBar() {
 
         <div className="flex items-center gap-4">
           <a
-            href="https://github.com"
+            href={SOCIAL.github}
             target="_blank"
             rel="noreferrer"
             aria-label="GitHub profile"
@@ -34,7 +35,7 @@ export function UtilityBar() {
             <GithubIcon className="h-4 w-4" />
           </a>
           <a
-            href="https://linkedin.com"
+            href={SOCIAL.linkedin}
             target="_blank"
             rel="noreferrer"
             aria-label="LinkedIn profile"

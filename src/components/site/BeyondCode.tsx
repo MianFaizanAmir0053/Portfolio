@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 import { CurtainText, FadeIn, Magnetic, Tag } from "./primitives";
 import { InstagramIcon } from "./BrandIcons";
+import { SOCIAL } from "@/data/social";
 
 const ACTIVITIES = [
   {
@@ -57,7 +58,7 @@ export function BeyondCode() {
       <div className="self-center">
         <FadeIn delay={0.15}>
           <a
-            href="https://www.instagram.com/fa.izy__/"
+            href={SOCIAL.instagram}
             target="_blank"
             rel="noreferrer"
             className="group relative block cut-tr grain bg-paper-deep p-8"

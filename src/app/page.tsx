@@ -2,6 +2,7 @@ import { Fragment } from "react";
 import Link from "next/link";
 import { ArrowUpRight, ChevronDown } from "lucide-react";
 import { projects } from "@/data/projects";
+import { SOCIAL } from "@/data/social";
 import { UtilityBar } from "@/components/site/UtilityBar";
 import { Footer } from "@/components/site/Footer";
 import { ContactForm } from "@/components/site/ContactForm";
@@ -422,10 +423,10 @@ function Contact() {
             <div>
               <dt className="label">[SOCIAL]</dt>
               <dd className="flex gap-4 text-sm">
-                <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="hover:text-cobalt">
+                <a href={SOCIAL.linkedin} target="_blank" rel="noreferrer" className="hover:text-cobalt">
                   LinkedIn ↗
                 </a>
-                <a href="https://github.com" target="_blank" rel="noreferrer" className="hover:text-cobalt">
+                <a href={SOCIAL.github} target="_blank" rel="noreferrer" className="hover:text-cobalt">
                   GitHub ↗
                 </a>
               </dd>
