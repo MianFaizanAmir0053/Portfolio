@@ -25,12 +25,14 @@ const LAHORE = { lat: 31.5204, lng: 74.3587, label: "Lahore, PK" };
 const ARCS: Arc[] = [
   { start: LAHORE, end: { lat: 34.0522, lng: -118.2437, label: "California, US" } },
   { start: LAHORE, end: { lat: 25.2048, lng: 55.2708, label: "Middle East" } },
+  { start: LAHORE, end: { lat: 51.5074, lng: -0.1278, label: "United Kingdom" } },
   { start: LAHORE, end: { lat: 50.1109, lng: 8.6821, label: "Europe" } },
 ];
 
 const NODES = [
   { label: "Lahore, PK", note: "* BASE" },
   { label: "California, US", note: "* NAZADV" },
+  { label: "United Kingdom", note: "* WARD WEB SOLUTIONS" },
   { label: "Middle East", note: "* CARDER USERS" },
   { label: "Europe", note: "* CARDER USERS" },
 ];
@@ -47,15 +49,15 @@ export function Reach() {
               lines={[
                 <Fragment key="1">Built in Lahore,</Fragment>,
                 <Fragment key="2">
-                  shipped across <span className="accent-word">three regions</span>
+                  shipped across <span className="accent-word">four markets</span>
                 </Fragment>,
               ]}
             />
           </div>
           <FadeIn delay={0.15}>
             <p className="max-w-xl text-base leading-7 text-ink-muted">
-              Four years of client work spanning the US, Middle East, and Europe — built from
-              Lahore, used by hundreds of people across those markets.
+              Four years of client work spanning the US, UK, Middle East, and Europe — built
+              from Lahore, used by hundreds of people across those markets.
             </p>
           </FadeIn>
         </div>
@@ -64,7 +66,7 @@ export function Reach() {
           <WorldMap src={REACH_MAP_SRC} image={image} dots={ARCS} />
         </div>
 
-        <dl className="mt-10 grid grid-cols-2 rule-t sm:grid-cols-4">
+        <dl className="mt-10 grid grid-cols-2 rule-t sm:grid-cols-3 lg:grid-cols-5">
           {NODES.map((n, i) => (
             <div key={n.label} className={i > 0 ? "py-6 sm:border-l sm:border-ink sm:pl-6" : "py-6"}>
               <dt className="display text-lg md:text-xl">{n.label}</dt>
