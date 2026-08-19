@@ -63,7 +63,7 @@ export default function Index() {
       <main>
         <Hero />
         <Marquee
-          text="WARD WEB SOLUTIONS + WANILE TECHNOLOGIES + NAZADV + REVITALIZE + WISDOMUP + CARDER.APP + GOLEGAL.WANILE.DEV + MUTERPE + ALFA + "
+          text="WARD WEB SOLUTIONS + WANILE TECHNOLOGIES + NAZADV + VOLUMIZE + WISDOMUP + CARDER.APP + GOLEGAL.WANILE.DEV + MUTERPE + ALFA + "
           speed={42}
           className="rule-t rule-b"
         />

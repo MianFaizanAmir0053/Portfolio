@@ -10,7 +10,7 @@ const img = {
   golegal: "/projects/golegal.svg",
   muterpe: "/projects/muterpe.svg",
   alfa: "/projects/alfa.svg",
-  revitalize: "/projects/revitalize.svg",
+  volumize: "/projects/volumize.svg",
   wisdomup: "/projects/wisdomup.svg",
   diagram: "/projects/diagram.svg",
   terminal: "/projects/terminal.svg",
@@ -222,16 +222,17 @@ export const projects: Project[] = [
       "Usage-based billing went in late, and retrofitting metering onto a pipeline that was already running cost more than building it in from the start would have. I'd meter first and price second next time.",
   },
   {
-    slug: "revitalize",
+    slug: "volumize",
     index: "04",
-    name: "Revitalize",
-    accentWord: "Revitalize",
+    name: "Volumize",
+    accentWord: "Volumize",
     tagline: "Telehealth E-Commerce Platform",
     summary:
       "A telehealth commerce platform for hair-loss treatment — medical intake, doctor approval, prescriptions, payments, and subscriptions in one lifecycle across two apps.",
     role: "Full-Stack Engineer",
     timeline: "2026 – Present",
-    status: "Production",
+    status: "In development",
+    inDevelopment: true,
     stack: [
       "Next.js 16",
       "React 19",
@@ -244,8 +245,8 @@ export const projects: Project[] = [
       "Turborepo",
     ],
     indexMetrics: ["94 API routes", "-97% vulnerabilities", "2 apps · 3 packages"],
-    image: img.revitalize,
-    alt: "Revitalize telehealth commerce dashboard",
+    image: img.volumize,
+    alt: "Volumize telehealth commerce dashboard",
     problemHeadline: "Intake and checkout live in different systems",
     problem:
       "A hair-loss treatment journey usually runs across disconnected tools. Medical intake sits apart from the purchase flow, clinical approval and prescription handoff are manual, and order, subscription, and refund operations are scattered — which makes payments hard to reconcile and leaves nobody with a view of the whole journey.",
@@ -261,15 +262,15 @@ export const projects: Project[] = [
     ],
     diagram: {
       src: img.diagram,
-      alt: "Revitalize monorepo: user and admin apps over shared auth, db and ui packages",
+      alt: "Volumize monorepo: user and admin apps over shared auth, db and ui packages",
       caption: "* MONOREPO + TREATMENT LIFECYCLE",
     },
     build: [
       {
         title: "Two apps, one domain layer",
         body: "The customer app and the back office are separate deployments over shared auth, database, and UI packages. Fifteen Mongoose models live in one place, so an order means the same thing on both sides of the platform.",
-        image: img.revitalize,
-        alt: "Revitalize monorepo structure",
+        image: img.volumize,
+        alt: "Volumize monorepo structure",
       },
       {
         title: "Intake to delivery, as one pipeline",
