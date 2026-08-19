@@ -26,6 +26,13 @@ import {
 const EXPERIENCE = [
   {
     role: "Senior Software Engineer",
+    company: "Ward Web Solutions",
+    dates: "Feb 2026 – Present",
+    place: "United Kingdom",
+    body: "Leading a team of developers on end-to-end full-stack and AI-powered SaaS applications, including medical platforms serving real users across the UK and Europe. Mentoring engineers through task allocation, code reviews, and sprint planning, translating business requirements into scalable solutions in React, Next.js, TypeScript, Node.js, and Python. Shipping production features built on RAG pipelines, agentic AI, and microservices, cutting bugs by 25%. Built and optimised 30+ REST and GraphQL APIs with PostgreSQL and AWS deployments, improving response times by 18% at 99% uptime.",
+  },
+  {
+    role: "Senior Software Engineer",
     company: "Wanile Technologies",
     dates: "Jul 2024 – Present",
     place: "Lahore",
@@ -46,7 +53,7 @@ const OTHER = ["todo_supabase", "certificate-2", "breadit", "Promptopia"];
 const ABOUT_FACTS = [
   { k: "FOCUS", v: "RAG architectures · agentic AI · LLM integration" },
   { k: "BASE", v: "Lahore, PK — working across the US, Middle East & Europe" },
-  { k: "CURRENTLY", v: "Senior Software Engineer, Wanile Technologies" },
+  { k: "CURRENTLY", v: "Senior Software Engineer, Ward Web Solutions" },
 ];
 
 export default function Index() {
@@ -56,7 +63,7 @@ export default function Index() {
       <main>
         <Hero />
         <Marquee
-          text="WANILE TECHNOLOGIES + NAZADV + CARDER.APP + GOLEGAL.WANILE.DEV + MUTERPE + ALFA + "
+          text="WARD WEB SOLUTIONS + WANILE TECHNOLOGIES + NAZADV + CARDER.APP + GOLEGAL.WANILE.DEV + MUTERPE + ALFA + "
           speed={42}
           className="rule-t rule-b"
         />
