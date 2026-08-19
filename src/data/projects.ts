@@ -303,7 +303,8 @@ export const projects: Project[] = [
       "A three-service commerce platform — storefront, transactional API, and CMS admin — built around checkout that survives its own edge cases.",
     role: "Full-Stack Product Engineer",
     timeline: "2026 – Present",
-    status: "Production",
+    status: "In development",
+    inDevelopment: true,
     stack: [
       "Next.js",
       "TypeScript",
