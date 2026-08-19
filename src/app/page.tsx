@@ -63,7 +63,7 @@ export default function Index() {
       <main>
         <Hero />
         <Marquee
-          text="WARD WEB SOLUTIONS + WANILE TECHNOLOGIES + NAZADV + CARDER.APP + GOLEGAL.WANILE.DEV + MUTERPE + ALFA + "
+          text="WARD WEB SOLUTIONS + WANILE TECHNOLOGIES + NAZADV + REVITALIZE + CARDER.APP + GOLEGAL.WANILE.DEV + MUTERPE + ALFA + "
           speed={42}
           className="rule-t rule-b"
         />
@@ -282,7 +282,7 @@ function FeaturedWork() {
             ]}
           />
         </div>
-        <p className="display text-3xl text-ink-muted">(04)</p>
+        <p className="display text-3xl text-ink-muted">(05)</p>
       </div>
 
       <div>
@@ -440,7 +440,7 @@ function Contact() {
             </div>
           </dl>
           <p className="mt-10 label">
-            <Scramble value="04" /> PROJECTS · <Scramble value="200" />+ USERS
+            <Scramble value="05" /> PROJECTS · <Scramble value="200" />+ USERS
           </p>
         </div>
 
