@@ -228,7 +228,7 @@ export const projects: Project[] = [
     accentWord: "Volumize",
     tagline: "Telehealth E-Commerce Platform",
     summary:
-      "A telehealth commerce platform for hair-loss treatment — medical intake, doctor approval, prescriptions, payments, and subscriptions in one lifecycle across two apps.",
+      "A telehealth commerce platform for hair-loss treatment — medical intake, doctor approval, prescriptions, payments, despatch, and subscriptions in one lifecycle across two apps.",
     role: "Full-Stack Engineer",
     timeline: "2026 – Present",
     status: "In development",
@@ -241,6 +241,7 @@ export const projects: Project[] = [
       "Mongoose",
       "Socket.IO",
       "Stripe",
+      "Royal Mail API",
       "AWS S3",
       "Turborepo",
     ],
@@ -259,6 +260,7 @@ export const projects: Project[] = [
       "Kept refunds executing against the same Stripe environment as the original transaction, so payment operations reconcile instead of drifting.",
       "Made product pages config-driven, so merchandising changes are composition rather than layout rewrites.",
       "Wired Socket.IO for event-driven status updates, giving doctors and admins live operational visibility.",
+      "Integrated the Royal Mail API so despatch generates labels and syncs tracking back onto the order, taking approved prescriptions to shipped without manual handling.",
     ],
     diagram: {
       src: img.diagram,
@@ -274,7 +276,7 @@ export const projects: Project[] = [
       },
       {
         title: "Intake to delivery, as one pipeline",
-        body: "Signup leads into a medical questionnaire, then checkout, then doctor review. Approval generates a prescription PDF and hands off to the pharmacy; rejection stops the order. Delivery rolls into the subscription renewal cycle, and refunds are a modelled branch rather than an afterthought.",
+        body: "Signup leads into a medical questionnaire, then checkout, then doctor review. Approval generates a prescription PDF and hands off to the pharmacy; rejection stops the order. Despatch runs through the Royal Mail API — labels generated and tracking written straight back onto the order — so nobody is creating labels by hand. Delivery rolls into the subscription renewal cycle, and refunds are a modelled branch rather than an afterthought.",
         image: img.diagram,
         alt: "Treatment and commerce lifecycle flow",
       },
