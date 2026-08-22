@@ -8,7 +8,14 @@ import {
 } from "next/font/google";
 import { LoadCurtain, RouteCurtain } from "@/components/site/Curtains";
 import { ScrollProgress } from "@/components/site/primitives";
+import { ScrollFxRoot } from "@/components/site/scroll-fx";
 import { DockNav } from "@/components/site/DockNav";
+import {
+  GoogleAnalytics,
+  GoogleTagManager,
+  GoogleTagManagerNoScript,
+  GtmRouteTracker,
+} from "@/components/site/Analytics";
 import "./globals.css";
 
 const bebasNeue = Bebas_Neue({
@@ -73,7 +80,17 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${bebasNeue.variable} ${barlow.variable} ${barlowCondensed.variable} ${instrumentSerif.variable} ${geistMono.variable}`}
     >
       <body>
+        {/* Inside <body>, not between <html> and <body>: a bare <script> there
+            is invalid nesting, and the hydration mismatch it caused made React
+            discard the server HTML and rebuild the tree — which orphaned every
+            ScrollTrigger pin on the page. `beforeInteractive` still hoists this
+            into <head>, so load order is unchanged. */}
+        <GoogleTagManager />
+        <GoogleTagManagerNoScript />
+        <GoogleAnalytics />
+        <GtmRouteTracker />
         <ScrollProgress />
+        <ScrollFxRoot />
         <LoadCurtain />
         <RouteCurtain />
         {children}

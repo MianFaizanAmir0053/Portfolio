@@ -6,6 +6,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { scrollSignal } from "@/lib/scroll-signal";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -232,6 +233,15 @@ export function CutFrame({
 }
 
 /* ---------- marquee ---------- */
+/**
+ * Velocity-reactive marquee.
+ *
+ * Idles at a constant crawl, but reads the shared scroll signal every frame:
+ * scrolling drives it faster, scrolling *up* runs it backwards, and the band
+ * shears in the direction of travel then springs back to upright once you
+ * stop. Driven off GSAP's ticker rather than a CSS animation, because a
+ * keyframed animation can only change speed by restarting.
+ */
 export function Marquee({
   text,
   speed = 40,
@@ -239,34 +249,50 @@ export function Marquee({
   dark = false,
 }: {
   text: string;
+  /** Seconds for one loop at rest. Scroll velocity multiplies this. */
   speed?: number;
   className?: string;
   dark?: boolean;
 }) {
-  const [dir, setDir] = useState(1);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const reduce = useMediaQuery("(prefers-reduced-motion: reduce)");
+
   useEffect(() => {
-    let last = window.scrollY;
-    const onScroll = () => {
-      const y = window.scrollY;
-      if (Math.abs(y - last) > 4) {
-        setDir(y > last ? 1 : -1);
-        last = y;
-      }
+    if (reduce) return;
+    const track = trackRef.current;
+    if (!track) return;
+
+    let x = 0;
+    let skew = 0;
+
+    const tick = (_time: number, deltaMs: number) => {
+      // Two identical copies sit side by side, so wrapping at half the track
+      // width loops seamlessly whatever the text length.
+      const half = track.scrollWidth / 2;
+      if (!half) return;
+
+      const velocity = scrollSignal.velocity;
+      const direction = velocity < -0.01 ? -1 : 1;
+      const boost = 1 + Math.min(Math.abs(velocity) * 6, 6);
+      x = gsap.utils.wrap(-half, 0, x - direction * (half / speed) * boost * (deltaMs / 1000));
+
+      const target = gsap.utils.clamp(-9, 9, velocity * 11);
+      skew += (target - skew) * Math.min(1, deltaMs / 110);
+
+      gsap.set(track, { x, skewX: skew });
     };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+
+    gsap.ticker.add(tick);
+    return () => {
+      gsap.ticker.remove(tick);
+      gsap.set(track, { x: 0, skewX: 0 });
+    };
+  }, [reduce, speed]);
 
   const content = `${text} `.repeat(4);
   return (
     <div className={cn("overflow-hidden py-4", dark ? "bg-ink text-paper" : "", className)}>
-      <div
-        className="marquee-track flex w-max whitespace-nowrap will-change-transform"
-        style={{
-          animation: `marquee-left ${speed}s linear infinite`,
-          animationDirection: dir === 1 ? "normal" : "reverse",
-        }}
-      >
+      <div ref={trackRef} className="flex w-max whitespace-nowrap will-change-transform">
         <span className="display pr-8 text-[clamp(1.5rem,3.4vw,3rem)]">{content}</span>
         <span className="display pr-8 text-[clamp(1.5rem,3.4vw,3rem)]" aria-hidden>
           {content}

@@ -20,22 +20,33 @@ const image = buildReachMap().image;
  * Regional endpoints use a representative city coordinate but are labelled by
  * region, since the region is what is actually claimed.
  */
-const LAHORE = { lat: 31.5204, lng: 74.3587, label: "Lahore, PK" };
+/** A place, always named — the map's optional fields are required here. */
+type Place = { lat: number; lng: number; label: string; note: string };
 
-const ARCS: Arc[] = [
-  { start: LAHORE, end: { lat: 34.0522, lng: -118.2437, label: "California, US" } },
-  { start: LAHORE, end: { lat: 25.2048, lng: 55.2708, label: "Middle East" } },
-  { start: LAHORE, end: { lat: 51.5074, lng: -0.1278, label: "United Kingdom" } },
-  { start: LAHORE, end: { lat: 50.1109, lng: 8.6821, label: "Europe" } },
+const LAHORE: Place = { lat: 31.5204, lng: 74.3587, label: "Lahore, PK", note: "* BASE" };
+
+/*
+ * Notes travel with the coordinates rather than living only in the list below,
+ * so hovering a marker on the map can name what that marker is without the two
+ * lists drifting apart.
+ */
+const ARCS: (Arc & { end: Place })[] = [
+  {
+    start: LAHORE,
+    end: { lat: 34.0522, lng: -118.2437, label: "California, US", note: "* NAZADV" },
+  },
+  {
+    start: LAHORE,
+    end: { lat: 25.2048, lng: 55.2708, label: "Middle East", note: "* CARDER USERS" },
+  },
+  {
+    start: LAHORE,
+    end: { lat: 51.5074, lng: -0.1278, label: "United Kingdom", note: "* WARD WEB SOLUTIONS" },
+  },
+  { start: LAHORE, end: { lat: 50.1109, lng: 8.6821, label: "Europe", note: "* CARDER USERS" } },
 ];
 
-const NODES = [
-  { label: "Lahore, PK", note: "* BASE" },
-  { label: "California, US", note: "* NAZADV" },
-  { label: "United Kingdom", note: "* WARD WEB SOLUTIONS" },
-  { label: "Middle East", note: "* CARDER USERS" },
-  { label: "Europe", note: "* CARDER USERS" },
-];
+const NODES = [LAHORE, ...ARCS.map((a) => a.end)];
 
 export function Reach() {
   return (
@@ -64,6 +75,11 @@ export function Reach() {
 
         <div className="mt-12 md:mt-16">
           <WorldMap src={REACH_MAP_SRC} image={image} dots={ARCS} />
+          {/* Nothing about a dot says it can be hovered, and the tooltip is the
+              only place the route behind each one is named. */}
+          <p className="label mt-5 hidden text-center md:block">
+            Hover a marker for what it stands for
+          </p>
         </div>
 
         <dl className="mt-10 grid grid-cols-2 rule-t sm:grid-cols-3 lg:grid-cols-5">

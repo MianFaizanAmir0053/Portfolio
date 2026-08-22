@@ -3,6 +3,7 @@
 import { Fragment, useState } from "react";
 import { Plus } from "lucide-react";
 import { CurtainText, Tag } from "./primitives";
+import { MagneticSurface } from "./scroll-fx";
 
 const SKILLS = [
   { n: "01", label: "Languages", items: ["JavaScript", "TypeScript", "Python"] },
@@ -61,22 +62,26 @@ export function Skills() {
               const isOpen = open === s.n;
               return (
                 <li key={s.n} className="rule-t last:rule-b">
-                  <button
-                    type="button"
-                    onClick={() => setOpen(isOpen ? null : s.n)}
-                    aria-expanded={isOpen}
-                    className="flex w-full items-center gap-4 py-5 text-left"
-                  >
-                    <span className="label">[{s.n}]</span>
-                    <span className="display text-xl md:text-2xl">{s.label}</span>
-                    <span className="label ml-auto">({s.items.length})</span>
-                    <span
-                      className={`text-cobalt transition-transform duration-300 ${isOpen ? "rotate-45" : ""}`}
-                      aria-hidden
+                  {/* Rows are full-width, so cursor-following would read as
+                      drift — `pull={false}` keeps only the hover/focus lift. */}
+                  <MagneticSurface pull={false} lift={4}>
+                    <button
+                      type="button"
+                      onClick={() => setOpen(isOpen ? null : s.n)}
+                      aria-expanded={isOpen}
+                      className="flex w-full items-center gap-4 py-5 text-left"
                     >
-                      <Plus className="h-4 w-4" />
-                    </span>
-                  </button>
+                      <span className="label">[{s.n}]</span>
+                      <span className="display text-xl md:text-2xl">{s.label}</span>
+                      <span className="label ml-auto">({s.items.length})</span>
+                      <span
+                        className={`text-cobalt transition-transform duration-300 ${isOpen ? "rotate-45" : ""}`}
+                        aria-hidden
+                      >
+                        <Plus className="h-4 w-4" />
+                      </span>
+                    </button>
+                  </MagneticSurface>
                   {isOpen && (
                     <ul className="flex flex-wrap gap-x-6 gap-y-2 pb-6">
                       {s.items.map((i) => (
@@ -92,7 +97,7 @@ export function Skills() {
           </ul>
         </div>
 
-        <div className="self-center">
+        <div className="md:sticky md:top-24 md:self-start">
           <div className="cut-br grain relative bg-paper p-8">
             <span
               aria-hidden

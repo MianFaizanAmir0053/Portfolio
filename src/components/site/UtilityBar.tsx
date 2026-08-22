@@ -5,8 +5,8 @@ import { SOCIAL } from "@/data/social";
 
 export function UtilityBar() {
   return (
-    <header className="sticky top-0 z-50 bg-paper/95 backdrop-blur-[2px] rule-b">
-      <div className="wrap flex h-11 items-center justify-between gap-4">
+    <header data-utility-bar className="sticky top-0 z-50 bg-paper/95 backdrop-blur-[2px] rule-b">
+      <div className="wrap flex h-[var(--bar-h)] items-center justify-between gap-4">
         <div className="flex items-center gap-4 overflow-hidden">
           <a
             href="mailto:faizanamir0053@gmail.com"
