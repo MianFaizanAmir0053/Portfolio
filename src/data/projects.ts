@@ -107,7 +107,7 @@ export const projects: Project[] = [
   },
   {
     slug: "golegal",
-    index: "02",
+    index: "03",
     name: "Golegal",
     accentWord: "Golegal",
     tagline: "AI SaaS for Legal Assistance",
@@ -170,7 +170,7 @@ export const projects: Project[] = [
   },
   {
     slug: "muterpe",
-    index: "03",
+    index: "06",
     name: "Muterpe",
     accentWord: "Muterpe",
     tagline: "AI Image Generation SaaS",
@@ -223,7 +223,7 @@ export const projects: Project[] = [
   },
   {
     slug: "volumize",
-    index: "04",
+    index: "02",
     name: "Volumize",
     accentWord: "Volumize",
     tagline: "Telehealth E-Commerce Platform",
@@ -371,7 +371,7 @@ export const projects: Project[] = [
   },
   {
     slug: "alfa",
-    index: "06",
+    index: "04",
     name: "Alfa",
     accentWord: "Alfa",
     tagline: "Multi-Role Fintech Frontend",
@@ -442,6 +442,181 @@ export const projects: Project[] = [
       "The architecture is sound but under-tested for what it is. Money movement and auth are exactly the paths that deserve integration and end-to-end coverage, and right now correctness rests on the guard logic being right rather than on anything proving it. That is the next thing I would build, before analytics on onboarding drop-off or feature flags for staged rollout.",
   }
 ];
+
+const bySlug = Object.fromEntries(projects.map((p) => [p.slug, p])) as Record<string, Project>;
+
+/**
+ * The four the index leads with, in the order it leads with them.
+ *
+ * Declaration order in `projects` above is *routing* order — it feeds
+ * `generateStaticParams` and case-study prev/next, so it stays put. This is
+ * presentation order, and the two are allowed to differ: WisdomUp and Muterpe
+ * still have full case studies, they just no longer earn a pinned card on the
+ * index. They surface through `otherWork` instead, which links straight at
+ * those same pages.
+ */
+export const featuredProjects: Project[] = ["carder", "volumize", "golegal", "alfa"].map(
+  (slug) => bySlug[slug],
+);
+
+export type OtherWork = {
+  name: string;
+  tagline: string;
+  /** One line. This list is an index, not a second case-study section. */
+  note: string;
+  stack: string[];
+  status: string;
+  href: string;
+  /** Case studies link inward; everything else opens in a new tab. */
+  external?: boolean;
+  hrefLabel: string;
+};
+
+/**
+ * Shipped work that isn't the argument the index is making. Two of these have
+ * full case studies and point at them; the third is a live site and points at
+ * itself.
+ */
+export const otherWork: OtherWork[] = [
+  {
+    name: "WisdomUp",
+    tagline: "Multi-Service E-Commerce Platform",
+    note: "Storefront, transactional API, and CMS admin as three deployable services, with settlement guarded down two paths so a dropped browser never loses an order.",
+    stack: ["Next.js", "Express 5", "MongoDB", "Payload CMS", "Stripe"],
+    status: "In development",
+    href: "/work/wisdomup",
+    hrefLabel: "Read the case study",
+  },
+  {
+    name: "LightspeedGo",
+    tagline: "Logistics & Delivery Platform",
+    note: "Marketing and booking surface for a courier operation — live, and the front door for the dispatch flow behind it.",
+    stack: ["Next.js", "TypeScript", "Tailwind"],
+    status: "Live",
+    href: "https://lightspeedgo.com",
+    external: true,
+    hrefLabel: "lightspeedgo.com",
+  },
+  {
+    name: "Muterpe",
+    tagline: "AI Image Generation SaaS",
+    note: "Per-user model training and generation on Fal.ai, monetized usage-based, with an async queue so a baking model never blocks the UI.",
+    stack: ["Next.js", "PostgreSQL", "Fal.ai", "OpenAI", "AWS S3"],
+    status: "Live, monetized",
+    href: "/work/muterpe",
+    hrefLabel: "Read the case study",
+  },
+];
+
+/** One node of the agent's state machine, as the index replays it. */
+export type TraceStep = {
+  id: string;
+  label: string;
+  /** What the node actually emitted — shown as the span's result line. */
+  detail: string;
+  ms: number;
+  tokens?: number;
+  /** The human-approval interrupt. The replay stops here until someone taps. */
+  gate?: boolean;
+};
+
+/**
+ * mailagent — in build, not shipped, and listed that way on purpose.
+ *
+ * The interesting claim here isn't "an LLM reads your email", it's the
+ * engineering around it: a scoring harness that existed before the extractor,
+ * a retrieval comparison whose losing arm shipped disabled, and cost accounting
+ * that records an unpriced call as NULL rather than lying with a zero. The
+ * index replays the graph instead of describing it.
+ */
+export const comingSoon = {
+  name: "mailagent",
+  tagline: "Human-in-the-Loop Scheduling Agent",
+  status: "In build",
+  summary:
+    "Reads Gmail, spots meeting requests, extracts the details, checks the calendar for conflicts, and sends a Telegram card with Confirm / Edit / Cancel. Nothing touches the calendar without a human tap.",
+  stack: [
+    "Python 3.12",
+    "FastAPI",
+    "LangGraph",
+    "Gemini",
+    "Postgres + pgvector",
+    "Gmail & Calendar APIs",
+    "Telegram Bot API",
+    "Next.js",
+  ],
+  trace: [
+    {
+      id: "classify",
+      label: "classify",
+      detail: 'intent="schedule_meeting" · confidence 0.94',
+      ms: 412,
+      tokens: 318,
+    },
+    {
+      id: "extract",
+      label: "extract",
+      detail: 'title="Design sync" · Thu 14:00–14:45 GMT · 3 attendees',
+      ms: 1180,
+      tokens: 902,
+    },
+    {
+      id: "retrieve",
+      label: "retrieve",
+      detail: "pgvector · 5 prior threads · hit@5 1.00 (fusion off)",
+      ms: 96,
+    },
+    {
+      id: "conflict_check",
+      label: "conflict_check",
+      detail: "1 overlap — “1:1 · Ali” Thu 14:30. Proposing 15:00.",
+      ms: 240,
+    },
+    {
+      id: "human_approval",
+      label: "human_approval",
+      detail: "interrupt — awaiting Telegram callback",
+      ms: 0,
+      gate: true,
+    },
+    {
+      id: "act",
+      label: "act",
+      detail: "calendar.events.insert · 200 · reply drafted",
+      ms: 588,
+    },
+  ] satisfies TraceStep[],
+  /** Numbers that came out of the harness, not out of a pitch. */
+  evidence: [
+    { value: "92.9%", caption: "Exact-match extraction", note: "* 14 hand-labelled fixtures" },
+    { value: "100%", caption: "Retrieval hit@5", note: "* vector-only, 29 queries" },
+    { value: "NULL", caption: "Unpriced call cost", note: "* never recorded as 0" },
+    { value: "OFF", caption: "RRF fusion, shipped", note: "* built, measured, lost" },
+  ],
+  /**
+   * The most distinctive part of the write-up. Four real production bugs, kept
+   * in the reader's view rather than buried in a repo — a portfolio that only
+   * lists wins is a portfolio nobody believes.
+   */
+  broke: [
+    {
+      title: "Auth bypass",
+      body: "An empty Telegram secret matched an empty header, so an unsigned request authenticated cleanly. Fixed by refusing to start when the secret is unset.",
+    },
+    {
+      title: "Silent batch collapse",
+      body: "The Gemini SDK quietly folded an embedding batch, returning fewer vectors than inputs with no error. Caught by a length assertion that should have been there first.",
+    },
+    {
+      title: "tsquery AND vs OR",
+      body: "A Postgres full-text query built with the wrong operator flipped a benchmark result. The BM25 arm looked worse than it was for two days.",
+    },
+    {
+      title: "A confident wrong answer",
+      body: "An A/B run picked a winner on one pass. Repeating it exposed fixture-level variance wide enough to swallow the difference — the result was noise wearing a decision.",
+    },
+  ],
+} as const;
 
 export const getProject = (slug?: string) => projects.find((p) => p.slug === slug);
 

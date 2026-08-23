@@ -1,7 +1,7 @@
 import { Fragment } from "react";
 import Link from "next/link";
-import { ArrowUpRight, ChevronDown } from "lucide-react";
-import { projects, type Project } from "@/data/projects";
+import { ChevronDown } from "lucide-react";
+import { featuredProjects, type Project } from "@/data/projects";
 import { SOCIAL } from "@/data/social";
 import { UtilityBar } from "@/components/site/UtilityBar";
 import { Footer } from "@/components/site/Footer";
@@ -9,6 +9,8 @@ import { ContactForm } from "@/components/site/ContactForm";
 import { Skills } from "@/components/site/Skills";
 import { Reach } from "@/components/site/Reach";
 import { BeyondCode } from "@/components/site/BeyondCode";
+import { ComingSoon } from "@/components/site/ComingSoon";
+import { OtherWork } from "@/components/site/OtherWork";
 import { PixelatedCanvas } from "@/components/ui/pixelated-canvas";
 import {
   CurtainText,
@@ -66,8 +68,6 @@ const EXPERIENCE = [
 
 /** Stack tags a stacked card shows before collapsing the rest into a count. */
 const STACK_TAGS_ON_CARD = 6;
-
-const OTHER = ["todo_supabase", "certificate-2", "breadit", "Promptopia"];
 
 /*
  * Margin notes on the bio, not a summary of it. Each one is anchored to the
@@ -128,7 +128,8 @@ export default function Index() {
         <Experience />
         <Reach />
         <FeaturedWork />
-        <OtherProjects />
+        <ComingSoon />
+        <OtherWork />
         <Education />
         <BeyondCode />
         <Contact />
@@ -394,7 +395,9 @@ function FeaturedWork() {
             accent={["case", "studies"]}
           />
         </div>
-        <p className="display text-3xl text-ink-muted">(06)</p>
+        <p className="display text-3xl text-ink-muted">
+          ({String(featuredProjects.length).padStart(2, "0")})
+        </p>
       </div>
 
       {/*
@@ -405,7 +408,7 @@ function FeaturedWork() {
        * together while only they are clickable.
        */}
       <CardStack
-        items={projects.map((p, i) => ({
+        items={featuredProjects.map((p, i) => ({
           key: p.slug,
           content: (
             <article id={`work-${p.slug}`} className="group scroll-mt-24">
@@ -541,37 +544,6 @@ function ProjectAside({ project: p, href }: { project: Project; href?: string })
 }
 
 
-
-/* ---------------- OTHER — a footnote, not a section ---------------- */
-/*
- * Side projects, listed at the weight they deserve. This used to be a pinned
- * horizontal rail with four full-height cards — the same treatment the case
- * studies get, spent on repos that are not the argument the page is making. A
- * reader who wants them can find them; everyone else should scroll past in one
- * screen, the way they do the education line below.
- */
-function OtherProjects() {
-  return (
-    <section id="other" className="wrap rule-t py-10">
-      <Tag className="mb-3 block">[INDEX] OTHER WORK</Tag>
-      <ul className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
-        {OTHER.map((name) => (
-          <li key={name}>
-            <a
-              href={`https://github.com/search?q=${encodeURIComponent(name)}`}
-              target="_blank"
-              rel="noreferrer"
-              className="group inline-flex items-center gap-1 text-ink transition-colors hover:text-cobalt"
-            >
-              {name}
-              <ArrowUpRight className="h-3.5 w-3.5 text-cobalt" aria-hidden />
-            </a>
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
 
 function Education() {
   return (

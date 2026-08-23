@@ -345,6 +345,19 @@
   animation: drift 7s ease-in-out infinite;
 }
 
+/* Entrance for content that swaps in place — the other-work detail pane
+   remounts per selection, so the fade re-runs on every move down the list. */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -352,7 +365,8 @@
 
   .animate-bob,
   .animate-drift,
-  .animate-flicker {
+  .animate-flicker,
+  [class*="animate-[fade-up"] {
     animation: none !important;
   }
 }
