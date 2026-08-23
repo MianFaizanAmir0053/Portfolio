@@ -81,7 +81,10 @@ const ABOUT_FACTS = [
     k: "FOCUS",
     v: "RAG architectures · agentic AI · LLM integration",
     anchor: "RAG",
-    pos: "right-[3%] top-[27%]",
+    // Fixed, not %: the nav rail sits at a fixed distance from the right edge
+    // too, so a percentage offset closes on it as the viewport narrows. This
+    // keeps a constant ~26px gap from the rail's left edge at every width.
+    pos: "right-[5.5rem] top-[27%]",
   },
   {
     k: "BASE",

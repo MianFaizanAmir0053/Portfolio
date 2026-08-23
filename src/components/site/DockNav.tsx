@@ -2,39 +2,42 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Briefcase, FileText } from "lucide-react";
+import { Briefcase } from "lucide-react";
 import { FloatingDock, type DockItem } from "@/components/ui/floating-dock";
-import { GithubIcon, LinkedinIcon } from "./BrandIcons";
-import { SOCIAL } from "@/data/social";
 
 const iconClass = "h-full w-full";
 
 /** Section numerals, drawn in the display face to match the site's [01] labels. */
 const num = (n: string) => <span className="display leading-none">{n}</span>;
 
+/** Section anchors the dock can highlight, in document order. */
+const SECTION_IDS = ["about", "skills", "experience", "reach", "work", "beyond", "contact"];
+
 /*
- * Order and numbers mirror the index page's own section labels exactly:
- * [01] hero · [02] about · [03] stack · [04] experience · [05] reach ·
- * [06] beyond code · [07] contact.
- * Featured work carries no number on the page, so it sits in the next group
- * with an icon rather than being given a number the page never uses.
+ * Pure wayfinding now — Resume, GitHub, and LinkedIn dropped. All three are
+ * already one click away (utility bar, hero, contact section), so carrying
+ * them here too was the dock repeating links the page already offers, which
+ * is most of why it read as heavy.
+ *
+ * Order matches the page's own reading order — [01] hero through [07]
+ * contact, Work slotted in where it actually sits in the DOM (between Reach
+ * and Beyond Code) rather than tacked on at the end. Featured work carries no
+ * numeral on the page, so it gets the briefcase glyph instead of a number the
+ * page never uses.
  */
 const links: DockItem[] = [
-  { title: "Index", icon: num("01"), href: "/", group: "sections" },
-  { title: "About", icon: num("02"), href: "/#about", group: "sections" },
-  { title: "Stack", icon: num("03"), href: "/#skills", group: "sections" },
-  { title: "Experience", icon: num("04"), href: "/#experience", group: "sections" },
-  { title: "Reach", icon: num("05"), href: "/#reach", group: "sections" },
-  { title: "Beyond Code", icon: num("06"), href: "/#beyond", group: "sections" },
-  { title: "Contact", icon: num("07"), href: "/#contact", group: "sections" },
-  { title: "Work", icon: <Briefcase className={iconClass} />, href: "/#work", group: "extra" },
-  { title: "Resume", icon: <FileText className={iconClass} />, href: "/resume.pdf", group: "extra" },
-  { title: "GitHub", icon: <GithubIcon className={iconClass} />, href: SOCIAL.github, group: "social" },
-  { title: "LinkedIn", icon: <LinkedinIcon className={iconClass} />, href: SOCIAL.linkedin, group: "social" },
-];
-
-/** Index sections the dock can highlight, in document order. */
-const SECTION_IDS = ["about", "skills", "experience", "reach", "work", "beyond", "contact"];
+  { title: "Index", icon: num("01") },
+  { title: "About", icon: num("02") },
+  { title: "Stack", icon: num("03") },
+  { title: "Experience", icon: num("04") },
+  { title: "Reach", icon: num("05") },
+  { title: "Work", icon: <Briefcase className={iconClass} strokeWidth={1.75} /> },
+  { title: "Beyond Code", icon: num("06") },
+  { title: "Contact", icon: num("07") },
+].map((item, i) => ({
+  ...item,
+  href: i === 0 ? "/" : `/#${SECTION_IDS[i - 1]}`,
+}));
 
 /** Below this the dock stays hidden — the hero should be uncluttered. */
 const REVEAL_AFTER = 80;
@@ -108,7 +111,7 @@ export function DockNav() {
         items={links}
         activeHref={activeHref}
         visible={visible}
-        desktopClassName="fixed bottom-6 left-1/2 z-60 -translate-x-1/2"
+        desktopClassName="fixed right-5 top-1/2 z-60 -translate-y-1/2"
         mobileClassName="fixed bottom-6 right-5 z-60"
       />
     </nav>

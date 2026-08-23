@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { Turnstile } from "./Turnstile";
 
 type Errors = { name?: string; email?: string; message?: string };
 type Status = "idle" | "sending" | "success" | "error";
@@ -14,14 +15,20 @@ const validate = (values: { name: string; email: string; message: string }): Err
   return e;
 };
 
-// Statically referenced so Next inlines it at build time.
-const ENDPOINT = process.env.NEXT_PUBLIC_FORMSPREE_ENDPOINT;
+// Read directly (not just inside <Turnstile>) so a missing key disables the
+// gate instead of leaving the submit button permanently stuck on a captcha
+// that will never render.
+const CAPTCHA_CONFIGURED = Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
 
 export function ContactForm() {
   const [values, setValues] = useState({ name: "", email: "", message: "" });
   const [errors, setErrors] = useState<Errors>({});
   const [status, setStatus] = useState<Status>("idle");
   const [errorMsg, setErrorMsg] = useState("");
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  // Turnstile tokens are single-use — a failed submit needs a fresh widget,
+  // not just a cleared token, so a retry has something to send.
+  const [captchaKey, setCaptchaKey] = useState(0);
 
   const set = (k: keyof typeof values) => (v: string) => setValues((s) => ({ ...s, [k]: v }));
   const blur = (k: keyof typeof values) => () =>
@@ -33,25 +40,30 @@ export function ContactForm() {
     setErrors(next);
     if (Object.keys(next).length) return;
 
-    if (!ENDPOINT) {
+    if (CAPTCHA_CONFIGURED && !captchaToken) {
       setStatus("error");
-      setErrorMsg("Form endpoint not configured. Set NEXT_PUBLIC_FORMSPREE_ENDPOINT.");
+      setErrorMsg("Please complete the captcha.");
       return;
     }
 
     setStatus("sending");
     try {
-      const res = await fetch(ENDPOINT, {
+      const res = await fetch("/api/contact", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify(values),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...values, turnstileToken: captchaToken }),
       });
-      if (!res.ok) throw new Error(`Request failed (${res.status})`);
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
       setStatus("success");
       setValues({ name: "", email: "", message: "" });
+      setCaptchaToken(null);
+      setCaptchaKey((k) => k + 1);
     } catch (err) {
       setStatus("error");
       setErrorMsg(err instanceof Error ? err.message : "Something went wrong.");
+      setCaptchaToken(null);
+      setCaptchaKey((k) => k + 1);
     }
   }
 
@@ -128,10 +140,12 @@ export function ContactForm() {
         )}
       </div>
 
+      <Turnstile key={captchaKey} onVerify={setCaptchaToken} onExpire={() => setCaptchaToken(null)} />
+
       <div className="flex flex-wrap items-center gap-4">
         <button
           type="submit"
-          disabled={status === "sending"}
+          disabled={status === "sending" || (CAPTCHA_CONFIGURED && !captchaToken)}
           className="bg-cobalt px-6 py-3 text-sm font-medium text-paper transition-colors hover:bg-cobalt-deep disabled:opacity-60"
         >
           {status === "sending" ? "Sending…" : "Send message"}

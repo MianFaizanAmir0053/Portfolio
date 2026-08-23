@@ -17,26 +17,15 @@
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { Menu } from "lucide-react";
-import {
-  AnimatePresence,
-  type MotionValue,
-  motion,
-  useMotionValue,
-  useSpring,
-  useTransform,
-} from "framer-motion";
-import { Fragment, useRef, useState, type ReactNode } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { useState, type MouseEventHandler, type ReactNode } from "react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 
 export type DockItem = {
   title: string;
   icon: ReactNode;
   href: string;
-  /** Items with differing groups get a hairline divider between them. */
-  group?: string;
 };
-
-const REST_SIZE = 44;
 
 const isExternal = (href: string) => /^(https?:)?\/\/|^mailto:|^tel:/.test(href);
 
@@ -55,7 +44,10 @@ function DockLink({
   href: string;
   className?: string;
   children: ReactNode;
-} & React.AriaAttributes) {
+} & React.AriaAttributes & {
+    onMouseEnter?: MouseEventHandler;
+    onMouseLeave?: MouseEventHandler;
+  }) {
   if (isExternal(href) || isFile(href)) {
     const external = isExternal(href);
     return (
@@ -233,6 +225,17 @@ const FloatingDockMobile = ({
   );
 };
 
+/*
+ * Desktop rail — a slim vertical column in the page's own margin, not a wide
+ * bar claiming the bottom of the screen. No magnify-on-approach: at eleven
+ * items that move was most of why the old dock read as heavy. What is left is
+ * eight small, fixed-size marks and a hairline tying them together — the same
+ * progress-rail language `PinnedLitText` and `ScrollRail` already use
+ * elsewhere on the page, so the nav looks like part of the site rather than a
+ * widget bolted onto it.
+ */
+const RAIL_TILE = 30;
+
 const FloatingDockDesktop = ({
   items,
   className,
@@ -244,69 +247,42 @@ const FloatingDockDesktop = ({
   activeHref?: string | null;
   visible: boolean;
 }) => {
-  const mouseX = useMotionValue(Infinity);
   const reduce = useMediaQuery("(prefers-reduced-motion: reduce)");
+  const activeIndex = items.findIndex((item) => item.href === activeHref);
+
   return (
     <motion.div
-      onMouseMove={(e) => mouseX.set(e.pageX)}
-      onMouseLeave={() => mouseX.set(Infinity)}
-      animate={{
-        clipPath: visible ? CLIP_SHOWN : CLIP_HIDDEN,
-        opacity: visible ? 1 : 0,
-      }}
-      transition={reduce ? { duration: 0 } : REVEAL}
-      className={cn("hidden md:block", className, !visible && "pointer-events-none")}
+      initial={false}
+      animate={{ opacity: visible ? 1 : 0, x: visible ? 0 : 12 }}
+      transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 260, damping: 30 }}
+      className={cn("hidden md:flex flex-col items-center", className, !visible && "pointer-events-none")}
     >
-      <GlassPane />
-      <div className="relative flex h-[72px] items-end gap-3 px-4 pb-3.5">
+      {/* The hairline sits behind the tiles, full height, so it reads as one
+          spine the marks hang off rather than a separate progress bar. */}
+      <div className="relative flex flex-col items-center gap-2 px-1.5 py-2">
+        <span
+          aria-hidden
+          className="absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2 bg-[var(--hairline)]"
+        />
         {items.map((item, i) => (
-          <Fragment key={item.title}>
-            {i > 0 && items[i - 1].group !== item.group && (
-              <span aria-hidden className="mb-3 h-7 w-px shrink-0 self-end bg-[var(--hairline)]" />
-            )}
-            <IconContainer mouseX={mouseX} active={activeHref === item.href} {...item} />
-          </Fragment>
+          <RailTile key={item.title} {...item} active={i === activeIndex} />
         ))}
       </div>
     </motion.div>
   );
 };
 
-function IconContainer({
-  mouseX,
+function RailTile({
   title,
   icon,
   href,
   active,
 }: {
-  mouseX: MotionValue;
   title: string;
   icon: ReactNode;
   href: string;
   active: boolean;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const reduce = useMediaQuery("(prefers-reduced-motion: reduce)");
-
-  const distance = useTransform(mouseX, (val) => {
-    const bounds = ref.current?.getBoundingClientRect() ?? { x: 0, width: 0 };
-    return val - bounds.x - bounds.width / 2;
-  });
-
-  const widthTransform = useTransform(distance, [-150, 0, 150], [REST_SIZE, 82, REST_SIZE]);
-  const heightTransform = useTransform(distance, [-150, 0, 150], [REST_SIZE, 82, REST_SIZE]);
-  const iconWidthTransform = useTransform(distance, [-150, 0, 150], [20, 38, 20]);
-  const iconHeightTransform = useTransform(distance, [-150, 0, 150], [20, 38, 20]);
-  // Numeral glyphs scale by font-size, not box size, so they magnify too.
-  const fontTransform = useTransform(distance, [-150, 0, 150], [15, 30, 15]);
-
-  const spring = { mass: 0.1, stiffness: 150, damping: 12 };
-  const width = useSpring(widthTransform, spring);
-  const height = useSpring(heightTransform, spring);
-  const widthIcon = useSpring(iconWidthTransform, spring);
-  const heightIcon = useSpring(iconHeightTransform, spring);
-  const fontSize = useSpring(fontTransform, spring);
-
   const [hovered, setHovered] = useState(false);
 
   return (
@@ -314,53 +290,35 @@ function IconContainer({
       href={href}
       aria-label={title}
       aria-current={active ? "page" : undefined}
-      className="relative shrink-0"
+      className="group relative shrink-0"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
-      <motion.div
-        ref={ref}
-        style={reduce ? { width: REST_SIZE, height: REST_SIZE } : { width, height }}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
+      <span
+        style={{ width: RAIL_TILE, height: RAIL_TILE }}
         className={cn(
-          "relative flex items-center justify-center border transition-colors duration-200",
-          "before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-ink/30",
+          "relative flex items-center justify-center border bg-paper text-[11px] transition-colors duration-200",
           active
-            ? "border-cobalt/55 bg-cobalt/15 text-cobalt"
-            : "border-[var(--hairline)] bg-ink/8 text-ink hover:border-cobalt/45 hover:bg-ink/15 hover:text-cobalt",
+            ? "border-cobalt/60 text-cobalt"
+            : "border-[var(--hairline)] text-ink-muted group-hover:border-cobalt/45 group-hover:text-cobalt",
         )}
       >
-        <AnimatePresence>
-          {hovered && (
-            <motion.span
-              initial={{ opacity: 0, y: 6, x: "-50%" }}
-              animate={{ opacity: 1, y: 0, x: "-50%" }}
-              exit={{ opacity: 0, y: 2, x: "-50%" }}
-              transition={{ duration: 0.18 }}
-              className="label absolute -top-10 left-1/2 w-fit border border-[var(--hairline)] bg-paper-deep/95 px-2 py-1 whitespace-pre text-cobalt backdrop-blur-md"
-            >
-              [{title}]
-            </motion.span>
-          )}
-        </AnimatePresence>
+        {icon}
+      </span>
 
-        <motion.span
-          style={
-            reduce
-              ? { width: 20, height: 20, fontSize: 15 }
-              : { width: widthIcon, height: heightIcon, fontSize }
-          }
-          className="relative flex items-center justify-center"
-        >
-          {icon}
-        </motion.span>
-      </motion.div>
-
-      {active && (
-        <span
-          aria-hidden
-          className="absolute -bottom-2 left-1/2 h-1 w-1 -translate-x-1/2 bg-cobalt"
-        />
-      )}
+      <AnimatePresence>
+        {hovered && (
+          <motion.span
+            initial={{ opacity: 0, x: 4 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 2 }}
+            transition={{ duration: 0.15 }}
+            className="label pointer-events-none absolute right-full top-1/2 mr-3 w-max -translate-y-1/2 border border-[var(--hairline)] bg-paper-deep/95 px-2 py-1 text-cobalt backdrop-blur-md"
+          >
+            [{title}]
+          </motion.span>
+        )}
+      </AnimatePresence>
     </DockLink>
   );
 }
