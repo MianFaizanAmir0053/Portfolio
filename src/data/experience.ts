@@ -33,7 +33,13 @@ export const EXPERIENCE: Role[] = [
     role: "Senior Software Engineer",
     company: "Wanile Technologies",
     start: "2024-07",
-    dates: "Jul 2024 – Present",
+    // Two entries in this list end in "Present", and left unexplained that
+    // reads as a stale date rather than as two engagements running at once.
+    // Ward Web Solutions is the primary role — it is what `worksFor` and the
+    // homepage's CURRENTLY card name — so the qualifier goes on this one, and
+    // it rides in `dates` rather than a new field so it reaches every surface
+    // already printing them: the horizontal rail, the About list, llms.txt.
+    dates: "Jul 2024 – Present · concurrent",
     place: "Lahore",
     body: "Leading full-stack development across 8+ client projects in React, Next.js, Node.js, and Python, turning business requirements into shipped products 20% faster. Built 30+ REST APIs and data pipelines, cutting response times by 18%. Shipped 10+ production apps and closed 50+ issues, cutting incidents by 25%.",
   },
@@ -60,8 +66,8 @@ export const EDUCATION = {
  * one at a time; the About page sets them as a paragraph. Same words either way.
  */
 export const BIO = [
-  "I'm a Senior Software Engineer with four years of experience building full-stack and AI-driven applications using React, Next.js, Python, and Node.js.",
+  "I’m a Senior Software Engineer with four years of experience building full-stack and AI-driven applications using React, Next.js, Python, and Node.js.",
   "My focus is RAG architectures, agentic AI, and LLM integrations — turning business requirements into production systems people actually use.",
-  "I've led development across 8+ projects, built 30+ REST and GraphQL APIs, and shipped AI features used by hundreds of real users.",
+  "I’ve led development across 8+ projects, built 30+ REST and GraphQL APIs, and shipped AI features used by hundreds of real users.",
   "I care about clean architecture, fast iteration, and solving the actual problem, not just the ticket.",
 ];

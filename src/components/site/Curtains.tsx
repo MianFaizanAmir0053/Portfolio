@@ -22,7 +22,17 @@ export function LoadCurtain() {
   return <div aria-hidden className="load-curtain" />;
 }
 
-/** Route curtain: cobalt panel wipes across on navigation. */
+/**
+ * Route curtain: the lime panel wipes off to reveal the new page.
+ *
+ * It used to wipe *on* first and off after — but Next has already rendered the
+ * destination by the time this mounts, so the visitor saw the new page, then
+ * had it covered by a full-screen acid-lime panel for half a second, then got
+ * it back. The transition was concealing something it had already handed over,
+ * at roughly 900ms a navigation. Now the panel mounts already covering the
+ * screen and leaves immediately: same wipe, half the time, and it reads as a
+ * reveal instead of an interruption.
+ */
 export function RouteCurtain() {
   const reduce = useReducedMotion();
   const pathname = usePathname();
@@ -35,7 +45,9 @@ export function RouteCurtain() {
       return;
     }
     setKey(pathname + Date.now());
-    const t = window.setTimeout(() => setKey(null), 900);
+    // Just long enough for the panel to paint one frame before AnimatePresence
+    // starts its exit.
+    const t = window.setTimeout(() => setKey(null), 120);
     return () => window.clearTimeout(t);
   }, [pathname]);
 
@@ -48,7 +60,7 @@ export function RouteCurtain() {
           key={key}
           aria-hidden
           className="pointer-events-none fixed inset-0 z-[80] bg-cobalt"
-          initial={{ x: "-100%" }}
+          initial={{ x: "0%" }}
           animate={{ x: "0%" }}
           exit={{ x: "100%" }}
           transition={{ duration: 0.45, ease: EASE }}

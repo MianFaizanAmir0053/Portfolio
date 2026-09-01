@@ -118,7 +118,14 @@ export const PixelatedCanvas: React.FC<PixelatedCanvasProps> = ({
   const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
 
   const reduceMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
-  const animate = interactive && !reduceMotion;
+  /*
+   * The distortion follows a hovering pointer. A touch screen has none, so on a
+   * phone every frame painted the identical picture `drawStatic` already
+   * painted — thousands of fill operations a second, above the fold, on the
+   * hardware least able to absorb them, for no visible difference at all.
+   */
+  const finePointer = useMediaQuery("(hover: hover) and (pointer: fine)");
+  const animate = interactive && !reduceMotion && finePointer;
 
   // Backing resolution. Display size is handled in CSS when `responsive`.
   const displayWidth = width;
@@ -354,13 +361,27 @@ export const PixelatedCanvas: React.FC<PixelatedCanvasProps> = ({
           ? 1
           : 0;
 
+      const act = Math.max(0, Math.min(1, activity));
+
+      /*
+       * Nothing is moving: the pointer has left and the activity fade has run
+       * out, so every dot would be drawn at its resting position — the picture
+       * `drawStatic` paints. Park the loop instead of redrawing that same
+       * frame forever; the pointer handlers below start it again on the next
+       * approach. The IntersectionObserver stays as the outer guard.
+       */
+      if (!pointerInside && act < 0.002) {
+        drawStatic();
+        raf = null;
+        return;
+      }
+
       clear(ctx);
 
       const mx = animMouse.x;
       const my = animMouse.y;
       const sigma = Math.max(1, distortionRadius * 0.5);
       const t = now * 0.001 * jitterSpeed;
-      const act = Math.max(0, Math.min(1, activity));
 
       for (const s of samplesRef.current) {
         if (s.drop || s.a <= 0) continue;
@@ -428,10 +449,12 @@ export const PixelatedCanvas: React.FC<PixelatedCanvasProps> = ({
         targetMouse.y = (e.clientY - rect.top) * sy;
         pointerInside = true;
         activityTarget = 1;
+        startLoop();
       };
       const onPointerEnter = () => {
         pointerInside = true;
         activityTarget = 1;
+        startLoop();
       };
       const onPointerLeave = () => {
         pointerInside = false;

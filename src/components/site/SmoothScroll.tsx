@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import Lenis from "lenis";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { barHeight } from "./scroll-fx";
 
 /**
  * Lenis smooth scrolling, wired into the GSAP ticker.
@@ -33,8 +34,11 @@ export function SmoothScroll() {
       lerp: 0.09,
       smoothWheel: true,
       syncTouch: false,
-      // `#work` links from the dock and footer glide instead of jumping.
-      anchors: true,
+      // `#work` links from the dock and footer glide instead of jumping. The
+      // offset stops them short by the height of the sticky bar, which would
+      // otherwise cover the top of the section they just landed on. Measured,
+      // not hardcoded, so it stays right if the bar ever changes height.
+      anchors: { offset: -barHeight() },
       // Any nested scroller opts out by marking itself — the horizontal
       // case-study rail scrolls itself and must not be intercepted.
       prevent: (node) => node.hasAttribute("data-lenis-prevent"),

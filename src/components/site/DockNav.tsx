@@ -39,28 +39,49 @@ const links: DockItem[] = [
   href: i === 0 ? "/" : `/#${SECTION_IDS[i - 1]}`,
 }));
 
+/*
+ * The site's real pages. The dock's eight items are all anchors on the index,
+ * and below `sm` the utility bar hides its own nav for want of room — so
+ * without these the only way to /work, /services and /about on a phone is the
+ * footer. Mobile sheet only; the desktop bar already shows them.
+ */
+const routes = [
+  { title: "Work", href: "/work" },
+  { title: "Services", href: "/services" },
+  { title: "About", href: "/about" },
+];
+
 /** Below this the dock stays hidden — the hero should be uncluttered. */
 const REVEAL_AFTER = 80;
-/** Ignore sub-pixel scroll jitter. */
-const DELTA = 6;
 
 export function DockNav() {
   const pathname = usePathname();
   const [section, setSection] = useState<string | null>(null);
   const [visible, setVisible] = useState(false);
 
-  // Reveal on scroll down, conceal on scroll up.
+  /*
+   * Revealed once the reader is past the hero, and it stays. It used to require
+   * a *downward* scroll, which meant the one gesture that means "I want to go
+   * somewhere" — scrolling back up — was the gesture that hid the navigation.
+   * It also made the `inert` below dishonest: at rest the dock's links were
+   * outside the tab order entirely, so a keyboard visitor could only reach them
+   * mid-scroll. Position alone decides now.
+   */
   useEffect(() => {
-    let last = window.scrollY;
+    let frame = 0;
     const onScroll = () => {
-      const y = window.scrollY;
-      const dy = y - last;
-      if (Math.abs(dy) < DELTA) return;
-      last = y;
-      setVisible(y > REVEAL_AFTER && dy > 0);
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        setVisible(window.scrollY > REVEAL_AFTER);
+      });
     };
+    onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", onScroll);
+    };
   }, []);
 
   useEffect(() => {
@@ -86,13 +107,27 @@ export function DockNav() {
       setSection((prev) => (prev === found ? prev : found));
     };
 
-    const raf = requestAnimationFrame(compute);
-    window.addEventListener("scroll", compute, { passive: true });
-    window.addEventListener("resize", compute);
+    /*
+     * Batched to one measurement per frame. `compute` reads a bounding rect per
+     * section, and a scroll event can fire more than once a frame — so at worst
+     * it was flushing layout seven times, in the middle of the frames where
+     * GSAP is writing pin transforms and the card stack is writing scale.
+     */
+    let frame = requestAnimationFrame(compute);
+    const schedule = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        compute();
+      });
+    };
+
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
     return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("scroll", compute);
-      window.removeEventListener("resize", compute);
+      if (frame) cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
     };
   }, [pathname]);
 
@@ -102,13 +137,16 @@ export function DockNav() {
       ? section
         ? `/#${section}`
         : "/"
-      : null;
+      : // On a real page, that page is what is current — so the route chips in
+        // the mobile sheet can mark themselves.
+        pathname;
 
   return (
     // `inert` while concealed so hidden links are not keyboard-reachable.
     <nav aria-label="Primary" inert={!visible}>
       <FloatingDock
         items={links}
+        routes={routes}
         activeHref={activeHref}
         visible={visible}
         desktopClassName="fixed right-5 top-1/2 z-60 -translate-y-1/2"

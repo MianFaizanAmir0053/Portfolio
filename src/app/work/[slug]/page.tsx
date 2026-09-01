@@ -110,7 +110,14 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
         className="sticky top-11 z-40 bg-paper/95 backdrop-blur-[2px] rule-b"
         aria-label="Breadcrumb"
       >
-        <div className="wrap flex h-11 items-center justify-between">
+        {/*
+         * Height is a minimum rather than a fixed `h-11`: the crumb trail and
+         * the pager together need more than a 320px viewport can give on one
+         * line, and the flex items shrink to min-content and wrap. Locked at
+         * `h-11` the wrapped rows overshot the `rule-b` onto the title block
+         * below, so the bar grows a row instead of spilling out of itself.
+         */}
+        <div className="wrap flex min-h-11 flex-wrap items-center justify-between gap-x-4 gap-y-1 py-2">
           {/*
            * A real breadcrumb, not a bare back arrow. It gives the crawler the
            * same trail the BreadcrumbList declares, and it gives a reader
@@ -139,7 +146,9 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
             </li>
           </ol>
           <div className="flex items-center gap-5">
-            <span className="label">
+            {/* The position counter is the one item here a phone can lose:
+                PREV and NEXT carry the same "where am I in the set" answer. */}
+            <span className="label hidden sm:inline">
               [{String(position).padStart(2, "0")} / {String(projects.length).padStart(2, "0")}]
             </span>
             {prev && (
@@ -166,9 +175,17 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
             className="display text-[14vw] md:text-[clamp(3.5rem,8vw,8rem)]"
             lines={[
               <Fragment key="1">{project.name}</Fragment>,
-              <Fragment key="2">
+              /*
+               * The tagline gets its own step and its own leading. `.display`
+               * sets 0.9, which is right for Bebas — caps, no descenders — but
+               * the accent face is Instrument Serif italic, which has both.
+               * Taglines are full phrases and wrap at every desktop width, so
+               * at 0.9 the descenders of the first line sat inside the capitals
+               * of the second. Sized in `em` so it still tracks the clamp.
+               */
+              <span key="2" className="block text-[0.5em] leading-[1.15]">
                 <span className="accent-word">{project.tagline}</span>
-              </Fragment>,
+              </span>,
             ]}
           />
           <FadeIn delay={0.2}>
@@ -267,7 +284,11 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
             <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-4">
               {project.metrics.map((m) => (
                 <div key={m.caption}>
-                  <p className="display text-[14vw] leading-[0.85] text-cobalt md:text-[8vw]">
+                  {/* Capped, because the column it sits in is not fluid: `.wrap`
+                      stops at 96rem, so past ~1900px an 8vw numeral kept
+                      growing inside a column that had stopped. "92.9%" then
+                      ran into the metric beside it. */}
+                  <p className="display text-[14vw] leading-[0.85] text-cobalt md:text-[clamp(3rem,8vw,7rem)]">
                     <Scramble value={m.value} />
                   </p>
                   <p className="label mt-4">{m.caption}</p>

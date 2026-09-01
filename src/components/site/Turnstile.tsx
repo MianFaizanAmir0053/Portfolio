@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useId, useRef } from "react";
+import { useEffect, useId, useRef, useState } from "react";
+import { PERSON } from "@/lib/site";
 
 const SCRIPT_SRC = "https://challenges.cloudflare.com/turnstile/v0/api.js";
 
@@ -35,12 +36,19 @@ function loadTurnstile() {
       script.async = true;
       script.defer = true;
       script.onload = () => resolve();
-      script.onerror = () => reject(new Error("Failed to load Turnstile"));
+      script.onerror = () => {
+        // Let a later mount try again rather than caching the rejection
+        // forever — a blocked request now may succeed after a reconnect.
+        scriptPromise = null;
+        reject(new Error("Failed to load Turnstile"));
+      };
       document.head.appendChild(script);
     });
   }
   return scriptPromise;
 }
+
+type WidgetStatus = "idle" | "pending" | "ready" | "failed";
 
 /**
  * Cloudflare Turnstile, rendered into a div the library owns directly —
@@ -48,6 +56,12 @@ function loadTurnstile() {
  *
  * Silently renders nothing without a site key, so a missing env var fails
  * open in development rather than blocking every contact form submission.
+ *
+ * The widget states are visible rather than implied. A tracker blocker or a
+ * corporate proxy can stop Cloudflare's script from ever arriving, and the
+ * previous version handled that by leaving an empty box on screen: no widget,
+ * no token, no explanation. Now the load is caught, the failure is stated, and
+ * the message carries a way to make contact without the form.
  */
 export function Turnstile({
   onVerify,
@@ -61,6 +75,7 @@ export function Turnstile({
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
   const containerId = useId();
   const widgetId = useRef<string | null>(null);
+  const [status, setStatus] = useState<WidgetStatus>("idle");
 
   useEffect(() => {
     if (!siteKey) return;
@@ -68,18 +83,35 @@ export function Turnstile({
     let io: IntersectionObserver | null = null;
 
     const render = () => {
-      loadTurnstile().then(() => {
-        if (cancelled) return;
-        const target = document.getElementById(containerId);
-        if (!target || !window.turnstile) return;
-        widgetId.current = window.turnstile.render(target, {
-          sitekey: siteKey,
-          theme: "dark",
-          callback: onVerify,
-          "expired-callback": () => onExpire?.(),
-          "error-callback": () => onExpire?.(),
+      setStatus("pending");
+      loadTurnstile()
+        .then(() => {
+          if (cancelled) return;
+          const target = document.getElementById(containerId);
+          if (!target || !window.turnstile) {
+            setStatus("failed");
+            return;
+          }
+          widgetId.current = window.turnstile.render(target, {
+            sitekey: siteKey,
+            theme: "dark",
+            callback: (token) => {
+              setStatus("ready");
+              onVerify(token);
+            },
+            "expired-callback": () => onExpire?.(),
+            // A challenge that errors is not a challenge that will pass on its
+            // own. Say so, instead of silently re-disabling the form.
+            "error-callback": () => {
+              setStatus("failed");
+              onExpire?.();
+            },
+          });
+        })
+        .catch(() => {
+          if (cancelled) return;
+          setStatus("failed");
         });
-      });
     };
 
     /*
@@ -114,5 +146,23 @@ export function Turnstile({
 
   if (!siteKey) return null;
 
-  return <div id={containerId} className={className} />;
+  return (
+    <div className={className}>
+      <div id={containerId} />
+      {status === "pending" && (
+        <p className="label mt-2" aria-live="polite">
+          [VERIFYING…]
+        </p>
+      )}
+      {status === "failed" && (
+        <p className="label mt-2 text-cobalt" aria-live="polite">
+          [CAPTCHA UNAVAILABLE] Send the message to{" "}
+          <a href={`mailto:${PERSON.email}`} className="underline">
+            {PERSON.email}
+          </a>{" "}
+          instead.
+        </p>
+      )}
+    </div>
+  );
 }

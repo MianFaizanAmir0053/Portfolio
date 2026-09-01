@@ -59,7 +59,7 @@ const ABOUT_FACTS = [
   },
   {
     k: "BASE",
-    v: "Lahore, PK — working across the US, Middle East & Europe",
+    v: "Lahore, PK — working across the US, UK, Middle East & Europe",
     anchor: "users",
     pos: "left-[3%] bottom-[16%]",
   },
@@ -161,7 +161,7 @@ function Hero() {
     { label: "8+ PROJECTS LED", pos: "left-[4%] bottom-[22%]" },
     {
       label: "$5K+ REVENUE · MUTERPE",
-      pos: "left-[4%] bottom-[6%] md:left-auto md:right-[2%] md:bottom-[10%]",
+      pos: "left-[4%] bottom-[6%] md:bottom-[4%]",
     },
   ];
 
@@ -174,7 +174,7 @@ function Hero() {
       {/* Three depth planes leave at three speeds: copy slowest, object mid,
           floating proof stats fastest. */}
       <ParallaxLayer speed={0.07} scope="#hero" className="flex flex-col justify-center">
-        <Tag className="mb-6 block">[01] SENIOR SOFTWARE ENGINEER</Tag>
+        <Tag className="mb-6 block">[01] INDEX</Tag>
         {/*
          * The name and the role are inside the h1 now, as its first line. They
          * were a sibling <p> before, which left the page's only h1 reading
@@ -276,7 +276,7 @@ function Hero() {
             >
               Download
               <br />
-              Resume ↗
+              resume ↓
             </a>
           </MagneticSurface>
         </div>
@@ -348,7 +348,7 @@ function Experience() {
               ]}
             />
             <p className="mt-8 max-w-sm text-sm leading-7 text-ink-muted">
-              Four years across three teams, two continents, and one consistent job: turn the
+              Four years across three teams, three continents, and one consistent job: turn the
               requirement into something that survives production.
             </p>
             <p className="label mt-10 flex items-center gap-3 text-cobalt">
@@ -435,9 +435,16 @@ function FeaturedWork() {
             accent={["case", "studies"]}
           />
         </div>
-        <p className="display text-3xl text-ink-muted">
-          ({String(featuredProjects.length).padStart(2, "0")})
-        </p>
+        <div className="flex items-baseline gap-5">
+          <p className="display text-3xl text-ink-muted">
+            ({String(featuredProjects.length).padStart(2, "0")})
+          </p>
+          {/* The counter says four; there are six. This is the only place on the
+              homepage that says so and the only body link to the index. */}
+          <Link href="/work" className="label text-cobalt hover:underline">
+            ALL {projects.length} CASE STUDIES →
+          </Link>
+        </div>
       </div>
 
       {/*
@@ -454,7 +461,7 @@ function FeaturedWork() {
             <article id={`work-${p.slug}`} className="group scroll-mt-24">
               <LineDraw delay={0.05} />
               <div
-                className={`wrap grid items-center gap-8 py-12 md:grid-cols-2 md:gap-14 md:py-0 ${
+                className={`wrap grid items-center gap-8 py-12 md:grid-cols-2 md:gap-14 motion-safe:md:py-0 ${
                   i % 2 === 1 ? "md:[direction:rtl]" : ""
                 }`}
               >
@@ -587,16 +594,20 @@ function ProjectAside({ project: p, href }: { project: Project; href?: string })
 
 function Education() {
   return (
-    <section id="education" className="wrap rule-t py-10" aria-labelledby="education-heading">
-      <Tag className="mb-3 block">[EDUCATION]</Tag>
-      {/* The block had no heading and no id, so a degree sat unattached to any
-          titled section of the document. */}
-      <h2 id="education-heading" className="display mb-3 text-xl md:text-2xl">
-        Education
-      </h2>
-      <p className="text-sm">
-        {EDUCATION.degree} — {EDUCATION.institution}, {EDUCATION.place.split(",")[0]}
-      </p>
+    <section id="education" className="rule-t" aria-labelledby="education-heading">
+      {/* The rule sits on the section and the wrap holds only the content, so
+          the divider runs edge to edge like every other one on the page. */}
+      <div className="wrap py-10 md:py-14">
+        <Tag className="mb-3 block">[EDUCATION]</Tag>
+        {/* The block had no heading and no id, so a degree sat unattached to any
+            titled section of the document. */}
+        <h2 id="education-heading" className="display mb-3 text-xl md:text-2xl">
+          Education
+        </h2>
+        <p className="text-sm">
+          {EDUCATION.degree} — {EDUCATION.institution}, {EDUCATION.place.split(",")[0]}
+        </p>
+      </div>
     </section>
   );
 }
@@ -609,10 +620,13 @@ function Education() {
  */
 function Faq() {
   return (
-    <section id="faq" className="wrap rule-t py-20 md:py-28" aria-label="Frequently asked questions">
-      <div className="grid gap-10 md:grid-cols-[0.7fr_1.3fr]">
-        <div>
-          <Tag className="mb-6 block">[08] FAQ</Tag>
+    <section id="faq" className="rule-t" aria-label="Frequently asked questions">
+      <div className="wrap grid gap-10 py-20 md:grid-cols-[0.7fr_1.3fr] md:py-28">
+        {/* Travels with the answers rather than sitting at the top of a column
+            the reader has already scrolled past — the same treatment Skills
+            and the horizontal rail already use for a section header. */}
+        <div className="md:sticky md:top-24 md:self-start">
+          <Tag className="mb-6 block">[FAQ]</Tag>
           <h2 className="display text-[11vw] leading-[0.9] md:text-[clamp(2.25rem,4vw,3.5rem)]">
             The <span className="accent-word">short</span> answers
           </h2>
@@ -702,7 +716,7 @@ function Contact() {
             </div>
           </dl>
           <p className="mt-10 label">
-            <Scramble value="06" /> PROJECTS · <Scramble value="200" />+ USERS
+            <Scramble value="06" /> CASE STUDIES · <Scramble value="200" />+ USERS · MUTERPE
           </p>
         </div>
 

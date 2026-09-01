@@ -145,20 +145,19 @@ export default function Contact() {
         </section>
 
         <section className="wrap rule-t py-16 md:py-24">
-          <Tag className="mb-3 block">[BEFORE YOU WRITE]</Tag>
+          <Tag className="mb-3 block">[FAQ]</Tag>
           <h2 className="display mb-8 text-2xl md:text-4xl">Before you write</h2>
           <dl className="max-w-3xl space-y-8">
             {FAQS.map((faq) => (
               <div key={faq.q}>
                 <dt className="display text-xl md:text-2xl">{faq.q}</dt>
-                <dd className="mt-3 text-sm leading-7 text-ink-muted">{faq.a}</dd>
+                <dd className="mt-3 max-w-[64ch] text-sm leading-7 text-ink-muted">{faq.a}</dd>
               </div>
             ))}
           </dl>
         </section>
 
         <section className="wrap rule-t py-12">
-          <Tag className="mb-3 block">[WHAT I DO]</Tag>
           <h2 className="display mb-4 text-xl md:text-2xl">What I do</h2>
           <ul className="flex flex-wrap gap-x-8 gap-y-3 text-sm">
             {services.map((service) => (

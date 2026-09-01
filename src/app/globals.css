@@ -134,7 +134,19 @@
   }
 
   html {
-    scroll-behavior: smooth;
+    /*
+     * No `scroll-behavior: smooth` here. Lenis owns wheel scrolling and anchor
+     * jumps, so the native property was redundant — and it leaked into
+     * programmatic scrolls that are meant to be instant, where it ran a third
+     * animation against Lenis and a ScrollTrigger snap at the same time.
+     *
+     * `scroll-padding-top` stays: the utility bar is sticky and opaque, so an
+     * anchor jump that lands a section at scroll position 0 parks its opening
+     * rule and bracket label underneath it. Every `/#about`-style link on the
+     * site — the dock's whole purpose — arrived that way. Same token the bar
+     * sizes itself from.
+     */
+    scroll-padding-top: var(--bar-h);
   }
 
   body {
@@ -215,6 +227,16 @@
 @media (min-width: 768px) {
   .wrap {
     padding-inline: 2.5rem;
+    /*
+     * Extra clearance on the right only, for the fixed dock rail.
+     * The rail sits in the page margin above ~1580px, but below that it
+     * overlapped the content column. Widening both gutters would have pushed
+     * the centred pinned statement off the viewport's optical centre, so the
+     * allowance is asymmetric and collapses back to 2.5rem once the natural
+     * margin is wide enough to hold the rail on its own. 5.5rem is the same
+     * clearance constant the About margin-notes use.
+     */
+    padding-right: max(2.5rem, min(5.5rem, calc(5.5rem - (100vw - 96rem) / 2)));
   }
 }
 

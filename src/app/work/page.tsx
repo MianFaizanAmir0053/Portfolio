@@ -98,7 +98,7 @@ export default function WorkIndex() {
            * surrounding page required.
            */}
           <p className="mt-8 max-w-2xl text-base leading-7 text-ink-muted">
-            Every project below shipped to real users. Each write-up follows the same shape: the
+            Every project below is live or in active development. Each write-up follows the same shape: the
             problem as the business had it, the architecture decision that answered it, what got
             built, and the numbers afterwards — including the ones that are still targets rather
             than readings. Domains run from agentic AI over legal documents to telehealth commerce,
@@ -112,7 +112,7 @@ export default function WorkIndex() {
               <li key={project.slug} className="group rule-b">
                 <Link
                   href={`/work/${project.slug}`}
-                  className="grid items-center gap-6 py-10 md:grid-cols-[0.9fr_1.4fr_auto] md:gap-10"
+                  className="grid items-center gap-6 py-10 md:grid-cols-[0.9fr_1.4fr] md:gap-10 lg:grid-cols-[0.9fr_1.4fr_auto]"
                 >
                   <CutFrame
                     src={project.image}
@@ -121,7 +121,7 @@ export default function WorkIndex() {
                     ratio="aspect-[16/10]"
                     parallax={false}
                     grayscale
-                    sizes="(min-width: 768px) 33vw, 100vw"
+                    sizes="(min-width: 1280px) 30vw, (min-width: 768px) 36vw, 100vw"
                   />
 
                   <div>
@@ -130,6 +130,12 @@ export default function WorkIndex() {
                       <h2 className="display text-2xl md:text-4xl">
                         {project.name} — <span className="accent-word">{project.tagline}</span>
                       </h2>
+                      {/* The same badge the index uses. Three of these six are
+                          unfinished and say so on their own pages; the list
+                          that sends people there should say it too. */}
+                      {project.inDevelopment && (
+                        <span className="label bg-cobalt px-2 py-1 text-paper">[IN DEVELOPMENT]</span>
+                      )}
                     </div>
                     <p className="mt-3 max-w-xl text-sm leading-7 text-ink-muted">
                       {project.summary}
@@ -155,7 +161,12 @@ export default function WorkIndex() {
                     </div>
                   </div>
 
-                  <span className="label whitespace-nowrap text-cobalt md:self-end md:pb-1">
+                  {/* The CTA is a ~210px nowrap label. Held in its own track
+                      from 768px it took a third of the row and left the
+                      thumbnail at 156px beside a heading wrapping to three
+                      lines, so it only earns a column once there is room for
+                      one: below `lg` it drops under the write-up instead. */}
+                  <span className="label text-cobalt md:col-span-2 lg:col-span-1 lg:self-end lg:whitespace-nowrap lg:pb-1">
                     READ THE {project.name.toUpperCase()} CASE STUDY →
                   </span>
                 </Link>
@@ -167,7 +178,9 @@ export default function WorkIndex() {
         {/* Everything shipped that does not have a full write-up, so nothing is
             reachable only from the homepage. */}
         <section className="wrap py-16 md:py-24">
-          <Tag className="mb-3 block">[ALSO SHIPPED]</Tag>
+          {/* No bracket eyebrow here: it would have read [ALSO SHIPPED] over
+              "Also shipped", and a label that repeats the heading word for
+              word is a marker that has stopped marking anything. */}
           <h2 className="display mb-6 text-2xl md:text-4xl">Also shipped</h2>
           <ul className="grid gap-8 md:grid-cols-3">
             {otherWork.map((work) => (

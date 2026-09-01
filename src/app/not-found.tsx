@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 
 export default function NotFound() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-paper px-5 py-20">
+    <div className="flex min-h-svh items-center justify-center bg-paper px-5 py-20">
       <main id="main" className="w-full max-w-xl">
         <Tag className="mb-6 block text-cobalt">[404]</Tag>
         <p className="display text-[22vw] leading-[0.8] text-ink md:text-[9rem]">404</p>

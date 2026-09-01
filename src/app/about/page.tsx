@@ -14,7 +14,7 @@ import { breadcrumbSchema, faqSchema, graph, webPageSchema } from "@/lib/schema"
 
 const TITLE = "About Faizan Amir — senior software engineer in Lahore";
 const DESCRIPTION =
-  "Four years, three teams, two continents: how Faizan Amir works, the stack he works in, where he has shipped, and what he is honest about not knowing yet.";
+  "Four years, three teams, three continents: how Faizan Amir works, the stack he works in, where he has shipped, and what he is honest about not knowing yet.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -158,7 +158,7 @@ export default function About() {
                 <div>
                   <h3 className="display text-xl md:text-3xl">{role.role}</h3>
                   <p className="accent-word text-lg md:text-2xl">{role.company}</p>
-                  <p className="mt-3 max-w-2xl text-sm leading-7 text-ink-muted">{role.body}</p>
+                  <p className="mt-3 max-w-[64ch] text-sm leading-7 text-ink-muted">{role.body}</p>
                 </div>
               </li>
             ))}
@@ -209,20 +209,23 @@ export default function About() {
         </section>
 
         <section className="wrap rule-t py-16 md:py-24">
-          <Tag className="mb-3 block">[05] QUESTIONS PEOPLE ASK FIRST</Tag>
+          <Tag className="mb-3 block">[05] FAQ</Tag>
           <h2 className="display mb-8 text-2xl md:text-4xl">Questions people ask first</h2>
           <dl className="max-w-3xl space-y-8">
-            {FAQS.map((faq) => (
+            {/* The first answer is already set as this page's lead paragraph
+                above. The FAQPage graph still carries the whole array — a
+                definition belongs in the structured data either way — but
+                printing it twice on one screen made the list look padded. */}
+            {FAQS.slice(1).map((faq) => (
               <div key={faq.q}>
                 <dt className="display text-xl md:text-2xl">{faq.q}</dt>
-                <dd className="mt-3 text-sm leading-7 text-ink-muted">{faq.a}</dd>
+                <dd className="mt-3 max-w-[64ch] text-sm leading-7 text-ink-muted">{faq.a}</dd>
               </div>
             ))}
           </dl>
         </section>
 
         <section className="wrap rule-t py-12">
-          <Tag className="mb-3 block">[ELSEWHERE]</Tag>
           <h2 className="display mb-4 text-xl md:text-2xl">Elsewhere</h2>
           <ul className="flex flex-wrap gap-x-8 gap-y-3 text-sm">
             <li>

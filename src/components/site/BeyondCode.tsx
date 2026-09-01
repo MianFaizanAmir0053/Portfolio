@@ -49,7 +49,11 @@ export function BeyondCode() {
                 href={SOCIAL.instagram}
                 target="_blank"
                 rel="noopener"
-                className="group relative block cut-tr grain bg-paper-deep p-7"
+                /* The ring goes inside the card. `cut-tr` clips this element's
+                   whole rendering to its polygon, outline included, so the
+                   default 3px outward offset painted nothing at all — the only
+                   focusable surface on the site carrying a cut class directly. */
+                className="group relative block cut-tr grain bg-paper-deep p-7 focus-visible:-outline-offset-4"
               >
                 <span
                   aria-hidden

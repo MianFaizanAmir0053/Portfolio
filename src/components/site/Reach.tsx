@@ -84,7 +84,21 @@ export function Reach() {
 
         <dl className="mt-10 grid grid-cols-2 rule-t sm:grid-cols-3 lg:grid-cols-5">
           {NODES.map((n, i) => (
-            <div key={n.label} className={i > 0 ? "py-6 sm:border-l sm:border-ink sm:pl-6" : "py-6"}>
+            /* The divider is what makes this strip read as a table, so it has to
+               follow the grid rather than the index. At three columns the fourth
+               node starts the second row, where a left rule and its 24px indent
+               would hang off the block's own edge against nothing; that node only
+               earns the rule at `lg`, where all five sit in one row. */
+            <div
+              key={n.label}
+              className={`py-6 ${
+                i === 3
+                  ? "lg:border-l lg:border-ink lg:pl-6"
+                  : i > 0
+                    ? "sm:border-l sm:border-ink sm:pl-6"
+                    : ""
+              }`}
+            >
               <dt className="display text-lg md:text-xl">{n.label}</dt>
               <dd className="label mt-2">{n.note}</dd>
             </div>

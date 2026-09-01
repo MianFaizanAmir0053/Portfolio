@@ -53,7 +53,7 @@ export const services: Service[] = [
     includes: [
       {
         title: "Retrieval that preserves structure",
-        body: "Chunking follows the document's own hierarchy — sections, clauses, sub-clauses — and every chunk carries its ancestry, so a retrieved passage arrives with the context that makes it mean something. This is what stopped the hallucinated citations on Golegal.",
+        body: "Chunking follows the document’s own hierarchy — sections, clauses, sub-clauses — and every chunk carries its ancestry, so a retrieved passage arrives with the context that makes it mean something. This is what stopped the hallucinated citations on Golegal.",
       },
       {
         title: "Agent workflows with real routing",
@@ -87,7 +87,7 @@ export const services: Service[] = [
       },
       {
         step: "Put a human in the path",
-        body: "Approval interrupts on anything irreversible, with the agent's own trace shown to whoever approves it.",
+        body: "Approval interrupts on anything irreversible, with the agent’s own trace shown to whoever approves it.",
       },
       {
         step: "Instrument, then iterate",
@@ -260,7 +260,7 @@ export const services: Service[] = [
       },
       {
         title: "Migrations without downtime",
-        body: "Expand and contract schema changes so the product can keep shipping while it is already in users' hands.",
+        body: "Expand and contract schema changes so the product can keep shipping while it is already in users’ hands.",
       },
       {
         title: "A dependency graph you can defend",
@@ -397,7 +397,7 @@ export const services: Service[] = [
         slug: "muterpe",
         project: "Muterpe",
         claim:
-          "Founding engineer on an AI model-training and image-generation SaaS: 200+ self-serve users, $5,000+ usage-based revenue, 99% uptime, and generation 40% faster than at first release.",
+          "Founding engineer on an AI model-training and image-generation SaaS: 200+ self-serve users, $5,000+ usage-based revenue, 99% uptime, and generation that feels ~40% faster than at first release without changing the model.",
       },
       {
         slug: "volumize",
@@ -409,7 +409,7 @@ export const services: Service[] = [
         slug: "carder",
         project: "Carder",
         claim:
-          "Backend and infrastructure lead on a product already in users' hands, adding Stripe subscriptions, S3 media delivery and CI/CD without downtime.",
+          "Backend and infrastructure lead on a product already in users’ hands, adding Stripe subscriptions, S3 media delivery and CI/CD without downtime.",
       },
     ],
     stack: [
@@ -430,7 +430,7 @@ export const services: Service[] = [
       },
       {
         q: "Do you work with founders who are not technical?",
-        a: "Yes. The working pattern is a written model of the product's states and a weekly shipped increment you can use rather than a status report. Muterpe was built that way from the first commit.",
+        a: "Yes. The working pattern is a written model of the product’s states and a weekly shipped increment you can use rather than a status report. Muterpe was built that way from the first commit.",
       },
       {
         q: "Who owns the code?",
@@ -469,7 +469,7 @@ export const services: Service[] = [
       },
       {
         title: "Fulfilment wired to the carrier",
-        body: "Despatch through the carrier's API — labels generated, tracking written back onto the order — so approved goes to shipped without anybody creating labels by hand.",
+        body: "Despatch through the carrier’s API — labels generated, tracking written back onto the order — so approved goes to shipped without anybody creating labels by hand.",
       },
     ],
     process: [
@@ -530,7 +530,7 @@ export const services: Service[] = [
       },
       {
         q: "Can you integrate a carrier or a fulfilment partner?",
-        a: "Yes. The Volumize despatch flow generates labels through the Royal Mail API and writes tracking back onto the order, so fulfilment status lives in the same lifecycle as the payment rather than in somebody's inbox.",
+        a: "Yes. The Volumize despatch flow generates labels through the Royal Mail API and writes tracking back onto the order, so fulfilment status lives in the same lifecycle as the payment rather than in somebody’s inbox.",
       },
     ],
     related: ["api-and-backend-development", "saas-mvp-development"],

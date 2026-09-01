@@ -49,10 +49,14 @@ export type Project = {
   reflection: string;
 };
 
-export const projects: Project[] = [
+/*
+ * The projects as written. The catalogue index is deliberately absent: it is
+ * derived from ORDER below, so the number on the page and the number in the
+ * counter cannot drift apart again.
+ */
+const authored: Omit<Project, "index">[] = [
   {
     slug: "carder",
-    index: "01",
     name: "Carder",
     accentWord: "Carder",
     tagline: "Digital Business Card Platform",
@@ -68,9 +72,9 @@ export const projects: Project[] = [
     alt: "Carder digital business card profile screen",
     problemHeadline: "Paper cards die in a drawer",
     problem:
-      "Physical business cards die in a drawer. Carder needed to replace them with a shareable digital profile — but the first version couldn't handle payments, media storage, or the release cadence the team wanted.",
+      "Physical business cards die in a drawer. Carder needed to replace them with a shareable digital profile — but the first version couldn’t handle payments, media storage, or the release cadence the team wanted.",
     approach:
-      "I owned the backend and the data layer end to end, designing for a product that had to keep shipping while it was already in users' hands.",
+      "I owned the backend and the data layer end to end, designing for a product that had to keep shipping while it was already in users’ hands.",
     decisions: [
       "Designed the schema and a migration strategy so the product could evolve without downtime.",
       "Integrated Stripe for subscription payments, including webhook-driven state.",
@@ -103,11 +107,10 @@ export const projects: Project[] = [
       { value: "100%", caption: "Payments via Stripe", note: "* webhook-reconciled" },
     ],
     reflection:
-      "I'd put the analytics layer in from day one. We shipped adoption features on intuition for the first few months, and the +40% only became legible once instrumentation landed — which means we were probably slower than we needed to be to find it.",
+      "I’d put the analytics layer in from day one. We shipped adoption features on intuition for the first few months, and the +40% only became legible once instrumentation landed — which means we were probably slower than we needed to be to find it.",
   },
   {
     slug: "golegal",
-    index: "03",
     name: "Golegal",
     accentWord: "Golegal",
     tagline: "AI SaaS for Legal Assistance",
@@ -122,11 +125,11 @@ export const projects: Project[] = [
     indexMetrics: ["95% accuracy", "-30% manual work", "50+ users"],
     image: img.golegal,
     alt: "Golegal AI legal document dashboard with workflow canvas",
-    problemHeadline: "Generic chat can't be trusted with legal text",
+    problemHeadline: "Generic chat can’t be trusted with legal text",
     problem:
-      "Legal teams lose hours to reading, extracting, and reformatting the same document types. Generic LLM chat wasn't accurate enough to trust with legal text — it hallucinated citations and lost document context.",
+      "Legal teams lose hours to reading, extracting, and reformatting the same document types. Generic LLM chat wasn’t accurate enough to trust with legal text — it hallucinated citations and lost document context.",
     approach:
-      "The fix wasn't a better prompt. It was retrieval that preserves legal structure, and agents that know which extraction path a document belongs to.",
+      "The fix wasn’t a better prompt. It was retrieval that preserves legal structure, and agents that know which extraction path a document belongs to.",
     decisions: [
       "Built an agentic RAG pipeline over PostgreSQL with vector retrieval.",
       "Chunked and embedded documents with structure preserved, so clause context survives retrieval.",
@@ -142,7 +145,7 @@ export const projects: Project[] = [
     build: [
       {
         title: "Structure-preserving retrieval",
-        body: "Chunking follows the document's own hierarchy — sections, clauses, sub-clauses — and every chunk carries its ancestry. A retrieved clause arrives with the context that makes it mean something, which is what killed the hallucinated citations.",
+        body: "Chunking follows the document’s own hierarchy — sections, clauses, sub-clauses — and every chunk carries its ancestry. A retrieved clause arrives with the context that makes it mean something, which is what killed the hallucinated citations.",
         image: img.golegal,
         alt: "Document retrieval view in Golegal",
       },
@@ -166,11 +169,10 @@ export const projects: Project[] = [
       { value: "50+", caption: "Active users", note: "* legal professionals" },
     ],
     reflection:
-      "I'd build the evaluation harness before the pipeline, not alongside it. We tuned chunking by feel for too long, and every change felt like a coin flip until there was a scored regression set to argue with.",
+      "I’d build the evaluation harness before the pipeline, not alongside it. We tuned chunking by feel for too long, and every change felt like a coin flip until there was a scored regression set to argue with.",
   },
   {
     slug: "muterpe",
-    index: "06",
     name: "Muterpe",
     accentWord: "Muterpe",
     tagline: "AI Image Generation SaaS",
@@ -182,9 +184,9 @@ export const projects: Project[] = [
     indexMetrics: ["200+ users", "$5K+ revenue", "99% uptime"],
     image: img.muterpe,
     alt: "Muterpe AI image generation interface with result grid",
-    problemHeadline: "Generic models don't hold a likeness",
+    problemHeadline: "Generic models don’t hold a likeness",
     problem:
-      "Generic image generators don't hold a brand or a person's likeness. Muterpe needed per-user model training, plus a generation pipeline fast enough that users wouldn't abandon mid-flow.",
+      "Generic image generators don’t hold a brand or a person’s likeness. Muterpe needed per-user model training, plus a generation pipeline fast enough that users wouldn’t abandon mid-flow.",
     approach:
       "Training is slow and generation must feel instant, so the architecture is built around never letting one block the other.",
     decisions: [
@@ -216,14 +218,16 @@ export const projects: Project[] = [
       { value: "200+", caption: "Users", note: "* self-serve signup" },
       { value: "$5K+", caption: "Revenue", note: "* usage-based" },
       { value: "99%", caption: "Uptime", note: "* rolling 12 months" },
-      { value: "40%", caption: "Faster generation", note: "* vs. first release" },
+      // Keeps the two qualifiers the write-up above states: it is perceived
+      // speed, from streaming, and it is approximate. "Faster generation" flat
+      // was a different and larger claim than the one that was measured.
+      { value: "~40%", caption: "Faster, perceived", note: "* streaming, vs. first release" },
     ],
     reflection:
-      "Usage-based billing went in late, and retrofitting metering onto a pipeline that was already running cost more than building it in from the start would have. I'd meter first and price second next time.",
+      "Usage-based billing went in late, and retrofitting metering onto a pipeline that was already running cost more than building it in from the start would have. I’d meter first and price second next time.",
   },
   {
     slug: "volumize",
-    index: "02",
     name: "Volumize",
     accentWord: "Volumize",
     tagline: "Telehealth E-Commerce Platform",
@@ -298,7 +302,6 @@ export const projects: Project[] = [
   },
   {
     slug: "wisdomup",
-    index: "05",
     name: "WisdomUp",
     accentWord: "WisdomUp",
     tagline: "Multi-Service E-Commerce Platform",
@@ -371,7 +374,6 @@ export const projects: Project[] = [
   },
   {
     slug: "alfa",
-    index: "04",
     name: "Alfa",
     accentWord: "Alfa",
     tagline: "Multi-Role Fintech Frontend",
@@ -443,13 +445,42 @@ export const projects: Project[] = [
   }
 ];
 
+/**
+ * Reading order, and the numbering that comes with it.
+ *
+ * The case-study page shows two numerals for the same project: a position
+ * counter in the sticky bar ([02 / 06]) and the authored [CASE STUDY nn] tag.
+ * Those were separate values — declaration order for one, a hand-written
+ * `index` field for the other — and four of the six disagreed. Deriving the
+ * index from this list makes them the same number by construction, and makes
+ * prev/next walk the projects in the order the site actually presents them.
+ */
+const ORDER = ["carder", "volumize", "golegal", "alfa", "wisdomup", "muterpe"] as const;
+
+export const projects: Project[] = ORDER.map((slug, i) => {
+  const project = authored.find((p) => p.slug === slug);
+  if (!project) throw new Error(`ORDER lists a slug with no project: ${slug}`);
+  return { ...project, index: String(i + 1).padStart(2, "0") };
+});
+
+/*
+ * The guard above catches a slug with no project. This catches the direction
+ * that fails quietly: a project added to `authored` and forgotten here would
+ * simply vanish — no route from generateStaticParams, no card on the index, no
+ * entry in the sitemap, and nothing anywhere to say so.
+ */
+if (projects.length !== authored.length) {
+  const missing = authored.map((p) => p.slug).filter((slug) => !ORDER.includes(slug as never));
+  throw new Error(`Projects missing from ORDER: ${missing.join(", ")}`);
+}
+
 const bySlug = Object.fromEntries(projects.map((p) => [p.slug, p])) as Record<string, Project>;
 
 /**
  * The four the index leads with, in the order it leads with them.
  *
- * Declaration order in `projects` above is *routing* order — it feeds
- * `generateStaticParams` and case-study prev/next, so it stays put. This is
+ * `ORDER` above is *routing* order — it feeds `generateStaticParams`, the
+ * case-study numbering and prev/next, so it stays put. This is
  * presentation order, and the two are allowed to differ: WisdomUp and Muterpe
  * still have full case studies, they just no longer earn a pinned card on the
  * index. They surface through `otherWork` instead, which links straight at

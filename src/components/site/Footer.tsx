@@ -3,11 +3,16 @@ import { Marquee } from "./primitives";
 import { SOCIAL } from "@/data/social";
 import { projects } from "@/data/projects";
 import { services } from "@/data/services";
+import { PERSON } from "@/lib/site";
 
 export function Footer() {
   return (
     <>
-      <Marquee text="FAIZAN AMIR + " speed={34} className="rule-t rule-b" />
+      <Marquee
+        text="AVAILABLE FOR SENIOR ENGINEERING WORK + REACT + NEXT.JS + NODE.JS + PYTHON + RAG + AGENTIC AI + "
+        speed={34}
+        className="rule-t rule-b"
+      />
       <footer className="on-ink bg-ink text-paper">
         <div className="wrap grid gap-10 py-16 sm:grid-cols-2 lg:grid-cols-6">
           <address className="not-italic">
@@ -141,8 +146,10 @@ export function Footer() {
           </nav>
         </div>
 
-        <div className="flex items-center justify-between border-t border-paper/45 px-5 py-3">
-          <span className="label">©26 ALL RIGHTS RESERVED</span>
+        <div className="wrap flex items-center justify-between border-t border-paper/45 py-3">
+          <span className="label">
+            © {new Date().getFullYear()} {PERSON.name} · ALL RIGHTS RESERVED
+          </span>
           <span className="label">[END]</span>
         </div>
 

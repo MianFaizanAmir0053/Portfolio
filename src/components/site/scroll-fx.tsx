@@ -21,7 +21,17 @@ import { scrollSignal } from "@/lib/scroll-signal";
 if (typeof window !== "undefined") gsap.registerPlugin(ScrollTrigger);
 
 const REDUCE = "(prefers-reduced-motion: reduce)";
-const DESKTOP = "(min-width: 768px)";
+/*
+ * Width alone is not enough to qualify for a pinned section. A pinned box is
+ * `100svh` tall and clipped, and because it is pinned there is no scroll that
+ * can reveal what overflows it — so a viewport too short to hold the content
+ * loses that content outright. A landscape phone is ≥768px wide and ~400px
+ * tall, which is exactly that case. The height floor sends it down the
+ * already-built unpinned paths instead: horizontal rails become swipe rows,
+ * the pinned statement becomes a normal flow block, the card stack becomes a
+ * column. 1280x720 laptops clear it comfortably.
+ */
+const DESKTOP = "(min-width: 768px) and (min-height: 640px)";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
@@ -32,7 +42,7 @@ const pad = (n: number) => String(n).padStart(2, "0");
  * underneath the bar and invisible. Measured off the element rather than read
  * from `--bar-h` so it stays right if the bar ever wraps.
  */
-const barHeight = () =>
+export const barHeight = () =>
   document.querySelector<HTMLElement>("[data-utility-bar]")?.offsetHeight ?? 0;
 
 /** Height of a pinned viewport: the screen, less the bar it sits under. */
@@ -453,7 +463,10 @@ export function HorizontalScroll({
       const distance = track.scrollWidth - viewport.clientWidth;
       if (distance <= 0) return;
       const ratio = gsap.utils.clamp(0, 1, panel.offsetLeft / distance);
-      window.scrollTo({ top: st.start + (st.end - st.start) * ratio });
+      // Explicitly instant: the intent here is a reposition, not a journey, and
+      // a native smooth scroll would run against both Lenis and this trigger's
+      // own snap tween at the same time.
+      window.scrollTo({ top: st.start + (st.end - st.start) * ratio, behavior: "instant" });
     };
 
     track.addEventListener("focusin", onFocusIn);
@@ -514,6 +527,7 @@ export function HorizontalScroll({
               className={cn(
                 "relative flex px-5 md:px-10",
                 mode === "stack" ? "flex-col" : "w-max flex-row items-stretch gap-8 md:h-full md:gap-14",
+                mode === "pinned" && "will-change-transform",
                 trackClassName,
               )}
             >
@@ -981,7 +995,7 @@ export function PinnedLitText({
       const SWEEP = 2.6;
       tl.fromTo(
         words,
-        { opacity: 0.12 },
+        { opacity: 0.45 },
         { opacity: 1, ease: "none", duration: WORD_LIT, stagger: { amount: SWEEP } },
         0,
       );
@@ -1045,7 +1059,7 @@ export function PinnedLitText({
       >
         <div
           className={cn(
-            "wrap flex flex-col items-center py-16 md:py-0",
+            "wrap flex flex-col items-center py-16 motion-safe:md:py-0",
             // Narrower column when cards are scattering, so they have margin to
             // land in rather than crowding the text.
             scatter ? "max-w-2xl" : "max-w-3xl",
@@ -1277,8 +1291,28 @@ export function MagneticSurface({
   useEffect(() => {
     const el = liftRef.current;
     if (!el || reduce) return;
-    const raise = () => gsap.to(el, { y: -lift, duration: 0.35, ease: "power3.out" });
-    const settle = () => gsap.to(el, { y: 0, duration: 0.35, ease: "power3.out" });
+    /*
+     * `will-change` is claimed for the duration of the lift and given back
+     * afterwards. Declared as a class it was permanent, and this component is
+     * mounted fourteen times on the index — two nested wrappers each — so the
+     * page held twenty-eight promoted compositor layers for the lifetime of the
+     * document to animate whichever one the cursor happened to be near. The
+     * primitive that reveals headline lines already documents this rule; this
+     * is the same rule applied to the same problem.
+     */
+    const raise = () => {
+      el.style.willChange = "transform";
+      gsap.to(el, { y: -lift, duration: 0.35, ease: "power3.out" });
+    };
+    const settle = () =>
+      gsap.to(el, {
+        y: 0,
+        duration: 0.35,
+        ease: "power3.out",
+        onComplete: () => {
+          el.style.willChange = "auto";
+        },
+      });
     el.addEventListener("focusin", raise);
     el.addEventListener("focusout", settle);
     el.addEventListener("pointerenter", raise);
@@ -1292,10 +1326,11 @@ export function MagneticSurface({
   }, [lift, reduce]);
 
   return (
-    <div ref={pullRef} data-magnetic="idle" className={cn("will-change-transform", className)}>
-      <div ref={liftRef} className="will-change-transform">
-        {children}
-      </div>
+    // No standing `will-change` on either wrapper: GSAP promotes the pull layer
+    // for the duration of its own tween, and the lift layer claims it in the
+    // handler above only while it is actually moving.
+    <div ref={pullRef} data-magnetic="idle" className={className}>
+      <div ref={liftRef}>{children}</div>
     </div>
   );
 }
@@ -1464,13 +1499,25 @@ export function CardStack({
      */
     const setters = cards.map((card) => gsap.quickSetter(card, "css") as (v: object) => void);
 
+    /*
+     * Read every box first, then write every card. Interleaving them — measure
+     * card 1, style card 1, measure card 2 — invalidates layout with each write
+     * and forces the next read to flush it again, five times a frame while the
+     * deck is on screen. The magnet cache further up this file exists to avoid
+     * exactly that; this loop was the one place still doing it.
+     */
+    const covered: number[] = [];
+
     const measure = () => {
+      covered.length = 0;
       for (let i = 0; i < cards.length - 1; i += 1) {
         const box = slots[i].getBoundingClientRect();
         const nextTop = slots[i + 1].getBoundingClientRect().top;
         // How much of this panel the next one has climbed over, 0..1.
-        const covered = gsap.utils.clamp(0, 1, (box.bottom - nextTop) / box.height);
-        setters[i]({ scale: 1 - covered * 0.06, opacity: 1 - covered * 0.5 });
+        covered.push(gsap.utils.clamp(0, 1, (box.bottom - nextTop) / box.height));
+      }
+      for (let i = 0; i < covered.length; i += 1) {
+        setters[i]({ scale: 1 - covered[i] * 0.06, opacity: 1 - covered[i] * 0.5 });
       }
     };
 

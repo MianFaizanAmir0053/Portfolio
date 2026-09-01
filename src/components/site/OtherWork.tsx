@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { otherWork } from "@/data/projects";
+import { otherWork, type OtherWork as WorkEntry } from "@/data/projects";
 import { Tag } from "./primitives";
 
 /**
@@ -20,10 +20,59 @@ import { Tag } from "./primitives";
  * three projects cost one screen and comparing them costs no scrolling at all.
  *
  * Selection follows hover *and* focus, driven by a roving tabindex: ↑ / ↓ walk
- * the list, Home / End jump its ends, Enter opens. On mobile there is no
- * pointer to follow, so the pane sits under the list and the rows drive it by
- * tap.
+ * the list, Home / End jump its ends, Enter opens.
+ *
+ * All of that needs a cursor. Where there is none the rows are the only way in
+ * and a tap on one navigates rather than selects, so the pane sat frozen on the
+ * first project for the whole visit while the other two write-ups stayed hidden
+ * beside it. The composition is therefore gated on `md:pointer-fine:` — on the
+ * pointer as much as on the width, so a tablet is not handed a pane it has no
+ * way to drive — and touch gets the honest arrangement instead: every write-up
+ * open, inline under the row it belongs to. Rows stay plain links in both, so a
+ * tap still goes where it says it goes.
  */
+
+/**
+ * One write-up: the note, the stack, the labelled way in.
+ *
+ * It renders in both arrangements — inline under its row where there is no
+ * cursor, in the pane where there is — so it is defined once here rather than
+ * written twice and left to drift.
+ *
+ * No numeral. The bracketed [nn] everywhere else on the site is the project's
+ * catalogue index, and this list is in presentation order, so a positional
+ * counter here labelled Muterpe [03] and then opened a page headed
+ * [CASE STUDY 06]. The row's own name is the only label the pane needs.
+ */
+function Detail({ work }: { work: WorkEntry }) {
+  return (
+    <>
+      <p className="max-w-md text-sm leading-7 text-ink-muted">{work.note}</p>
+
+      <div className="mt-6 flex flex-wrap gap-2">
+        {work.stack.map((t) => (
+          <span key={t} className="label border border-[color:var(--hairline)] px-2 py-1 text-ink">
+            {t}
+          </span>
+        ))}
+      </div>
+
+      <Link
+        href={work.href}
+        target={work.external ? "_blank" : undefined}
+        rel={work.external ? "noopener" : undefined}
+        /* Not a keyboard stop: the row itself is already the link to the same
+           place, so this would be a second tab stop to nowhere new. */
+        tabIndex={-1}
+        className="label group mt-8 inline-flex items-center gap-1 text-cobalt transition-colors hover:text-cobalt-deep"
+      >
+        {work.hrefLabel} — {work.name}
+        <ArrowUpRight className="h-3.5 w-3.5" aria-hidden />
+      </Link>
+    </>
+  );
+}
+
 export function OtherWork() {
   const [active, setActive] = useState(0);
   const rowRefs = useRef<(HTMLAnchorElement | null)[]>([]);
@@ -59,10 +108,11 @@ export function OtherWork() {
               Also shipped
             </h2>
           </div>
-          <p className="label text-ink-muted">↑ ↓ TO BROWSE</p>
+          {/* Only true where the pane it browses exists. */}
+          <p className="label hidden text-ink-muted md:pointer-fine:block">↑ ↓ TO BROWSE</p>
         </div>
 
-        <div className="grid gap-8 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:gap-14">
+        <div className="grid gap-8 md:pointer-fine:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:pointer-fine:gap-14">
           {/* ---- the index ---- */}
           <ul className="rule-t">
             {otherWork.map((w, i) => {
@@ -85,70 +135,57 @@ export function OtherWork() {
                     rel={w.external ? "noopener" : undefined}
                     className="group flex items-baseline gap-4 py-5 transition-colors"
                   >
+                    {/* The marker reads as "selected", which is only true while
+                        something is doing the selecting, so it belongs to the
+                        pane arrangement and is dropped along with it. */}
                     <span
-                      className={`label transition-colors ${on ? "text-cobalt" : "text-ink-muted"}`}
+                      className={`label hidden transition-colors md:pointer-fine:block ${
+                        on ? "text-cobalt" : "text-ink-muted"
+                      }`}
                       aria-hidden
                     >
                       {on ? "▸" : "·"}
                     </span>
-                    <span className="min-w-0 flex-1">
-                      <span
-                        className={`display block text-2xl transition-colors md:text-3xl ${
-                          on ? "text-cobalt" : "text-ink"
+                    <div className="min-w-0 flex-1">
+                      {/* The row's name is the project's heading, rather than a
+                          screen-reader copy of it inside the pane: it is the
+                          same element in both arrangements, so the outline no
+                          longer depends on which one rendered, and nothing gets
+                          announced twice where the write-up sits directly under
+                          its row. */}
+                      <h3
+                        className={`display block text-2xl text-ink transition-colors md:text-3xl ${
+                          on ? "md:pointer-fine:text-cobalt" : ""
                         }`}
                       >
                         {w.name}
-                      </span>
+                      </h3>
                       <span className="label mt-1 block text-ink-muted">{w.tagline}</span>
-                    </span>
+                    </div>
                     <span className="label shrink-0 text-ink-muted">{w.status}</span>
                   </Link>
+
+                  {/* The inline write-up. It is in the served HTML for all three
+                      projects at every viewport, which is what keeps the section
+                      whole for crawlers and for readers without JavaScript now
+                      that the pane mounts only the selected one. */}
+                  <div className="pb-6 md:pointer-fine:hidden">
+                    <Detail work={w} />
+                  </div>
                 </li>
               );
             })}
           </ul>
 
-          {/* ---- the panes ----
-              All three render; the two that are not selected are `hidden`.
-              Mounting only the active one meant two of the three write-ups
-              never existed in the served HTML, so the section described one
-              project to anything that does not run JavaScript. The fade is
-              keyed on the active name so it still re-runs on every move. */}
-          <div key={item.name} className="animate-[fade-up_360ms_ease-out_both] md:pt-6">
-            {otherWork.map((work, i) => (
-              <div key={work.name} hidden={i !== active}>
-                <p className="label text-ink">[{String(i + 1).padStart(2, "0")}]</p>
-                <h3 className="sr-only">
-                  {work.name} — {work.tagline}
-                </h3>
-                <p className="mt-4 max-w-md text-sm leading-7 text-ink-muted">{work.note}</p>
-
-                <div className="mt-6 flex flex-wrap gap-2">
-                  {work.stack.map((t) => (
-                    <span
-                      key={t}
-                      className="label border border-[color:var(--hairline)] px-2 py-1 text-ink"
-                    >
-                      {t}
-                    </span>
-                  ))}
-                </div>
-
-                <Link
-                  href={work.href}
-                  target={work.external ? "_blank" : undefined}
-                  rel={work.external ? "noopener" : undefined}
-                  /* Not a keyboard stop: the row itself is already the link to
-                     the same place, so this would be a second tab stop to
-                     nowhere new. */
-                  tabIndex={-1}
-                  className="label group mt-8 inline-flex items-center gap-1 text-cobalt transition-colors hover:text-cobalt-deep"
-                >
-                  {work.hrefLabel} — {work.name}
-                  <ArrowUpRight className="h-3.5 w-3.5" aria-hidden />
-                </Link>
-              </div>
-            ))}
+          {/* ---- the pane ----
+              The selected write-up, and only where there is a pointer to select
+              it with. The fade is keyed on the active name so it re-runs on
+              every move. */}
+          <div
+            key={item.name}
+            className="hidden animate-[fade-up_360ms_ease-out_both] md:pt-6 md:pointer-fine:block"
+          >
+            <Detail work={item} />
           </div>
         </div>
       </div>

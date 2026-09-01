@@ -176,7 +176,7 @@ export function ComingSoon() {
                     key={step.id}
                     aria-hidden={unplayed}
                     className={`grid grid-cols-[1rem_1fr] gap-x-3 py-1.5 transition-opacity duration-300 ${
-                      unplayed ? "opacity-0" : state === "pending" ? "opacity-30" : "opacity-100"
+                      unplayed ? "opacity-0" : "opacity-100"
                     }`}
                   >
                     <span
@@ -187,7 +187,15 @@ export function ComingSoon() {
                     </span>
                     <span>
                       <span className="flex flex-wrap items-baseline justify-between gap-x-4">
-                        <span className="text-ink">{step.label}</span>
+                        {/* A row that has not run yet is a colour step, not an
+                            alpha wash: 12px mono dimmed to 30% measures about
+                            2.6:1, and the row held back this way is the gate —
+                            the one thing this whole section exists to explain.
+                            `--ink-muted` reads quiet at 7.71:1 and lets the
+                            white label plus the cobalt ✓ mark what has run. */}
+                        <span className={state === "pending" ? "text-ink-muted" : "text-ink"}>
+                          {step.label}
+                        </span>
                         <span className="text-ink-muted">
                           {state === "done" ? `${step.ms}ms` : "—"}
                           {" · "}

@@ -49,6 +49,9 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
   display: "swap",
+  // Used by one component below the fold. Preloading it on every route put a
+  // font file on the critical path that nothing in the first screen paints.
+  preload: false,
 });
 
 /* 60 characters: the name people search for, plus the two frameworks and the
@@ -116,7 +119,7 @@ export const metadata: Metadata = {
     apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
   },
   manifest: "/manifest.webmanifest",
-  appleWebApp: { capable: true, title: PERSON.name, statusBarStyle: "black-translucent" },
+  appleWebApp: { capable: true, title: PERSON.name, statusBarStyle: "default" },
   /* Phone numbers are linked deliberately in the contact block; Safari should
      not go looking for more and rewrite copy into tel: links. */
   formatDetection: { telephone: false, address: false, email: false },

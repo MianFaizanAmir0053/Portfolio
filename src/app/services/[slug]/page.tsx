@@ -148,7 +148,11 @@ export default async function ServicePage({ params }: PageProps<"/services/[slug
 
         {/* What the engagement includes. */}
         <section className="wrap rule-t py-16 md:py-24">
-          <Tag className="mb-3 block">[01] WHAT THIS INCLUDES</Tag>
+          {/* The eyebrows on this template are index terms, not a second copy
+              of the heading — the device only works as a register shift from
+              machine voice to human voice, which it cannot do when both lines
+              are the same words. */}
+          <Tag className="mb-3 block">[01] SCOPE</Tag>
           <h2 className="display mb-8 text-2xl md:text-4xl">What this includes</h2>
           <ul className="grid gap-x-12 gap-y-10 md:grid-cols-2">
             {service.includes.map((item) => (
@@ -162,7 +166,7 @@ export default async function ServicePage({ params }: PageProps<"/services/[slug
 
         {/* Process, ordered — a list an answer engine can lift as steps. */}
         <section className="wrap rule-t py-16 md:py-24">
-          <Tag className="mb-3 block">[02] HOW THE WORK RUNS</Tag>
+          <Tag className="mb-3 block">[02] PROCESS</Tag>
           <h2 className="display mb-8 text-2xl md:text-4xl">How the work runs</h2>
           <ol className="space-y-8">
             {service.process.map((step, i) => (
@@ -170,7 +174,7 @@ export default async function ServicePage({ params }: PageProps<"/services/[slug
                 <span className="label pt-1 text-cobalt">*[{String(i + 1).padStart(2, "0")}]</span>
                 <div>
                   <h3 className="display text-xl md:text-2xl">{step.step}</h3>
-                  <p className="mt-2 max-w-2xl text-sm leading-7 text-ink-muted">{step.body}</p>
+                  <p className="mt-2 max-w-[64ch] text-sm leading-7 text-ink-muted">{step.body}</p>
                 </div>
               </li>
             ))}
@@ -180,8 +184,16 @@ export default async function ServicePage({ params }: PageProps<"/services/[slug
         {/* Proof, each item linking to the case study that carries it. */}
         <section className="rule-t bg-paper-deep">
           <div className="wrap py-16 md:py-24">
-            <Tag className="mb-3 block">[03] WHERE THIS HAS SHIPPED</Tag>
-            <h2 className="display mb-8 text-2xl md:text-4xl">Where this has shipped</h2>
+            {/*
+             * Not "shipped": three of the six projects this section draws on
+             * are still in development, and on the e-commerce page both proofs
+             * are. The claims underneath are build facts and stand as they
+             * are, but the heading was the word doing the overclaiming, so it
+             * says what is true of all of them and each unfinished build says
+             * so on its own line.
+             */}
+            <Tag className="mb-3 block">[03] PROOF</Tag>
+            <h2 className="display mb-8 text-2xl md:text-4xl">Where this has been built</h2>
             <ul className="grid gap-8 md:grid-cols-3">
               {service.evidence.map((proof) => {
                 const project = getProject(proof.slug);
@@ -189,6 +201,9 @@ export default async function ServicePage({ params }: PageProps<"/services/[slug
                   <li key={proof.slug} className="rule-t pt-5">
                     <h3 className="display text-xl md:text-2xl">{proof.project}</h3>
                     {project && <p className="label mt-1 text-cobalt">{project.tagline}</p>}
+                    {project?.inDevelopment && (
+                      <p className="label mt-1 text-ink-muted">* IN DEVELOPMENT</p>
+                    )}
                     <p className="mt-3 text-sm leading-7 text-ink-muted">{proof.claim}</p>
                     <Link
                       href={`/work/${proof.slug}`}
@@ -204,7 +219,6 @@ export default async function ServicePage({ params }: PageProps<"/services/[slug
         </section>
 
         <section className="wrap rule-t py-12">
-          <Tag className="mb-3 block">[STACK]</Tag>
           <h2 className="display mb-4 text-xl md:text-2xl">Stack</h2>
           <ul className="flex flex-wrap gap-2">
             {service.stack.map((tech) => (
@@ -224,14 +238,13 @@ export default async function ServicePage({ params }: PageProps<"/services/[slug
             {service.faqs.map((faq) => (
               <div key={faq.q}>
                 <dt className="display text-xl md:text-2xl">{faq.q}</dt>
-                <dd className="mt-3 text-sm leading-7 text-ink-muted">{faq.a}</dd>
+                <dd className="mt-3 max-w-[64ch] text-sm leading-7 text-ink-muted">{faq.a}</dd>
               </div>
             ))}
           </dl>
         </section>
 
         <section className="wrap rule-t py-12">
-          <Tag className="mb-3 block">[RELATED]</Tag>
           <h2 className="display mb-4 text-xl md:text-2xl">Related</h2>
           <ul className="flex flex-wrap gap-x-8 gap-y-3">
             {related.map((other) => (

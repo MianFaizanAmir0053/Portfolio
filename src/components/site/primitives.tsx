@@ -2,7 +2,15 @@
 
 import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
-import { Fragment, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import {
+  Fragment,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { cn } from "@/lib/utils";
@@ -10,6 +18,15 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 import { scrollSignal } from "@/lib/scroll-signal";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
+
+/**
+ * `useLayoutEffect` on the client, `useEffect` on the server.
+ *
+ * Used where a state change has to land *before* the browser paints — hiding
+ * an element that the server deliberately rendered visible. `useEffect` runs
+ * after paint, which would show the text and then snatch it away.
+ */
+const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 /* ---------- bracket label ---------- */
 export function Tag({ children, className }: { children: ReactNode; className?: string }) {
@@ -39,13 +56,31 @@ export function CurtainText({
 }) {
   const ref = useRef<HTMLElement>(null);
   const [shown, setShown] = useState(false);
-  const [reduce, setReduce] = useState(false);
+  /*
+   * The line starts *visible* and is hidden by the client, not the other way
+   * around. Rendering `translateY(110%)` inside `overflow-hidden` from the
+   * server meant every heading below the fold was clipped out of its own box
+   * in the HTML: if the bundle was slow, blocked, or never ran, the page had
+   * body copy and no headings at all. Arming happens in a layout effect, so
+   * the hide lands before the first paint and nothing flashes.
+   */
+  const [armed, setArmed] = useState(false);
 
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     if (immediate) return;
     const el = ref.current;
     if (!el) return;
-    setReduce(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+    // Asked for no animation: leave the server's visible markup alone. The old
+    // behaviour revealed it only after hydration, so the heading snapped in
+    // with no transition — a pop, which is what the setting exists to prevent.
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    // Already on screen at first paint. Hiding it now to slide it back in
+    // would be a flash, so it simply stays where it is.
+    if (el.getBoundingClientRect().top < window.innerHeight) return;
+
+    setArmed(true);
     const io = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting) {
@@ -83,14 +118,14 @@ export function CurtainText({
               <span
                 className="block"
                 style={{
-                  transform: shown || reduce ? "translateY(0)" : "translateY(110%)",
-                  transition: reduce
-                    ? "none"
-                    : `transform 0.9s cubic-bezier(0.16,1,0.3,1) ${delay + i * 0.06}s`,
+                  transform: armed && !shown ? "translateY(110%)" : "translateY(0)",
+                  transition: armed
+                    ? `transform 0.9s cubic-bezier(0.16,1,0.3,1) ${delay + i * 0.06}s`
+                    : "none",
                   /* Dropped once the line has arrived: a promoted layer per
                      headline line, kept forever, is memory the compositor
                      never gets back. */
-                  willChange: shown || reduce ? "auto" : "transform",
+                  willChange: armed && !shown ? "transform" : "auto",
                 }}
               >
                 {line}
@@ -115,13 +150,32 @@ export function FadeIn({
   y?: number;
 }) {
   const reduce = useReducedMotion();
+  const ref = useRef<HTMLDivElement>(null);
+  /*
+   * Same rule as CurtainText: the server ships the content visible and the
+   * client hides it, rather than the other way round. `initial={{ opacity: 0 }}`
+   * puts that zero in the HTML, so without JavaScript the paragraph is in the
+   * document and invisible on the page. Arming in a layout effect lands the
+   * hide before the first paint, and anything already on screen is left alone
+   * so it cannot flash.
+   */
+  const [armed, setArmed] = useState(false);
+
+  useIsomorphicLayoutEffect(() => {
+    if (reduce) return;
+    const el = ref.current;
+    if (!el || el.getBoundingClientRect().top < window.innerHeight) return;
+    setArmed(true);
+  }, [reduce]);
+
   return (
     <motion.div
+      ref={ref}
       className={className}
-      initial={reduce ? { opacity: 1 } : { opacity: 0, y }}
+      initial={armed ? { opacity: 0, y } : false}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-8%" }}
-      transition={reduce ? { duration: 0 } : { duration: 0.7, ease: EASE, delay }}
+      transition={reduce || !armed ? { duration: 0 } : { duration: 0.7, ease: EASE, delay }}
     >
       {children}
     </motion.div>
@@ -317,10 +371,21 @@ export function Marquee({
     let x = 0;
     let skew = 0;
 
+    /*
+     * Measured once, not every frame. Two identical copies sit side by side, so
+     * wrapping at half the track width loops seamlessly whatever the text
+     * length — and because the string is fixed and the track is `w-max`, that
+     * width only changes when the element itself is resized. Reading it inside
+     * the ticker meant a forced layout flush 60 times a second, immediately
+     * after the same loop had written an inline transform.
+     */
+    let half = track.scrollWidth / 2;
+    const ro = new ResizeObserver(() => {
+      half = track.scrollWidth / 2;
+    });
+    ro.observe(track);
+
     const tick = (_time: number, deltaMs: number) => {
-      // Two identical copies sit side by side, so wrapping at half the track
-      // width loops seamlessly whatever the text length.
-      const half = track.scrollWidth / 2;
       if (!half) return;
 
       const velocity = scrollSignal.velocity;
@@ -334,9 +399,34 @@ export function Marquee({
       gsap.set(track, { x, skewX: skew });
     };
 
-    gsap.ticker.add(tick);
-    return () => {
+    /*
+     * Only runs while it is on screen. The footer marquee sits ten screens
+     * below the fold on every route, and without this it animated for the
+     * whole session where nobody could see it — the same gate PixelatedCanvas
+     * already uses for the same reason.
+     */
+    let running = false;
+    const start = () => {
+      if (running) return;
+      running = true;
+      gsap.ticker.add(tick);
+    };
+    const stop = () => {
+      if (!running) return;
+      running = false;
       gsap.ticker.remove(tick);
+    };
+
+    const io = new IntersectionObserver(
+      (entries) => (entries[0]?.isIntersecting ? start() : stop()),
+      { threshold: 0 },
+    );
+    io.observe(track);
+
+    return () => {
+      io.disconnect();
+      ro.disconnect();
+      stop();
       gsap.set(track, { x: 0, skewX: 0 });
     };
   }, [reduce, speed]);
@@ -511,18 +601,34 @@ export function Tilt({
     const el = ref.current;
     if (!el) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    /*
+     * The box is measured when the pointer arrives, not on every move. Reading
+     * it inside the move handler put a forced layout flush immediately after
+     * the previous move's style write — read, write, read — on the hero
+     * portrait and all six featured cards. It is captured again on enter, so a
+     * card that has moved since the last hover still tilts around its real
+     * centre.
+     */
+    let box: DOMRect | null = null;
+
+    const onEnter = () => {
+      box = el.getBoundingClientRect();
+    };
     const onMove = (e: MouseEvent) => {
-      const r = el.getBoundingClientRect();
-      const px = (e.clientX - r.left) / r.width - 0.5;
-      const py = (e.clientY - r.top) / r.height - 0.5;
+      if (!box) box = el.getBoundingClientRect();
+      const px = (e.clientX - box.left) / box.width - 0.5;
+      const py = (e.clientY - box.top) / box.height - 0.5;
       el.style.transform = `perspective(900px) rotateY(${px * max}deg) rotateX(${-py * max}deg)`;
     };
     const reset = () => {
+      box = null;
       el.style.transform = "perspective(900px) rotateY(0deg) rotateX(0deg)";
     };
+    el.addEventListener("mouseenter", onEnter);
     el.addEventListener("mousemove", onMove);
     el.addEventListener("mouseleave", reset);
     return () => {
+      el.removeEventListener("mouseenter", onEnter);
       el.removeEventListener("mousemove", onMove);
       el.removeEventListener("mouseleave", reset);
     };
@@ -536,24 +642,45 @@ export function Tilt({
 }
 
 /* ---------- scroll progress hairline ---------- */
+/**
+ * The bar is scaled, not resized, and React is not in the loop.
+ *
+ * It used to read `scrollHeight` and call `setState` on every scroll event,
+ * then animate `width` — a forced layout read, a re-render and a layout-
+ * affecting transition, all on the same frame, for one hairline. It also
+ * lagged: a 150ms ease on a value that changes every frame trails the real
+ * scroll position by about a tenth of a second. A scrubbed `scaleX` on the
+ * compositor tracks it exactly and costs nothing.
+ */
 export function ScrollProgress() {
-  const [pct, setPct] = useState(0);
+  const ref = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    const onScroll = () => {
-      const h = document.documentElement.scrollHeight - window.innerHeight;
-      setPct(h > 0 ? (window.scrollY / h) * 100 : 0);
-    };
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-    };
+    const el = ref.current;
+    if (!el) return;
+    gsap.registerPlugin(ScrollTrigger);
+
+    // The same measurement ScrollFxRoot already makes for the page, expressed
+    // once here rather than recomputed per event.
+    const trigger = ScrollTrigger.create({
+      trigger: document.documentElement,
+      start: "top top",
+      end: "bottom bottom",
+      onUpdate: (self) => {
+        el.style.transform = `scaleX(${self.progress})`;
+      },
+    });
+
+    return () => trigger.kill();
   }, []);
+
   return (
-    <div aria-hidden className="fixed inset-x-0 top-0 z-[70] h-px bg-transparent">
-      <div className="h-full bg-cobalt transition-[width] duration-150" style={{ width: `${pct}%` }} />
+    <div aria-hidden className="fixed inset-x-0 top-0 z-70 h-px bg-transparent">
+      <div
+        ref={ref}
+        className="h-full w-full origin-left bg-cobalt"
+        style={{ transform: "scaleX(0)" }}
+      />
     </div>
   );
 }
