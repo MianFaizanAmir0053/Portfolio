@@ -145,7 +145,10 @@ export function ComingSoon() {
           <div className="cut-tr border border-[color:var(--hairline)] bg-paper">
             <header className="flex items-center justify-between gap-4 rule-b px-5 py-3">
               <p className="label text-ink">LANGGRAPH · RUN #0af31c</p>
-              <p className="label" aria-live="polite">
+              {/* No aria-live: the replay starts on scroll, not on a user
+                  action, so announcing four state changes to a screen reader
+                  is an interruption nobody asked for. */}
+              <p className="label">
                 {phase === "awaiting" && <span className="text-cobalt">◆ INTERRUPT</span>}
                 {phase === "editing" && <span className="text-cobalt">◆ EDITING</span>}
                 {phase === "running" && "▮ RUNNING"}
@@ -159,13 +162,21 @@ export function ComingSoon() {
               {STEPS.map((step, i) => {
                 const state =
                   i < done ? "done" : i === done && phase === "awaiting" ? "gate" : "pending";
-                if (state === "pending" && !(i === GATE && phase !== "declined")) return null;
+                /*
+                 * Dimmed, not unmounted. Returning null here kept five of the
+                 * six graph nodes — the part of this write-up that is actually
+                 * technical — out of the served HTML until the replay had run,
+                 * which no crawler waits for. `opacity-0` with the row still in
+                 * the flow keeps the box the same height it always was.
+                 */
+                const unplayed = state === "pending" && !(i === GATE && phase !== "declined");
 
                 return (
                   <li
                     key={step.id}
+                    aria-hidden={unplayed}
                     className={`grid grid-cols-[1rem_1fr] gap-x-3 py-1.5 transition-opacity duration-300 ${
-                      state === "pending" ? "opacity-30" : "opacity-100"
+                      unplayed ? "opacity-0" : state === "pending" ? "opacity-30" : "opacity-100"
                     }`}
                   >
                     <span

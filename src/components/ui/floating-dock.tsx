@@ -53,7 +53,7 @@ function DockLink({
     return (
       <a
         href={href}
-        {...(external ? { target: "_blank", rel: "noreferrer" } : {})}
+        {...(external ? { target: "_blank", rel: "noopener" } : {})}
         className={className}
         {...rest}
       >

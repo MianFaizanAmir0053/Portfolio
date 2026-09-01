@@ -65,22 +65,48 @@ export function Turnstile({
   useEffect(() => {
     if (!siteKey) return;
     let cancelled = false;
+    let io: IntersectionObserver | null = null;
 
-    loadTurnstile().then(() => {
-      if (cancelled) return;
-      const el = document.getElementById(containerId);
-      if (!el || !window.turnstile) return;
-      widgetId.current = window.turnstile.render(el, {
-        sitekey: siteKey,
-        theme: "dark",
-        callback: onVerify,
-        "expired-callback": () => onExpire?.(),
-        "error-callback": () => onExpire?.(),
+    const render = () => {
+      loadTurnstile().then(() => {
+        if (cancelled) return;
+        const target = document.getElementById(containerId);
+        if (!target || !window.turnstile) return;
+        widgetId.current = window.turnstile.render(target, {
+          sitekey: siteKey,
+          theme: "dark",
+          callback: onVerify,
+          "expired-callback": () => onExpire?.(),
+          "error-callback": () => onExpire?.(),
+        });
       });
-    });
+    };
+
+    /*
+     * Deferred until the widget is close to the viewport. The contact form sits
+     * at the bottom of a long page, so fetching Cloudflare's script at
+     * hydration put a third-party request on the critical path of a page most
+     * visitors never scroll to the end of. The 600px margin means the widget is
+     * still ready by the time anyone reaches the form.
+     */
+    const el = document.getElementById(containerId);
+    if (el && "IntersectionObserver" in window) {
+      io = new IntersectionObserver(
+        (entries) => {
+          if (!entries[0]?.isIntersecting) return;
+          io?.disconnect();
+          render();
+        },
+        { rootMargin: "600px 0px" },
+      );
+      io.observe(el);
+    } else {
+      render();
+    }
 
     return () => {
       cancelled = true;
+      io?.disconnect();
       if (widgetId.current && window.turnstile) window.turnstile.remove(widgetId.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

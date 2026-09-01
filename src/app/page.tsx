@@ -1,8 +1,13 @@
 import { Fragment } from "react";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
-import { featuredProjects, type Project } from "@/data/projects";
+import { featuredProjects, projects, type Project } from "@/data/projects";
+import { EXPERIENCE, BIO, EDUCATION } from "@/data/experience";
 import { SOCIAL } from "@/data/social";
+import { services } from "@/data/services";
+import { JsonLd } from "@/components/site/JsonLd";
+import { PERSON } from "@/lib/site";
+import { faqSchema, graph, itemListSchema, webPageSchema } from "@/lib/schema";
 import { UtilityBar } from "@/components/site/UtilityBar";
 import { Footer } from "@/components/site/Footer";
 import { ContactForm } from "@/components/site/ContactForm";
@@ -32,46 +37,12 @@ import {
   ParallaxLayer,
 } from "@/components/site/scroll-fx";
 
-/*
- * The three bodies are written to the same length on purpose — 304 / 308 / 290
- * characters, three sentences each. The cards share a `min-h`, so an entry that
- * ran long was the only thing setting the height of its own panel and leaving
- * the others short. Matched copy means matched boxes.
- */
-const EXPERIENCE = [
-  {
-    n: "01",
-    role: "Senior Software Engineer",
-    company: "Ward Web Solutions",
-    dates: "Feb 2026 – Present",
-    place: "United Kingdom",
-    body: "Leading a team building full-stack and AI-powered SaaS, including medical platforms used across the UK and Europe. Shipping RAG pipelines, agentic AI, and microservices, and mentoring engineers through code reviews and sprint planning. Built 30+ REST and GraphQL APIs on PostgreSQL and AWS at 99% uptime.",
-  },
-  {
-    n: "02",
-    role: "Senior Software Engineer",
-    company: "Wanile Technologies",
-    dates: "Jul 2024 – Present",
-    place: "Lahore",
-    body: "Leading full-stack development across 8+ client projects in React, Next.js, Node.js, and Python, turning business requirements into shipped products 20% faster. Built 30+ REST APIs and data pipelines, cutting response times by 18%. Shipped 10+ production apps and closed 50+ issues, cutting incidents by 25%.",
-  },
-  {
-    n: "03",
-    role: "Senior Software Engineer",
-    company: "Nazadv",
-    dates: "Nov 2022 – Feb 2026",
-    place: "US (California)",
-    body: "Worked directly with 10+ clients and a small engineering team over three years, shipping 15+ full-stack features across UI, APIs, databases, and data pipelines. Developed 5+ RAG and agentic AI solutions, integrating LLMs into production systems. Cut bugs by 25% across 20+ shipped features.",
-  },
-];
-
-
 /** Stack tags a stacked card shows before collapsing the rest into a count. */
 const STACK_TAGS_ON_CARD = 6;
 
 /*
  * Margin notes on the bio, not a summary of it. Each one is anchored to the
- * word in ABOUT_BODY it explains — the word lights cobalt as its card lands, so
+ * word in BIO it explains — the word lights cobalt as its card lands, so
  * the pairing is visible rather than implied. `pos` is where the card sits in
  * the held frame on wide screens; the anchors decide the order they arrive in,
  * which is why the positions read left → right → left rather than top to bottom.
@@ -100,23 +71,60 @@ const ABOUT_FACTS = [
   },
 ];
 
+
 /**
- * The bio, broken at its own sentence boundaries. Same words as before — but
- * as one 79-word block at statement size it read as a wall, and a centred wall
- * is the hardest shape of text there is to get through.
+ * The five questions someone types before they type a name. Rendered on the
+ * page and mirrored into FAQPage structured data — one source, so the answer an
+ * engine quotes is the answer a visitor reads.
  */
-const ABOUT_BODY = [
-  "I'm a Senior Software Engineer with four years of experience building full-stack and AI-driven applications using React, Next.js, Python, and Node.js.",
-  "My focus is RAG architectures, agentic AI, and LLM integrations — turning business requirements into production systems people actually use.",
-  "I've led development across 8+ projects, built 30+ REST and GraphQL APIs, and shipped AI features used by hundreds of real users.",
-  "I care about clean architecture, fast iteration, and solving the actual problem, not just the ticket.",
+const HOME_FAQS = [
+  {
+    q: "What does Faizan Amir do?",
+    a: "Faizan Amir is a senior software engineer who builds full-stack and AI-driven applications in React, Next.js, TypeScript, Node.js and Python. His focus is retrieval-augmented generation, agentic AI and LLM integration, delivered as production systems rather than prototypes.",
+  },
+  {
+    q: "What has he actually shipped?",
+    a: "Six case studies, all live or in active development: a digital business card platform at 150+ users, an agentic RAG legal platform at 95% extraction accuracy, an AI image SaaS at 200+ users and $5,000+ revenue, a telehealth commerce platform with 94 API routes, a three-service e-commerce build, and a multi-role fintech front end.",
+  },
+  {
+    q: "Is he available to hire?",
+    a: "Yes, for scoped builds with a defined outcome and for embedded contract work alongside an existing team. Email faizanamir0053@gmail.com or use the contact form. Replies usually land within one working day.",
+  },
+  {
+    q: "Where is he based and who does he work with?",
+    a: "Lahore, Pakistan, at UTC+5, working day to day with teams in the United States, United Kingdom, Middle East and Europe across three current and previous roles.",
+  },
+  {
+    q: "What is his strongest area?",
+    a: "Applied AI engineering on top of solid product fundamentals: retrieval that preserves document structure, agent workflows with real routing and human approval gates, and evaluation harnesses built before the pipeline is tuned. Five or more RAG and agentic systems have reached production.",
+  },
 ];
 
 export default function Index() {
   return (
     <div className="min-h-screen bg-paper">
+      <JsonLd
+        data={graph(
+          webPageSchema({
+            path: "/",
+            name: `${PERSON.name} — ${PERSON.jobTitle}, Full-Stack & AI`,
+            description:
+              "Portfolio of Faizan Amir, a senior software engineer building full-stack and AI-driven products in React, Next.js, Node.js and Python.",
+            type: "ProfilePage",
+          }),
+          faqSchema("/", HOME_FAQS),
+          itemListSchema(
+            "/",
+            projects.map((p) => ({
+              name: `${p.name} — ${p.tagline}`,
+              path: `/work/${p.slug}`,
+              description: p.summary,
+            })),
+          ),
+        )}
+      />
       <UtilityBar />
-      <main>
+      <main id="main">
         <Hero />
         <Marquee
           text="WARD WEB SOLUTIONS + WANILE TECHNOLOGIES + NAZADV + VOLUMIZE + WISDOMUP + CARDER.APP + GOLEGAL.WANILE.DEV + MUTERPE + ALFA + "
@@ -132,6 +140,7 @@ export default function Index() {
         <OtherWork />
         <Education />
         <BeyondCode />
+        <Faq />
         <Contact />
       </main>
       <Footer />
@@ -141,27 +150,47 @@ export default function Index() {
 
 /* ---------------- HERO ---------------- */
 function Hero() {
+  /*
+   * Each stat now says where it comes from. "200+ USERS" and "$5K+ REVENUE"
+   * are Muterpe's numbers; floating them unattributed next to a career summary
+   * read as career totals, which is a claim the case studies do not make.
+   */
   const tags = [
-    { label: "4+ YRS", pos: "left-0 top-[12%]" },
-    { label: "200+ USERS", pos: "right-0 top-[26%]" },
-    { label: "8+ SHIPPED", pos: "left-[4%] bottom-[22%]" },
-    { label: "$5K+ REVENUE", pos: "left-[4%] bottom-[6%] md:left-auto md:right-[2%] md:bottom-[10%]" },
+    { label: "4+ YRS SHIPPING", pos: "left-0 top-[12%]" },
+    { label: "200+ USERS · MUTERPE", pos: "right-0 top-[26%]" },
+    { label: "8+ PROJECTS LED", pos: "left-[4%] bottom-[22%]" },
+    {
+      label: "$5K+ REVENUE · MUTERPE",
+      pos: "left-[4%] bottom-[6%] md:left-auto md:right-[2%] md:bottom-[10%]",
+    },
   ];
 
   return (
     <section
       id="hero"
+      aria-label="Introduction"
       className="wrap relative grid gap-10 pb-16 pt-10 md:grid-cols-[1.15fr_0.85fr] md:gap-12 md:pb-24 md:pt-16"
     >
       {/* Three depth planes leave at three speeds: copy slowest, object mid,
           floating proof stats fastest. */}
       <ParallaxLayer speed={0.07} scope="#hero" className="flex flex-col justify-center">
         <Tag className="mb-6 block">[01] SENIOR SOFTWARE ENGINEER</Tag>
-        <p className="label mb-4 text-ink">FAIZAN AMIR</p>
+        {/*
+         * The name and the role are inside the h1 now, as its first line. They
+         * were a sibling <p> before, which left the page's only h1 reading
+         * "I build full-stack and AI-driven systems people actually use." —
+         * a good sentence that names neither the person nor the job anyone
+         * searches for. `immediate` reveals it from CSS at parse time rather
+         * than after hydration: this is the largest text on the page.
+         */}
         <CurtainText
           as="h1"
+          immediate
           className="display text-[13vw] md:text-[clamp(3.5rem,7.4vw,7.5rem)]"
           lines={[
+            <span key="0" className="label mb-4 block text-ink">
+              Faizan Amir — Senior Software Engineer
+            </span>,
             <Fragment key="1">I build full-stack</Fragment>,
             <Fragment key="2">and AI-driven</Fragment>,
             <Fragment key="3">
@@ -221,15 +250,22 @@ function Hero() {
           scope="#hero"
           className="pointer-events-none absolute inset-0"
         >
-          {tags.map((t, i) => (
-            <span
-              key={t.label}
-              className={`label absolute ${t.pos} animate-drift border border-ink/40 bg-paper/80 px-2 py-1 text-ink backdrop-blur-[2px]`}
-              style={{ animationDelay: `${i * 0.8}s` }}
-            >
-              {t.label}
-            </span>
-          ))}
+          {/* A list, not four loose spans: these are the page's opening proof
+              and they should read as a set to anything parsing the document.
+              `backdrop-blur` dropped — four permanently-animating elements each
+              forcing a backdrop re-rasterisation every frame, above the fold,
+              is the most expensive decoration on the page. */}
+          <ul aria-label="Headline numbers">
+            {tags.map((t, i) => (
+              <li
+                key={t.label}
+                className={`label absolute ${t.pos} animate-drift border border-ink/40 bg-paper/90 px-2 py-1 text-ink`}
+                style={{ animationDelay: `${i * 0.8}s` }}
+              >
+                {t.label}
+              </li>
+            ))}
+          </ul>
         </ParallaxLayer>
 
         <div className="mt-6 flex justify-end md:absolute md:-bottom-8 md:right-0 md:mt-0">
@@ -253,9 +289,9 @@ function Hero() {
 /* ---------------- ABOUT — held on screen, lit as it is read ---------------- */
 function About() {
   return (
-    <section id="about" className="rule-t">
+    <section id="about" className="rule-t" aria-label="About Faizan Amir">
       <PinnedLitText
-        paragraphs={ABOUT_BODY}
+        paragraphs={BIO}
         // Margin notes, not a section: each lands as the sweep reaches the word
         // it explains, and stays there for the rest of the hold.
         facts={ABOUT_FACTS}
@@ -298,7 +334,7 @@ function Experience() {
   ];
 
   return (
-    <section id="experience" className="rule-t">
+    <section id="experience" className="rule-t" aria-label="Experience">
       <HorizontalScroll label="[04] EXPERIENCE" steps={steps}>
         <HPanel width="w-[84vw] sm:w-[58vw] md:w-[38vw] lg:w-[30vw]">
           <div className="flex flex-col justify-center md:min-h-[58vh]">
@@ -337,10 +373,14 @@ function Experience() {
                 <p className="outline-num text-[16vw] md:text-[5vw] [@media(max-height:680px)]:md:text-[3.4vw]">
                   [{e.n}]
                 </p>
+                {/* Role and company in one heading. Three panels each headed
+                    "Senior Software Engineer" with the employer demoted to a
+                    paragraph gave the page three identical h3s and no way to
+                    tell them apart from the outline alone. */}
                 <h3 className="display mt-6 text-2xl md:text-4xl [@media(max-height:680px)]:md:mt-3 [@media(max-height:680px)]:md:text-3xl">
                   {e.role}
+                  <span className="accent-word block text-2xl md:text-3xl">{e.company}</span>
                 </h3>
-                <p className="accent-word text-2xl md:text-3xl">{e.company}</p>
                 <p className="label mt-4 [@media(max-height:680px)]:mt-2">
                   {e.dates} · {e.place}
                 </p>
@@ -385,7 +425,7 @@ function Experience() {
 /* ---------------- FEATURED WORK — a deck that stacks ---------------- */
 function FeaturedWork() {
   return (
-    <section id="work" className="rule-t">
+    <section id="work" className="rule-t" aria-label="Featured case studies">
       <div className="wrap flex flex-wrap items-end justify-between gap-6 py-20 md:py-28">
         <div>
           <Tag className="mb-6 block">[FEATURED WORK]</Tag>
@@ -490,7 +530,7 @@ function ProjectAside({ project: p, href }: { project: Project; href?: string })
       <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2">
         {p.indexMetrics.map((m) => (
           <span key={m} className="label text-ink">
-            <span className="text-cobalt">*</span> {m}
+            <span aria-hidden className="text-cobalt">*</span> {m}
           </span>
         ))}
       </div>
@@ -547,12 +587,69 @@ function ProjectAside({ project: p, href }: { project: Project; href?: string })
 
 function Education() {
   return (
-    <section className="wrap rule-t py-10">
+    <section id="education" className="wrap rule-t py-10" aria-labelledby="education-heading">
       <Tag className="mb-3 block">[EDUCATION]</Tag>
+      {/* The block had no heading and no id, so a degree sat unattached to any
+          titled section of the document. */}
+      <h2 id="education-heading" className="display mb-3 text-xl md:text-2xl">
+        Education
+      </h2>
       <p className="text-sm">
-        Bachelor of Computer Science — Pakistan Institute of Engineering and Applied Sciences,
-        Islamabad
+        {EDUCATION.degree} — {EDUCATION.institution}, {EDUCATION.place.split(",")[0]}
       </p>
+    </section>
+  );
+}
+
+/* ---------------- FAQ — the questions that get typed ---------------- */
+/**
+ * Plain <dl>, no scroll effect. This block exists to be read out of context —
+ * by a visitor scanning, and by an answer engine lifting a single question and
+ * its answer. Anything that hides it behind an interaction defeats the point.
+ */
+function Faq() {
+  return (
+    <section id="faq" className="wrap rule-t py-20 md:py-28" aria-label="Frequently asked questions">
+      <div className="grid gap-10 md:grid-cols-[0.7fr_1.3fr]">
+        <div>
+          <Tag className="mb-6 block">[08] FAQ</Tag>
+          <h2 className="display text-[11vw] leading-[0.9] md:text-[clamp(2.25rem,4vw,3.5rem)]">
+            The <span className="accent-word">short</span> answers
+          </h2>
+          <p className="mt-6 max-w-sm text-sm leading-7 text-ink-muted">
+            Longer versions live on{" "}
+            <Link href="/about" className="text-cobalt hover:underline">
+              about
+            </Link>{" "}
+            and the{" "}
+            <Link href="/services" className="text-cobalt hover:underline">
+              service pages
+            </Link>
+            .
+          </p>
+        </div>
+        <dl className="space-y-8">
+          {HOME_FAQS.map((faq) => (
+            <div key={faq.q} className="rule-t pt-5">
+              <dt className="display text-xl md:text-2xl">{faq.q}</dt>
+              <dd className="mt-3 max-w-2xl text-sm leading-7 text-ink-muted">{faq.a}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+
+      <nav aria-label="Services" className="mt-14 rule-t pt-6">
+        <p className="label mb-4">[WHAT I DO]</p>
+        <ul className="flex flex-wrap gap-x-8 gap-y-3 text-sm">
+          {services.map((service) => (
+            <li key={service.slug}>
+              <Link href={`/services/${service.slug}`} className="text-cobalt hover:underline">
+                {service.name} →
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </nav>
     </section>
   );
 }
@@ -560,7 +657,7 @@ function Education() {
 /* ---------------- CONTACT ---------------- */
 function Contact() {
   return (
-    <section id="contact" className="rule-t bg-paper-deep">
+    <section id="contact" className="rule-t bg-paper-deep" aria-label="Contact">
       <div className="wrap grid gap-12 py-20 md:grid-cols-2 md:py-28">
         <div>
           <Tag className="mb-6 block">[07] CONTACT</Tag>
@@ -585,7 +682,7 @@ function Contact() {
                 <a
                   href="https://wa.me/923030649009"
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noopener"
                   className="text-cobalt hover:underline"
                 >
                   0303 0649009
@@ -595,10 +692,10 @@ function Contact() {
             <div>
               <dt className="label">[SOCIAL]</dt>
               <dd className="flex gap-4 text-sm">
-                <a href={SOCIAL.linkedin} target="_blank" rel="noreferrer" className="hover:text-cobalt">
+                <a href={SOCIAL.linkedin} target="_blank" rel="noopener" className="hover:text-cobalt">
                   LinkedIn ↗
                 </a>
-                <a href={SOCIAL.github} target="_blank" rel="noreferrer" className="hover:text-cobalt">
+                <a href={SOCIAL.github} target="_blank" rel="noopener" className="hover:text-cobalt">
                   GitHub ↗
                 </a>
               </dd>

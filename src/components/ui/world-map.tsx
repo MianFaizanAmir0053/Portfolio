@@ -202,6 +202,14 @@ export default function WorldMap({
                 onFocus={() => setActive(p.key)}
                 onBlur={() => setActive((cur) => (cur === p.key ? null : cur))}
                 onClick={() => setActive((cur) => (cur === p.key ? null : p.key))}
+                /* `role="button"` promises Enter and Space activate it. An SVG
+                   circle gets neither for free, so a keyboard visitor could
+                   focus every marker and open none of them. */
+                onKeyDown={(e) => {
+                  if (e.key !== "Enter" && e.key !== " ") return;
+                  e.preventDefault();
+                  setActive((cur) => (cur === p.key ? null : p.key));
+                }}
               />
             </g>
           );

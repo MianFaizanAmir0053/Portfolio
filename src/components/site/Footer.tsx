@@ -1,13 +1,15 @@
 import Link from "next/link";
 import { Marquee } from "./primitives";
 import { SOCIAL } from "@/data/social";
+import { projects } from "@/data/projects";
+import { services } from "@/data/services";
 
 export function Footer() {
   return (
     <>
       <Marquee text="FAIZAN AMIR + " speed={34} className="rule-t rule-b" />
       <footer className="on-ink bg-ink text-paper">
-        <div className="wrap grid gap-10 py-16 md:grid-cols-4">
+        <div className="wrap grid gap-10 py-16 sm:grid-cols-2 lg:grid-cols-6">
           <address className="not-italic">
             <p className="label mb-3">[CONTACT]</p>
             <p className="text-sm leading-6">
@@ -29,6 +31,11 @@ export function Footer() {
             </a>
           </address>
 
+          {/*
+           * Real pages, not page anchors. Every route on the site is reachable
+           * from every page's footer, which is what stops a case study or a
+           * service page depending on one scroll-driven card stack to be found.
+           */}
           <nav aria-label="Sitemap">
             <p className="label mb-3">[SITEMAP]</p>
             <ul className="space-y-2 text-sm">
@@ -38,20 +45,51 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/#work" className="hover:text-link">
-                  * Featured work
+                <Link href="/work" className="hover:text-link">
+                  * Case studies
                 </Link>
               </li>
               <li>
-                <Link href="/#experience" className="hover:text-link">
-                  * Experience
+                <Link href="/services" className="hover:text-link">
+                  * Services
                 </Link>
               </li>
               <li>
-                <Link href="/#contact" className="hover:text-link">
+                <Link href="/about" className="hover:text-link">
+                  * About
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact" className="hover:text-link">
                   * Contact
                 </Link>
               </li>
+            </ul>
+          </nav>
+
+          <nav aria-label="Case studies">
+            <p className="label mb-3">[WORK]</p>
+            <ul className="space-y-2 text-sm">
+              {projects.map((project) => (
+                <li key={project.slug}>
+                  <Link href={`/work/${project.slug}`} className="hover:text-link">
+                    * {project.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          <nav aria-label="Services">
+            <p className="label mb-3">[SERVICES]</p>
+            <ul className="space-y-2 text-sm">
+              {services.map((service) => (
+                <li key={service.slug}>
+                  <Link href={`/services/${service.slug}`} className="hover:text-link">
+                    * {service.name}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </nav>
 
@@ -59,17 +97,17 @@ export function Footer() {
             <p className="label mb-3">[CONNECT]</p>
             <ul className="space-y-2 text-sm">
               <li>
-                <a href={SOCIAL.github} target="_blank" rel="noreferrer" className="hover:text-link">
+                <a href={SOCIAL.github} target="_blank" rel="noopener" className="hover:text-link">
                   * GitHub
                 </a>
               </li>
               <li>
-                <a href={SOCIAL.linkedin} target="_blank" rel="noreferrer" className="hover:text-link">
+                <a href={SOCIAL.linkedin} target="_blank" rel="noopener" className="hover:text-link">
                   * LinkedIn
                 </a>
               </li>
               <li>
-                <a href="https://wa.me/923030649009" target="_blank" rel="noreferrer" className="hover:text-link">
+                <a href="https://wa.me/923030649009" target="_blank" rel="noopener" className="hover:text-link">
                   * WhatsApp
                 </a>
               </li>
@@ -85,7 +123,7 @@ export function Footer() {
                 </a>
               </li>
               <li>
-                <a href="https://carder.app" target="_blank" rel="noreferrer" className="hover:text-link">
+                <a href="https://carder.app" target="_blank" rel="noopener" className="hover:text-link">
                   * carder.app
                 </a>
               </li>
@@ -93,7 +131,7 @@ export function Footer() {
                 <a
                   href="https://golegal.wanile.dev"
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noopener"
                   className="hover:text-link"
                 >
                   * golegal.wanile.dev

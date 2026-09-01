@@ -1,7 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { cn } from "@/lib/utils";
@@ -21,17 +22,27 @@ export function CurtainText({
   className,
   as: As = "h2",
   delay = 0,
+  immediate = false,
 }: {
   lines: ReactNode[];
   className?: string;
   as?: "h1" | "h2" | "h3" | "p" | "div";
   delay?: number;
+  /**
+   * Reveal on a CSS animation from parse time instead of waiting for hydration
+   * and an IntersectionObserver. Set it on anything above the fold: the hero
+   * headline is the page's largest text, and gating it on the client bundle
+   * made the whole JavaScript payload part of the largest-contentful-paint
+   * measurement. Below the fold the observer is still the right trigger.
+   */
+  immediate?: boolean;
 }) {
   const ref = useRef<HTMLElement>(null);
   const [shown, setShown] = useState(false);
   const [reduce, setReduce] = useState(false);
 
   useEffect(() => {
+    if (immediate) return;
     const el = ref.current;
     if (!el) return;
     setReduce(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
@@ -46,24 +57,47 @@ export function CurtainText({
     );
     io.observe(el);
     return () => io.disconnect();
-  }, []);
+  }, [immediate]);
 
   return (
     <As className={className} ref={ref as never}>
       {lines.map((line, i) => (
-        <span key={i} className="block overflow-hidden pb-[0.06em]">
-          <span
-            className="block will-change-transform"
-            style={{
-              transform: shown || reduce ? "translateY(0)" : "translateY(110%)",
-              transition: reduce
-                ? "none"
-                : `transform 0.9s cubic-bezier(0.16,1,0.3,1) ${delay + i * 0.06}s`,
-            }}
-          >
-            {line}
+        <Fragment key={i}>
+          {/*
+           * A real space between the lines. Each line is its own block, which
+           * separates them visually, but `textContent` — what a crawler or an
+           * answer engine lifting the page reads — has no separator to insert.
+           * Without this the h1 extracts as "I build full-stackand AI-driven".
+           * Whitespace between block boxes does not render.
+           */}
+          {i > 0 ? " " : null}
+          <span className="block overflow-hidden pb-[0.06em]">
+            {immediate ? (
+              <span
+                className="line-rise block"
+                style={{ "--line-delay": `${delay + i * 0.06}s` } as CSSProperties}
+              >
+                {line}
+              </span>
+            ) : (
+              <span
+                className="block"
+                style={{
+                  transform: shown || reduce ? "translateY(0)" : "translateY(110%)",
+                  transition: reduce
+                    ? "none"
+                    : `transform 0.9s cubic-bezier(0.16,1,0.3,1) ${delay + i * 0.06}s`,
+                  /* Dropped once the line has arrived: a promoted layer per
+                     headline line, kept forever, is memory the compositor
+                     never gets back. */
+                  willChange: shown || reduce ? "auto" : "transform",
+                }}
+              >
+                {line}
+              </span>
+            )}
           </span>
-        </span>
+        </Fragment>
       ))}
     </As>
   );
@@ -170,6 +204,7 @@ export function CutFrame({
   parallax = true,
   grayscale = false,
   eager = false,
+  sizes = "(min-width: 1024px) 45vw, (min-width: 768px) 50vw, 100vw",
 }: {
   src: string;
   alt: string;
@@ -180,6 +215,8 @@ export function CutFrame({
   parallax?: boolean;
   grayscale?: boolean;
   eager?: boolean;
+  /** Responsive `sizes` hint. Override where the frame is narrower than half. */
+  sizes?: string;
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
@@ -208,14 +245,29 @@ export function CutFrame({
   return (
     <div ref={wrapRef} className={cn("relative", className)}>
       <div className={cn("relative overflow-hidden bg-paper-deep", ratio, cut)}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        {/*
+         * next/image, not a bare <img>: it emits a srcset sized to the viewport
+         * and converts raster sources to AVIF/WebP, which the case-study
+         * screenshots need the moment they stop being placeholder SVGs. An .svg
+         * source is served untouched — Next skips optimisation for it
+         * automatically.
+         *
+         * `fill` plus an explicit style: the frame overscans by 12% and sits 6%
+         * high so the GSAP parallax has somewhere to travel without exposing an
+         * edge. The style prop is merged after Next's own fill styles, so it
+         * wins.
+         */}
+        <Image
           ref={imgRef}
           src={src}
           alt={alt}
+          fill
+          sizes={sizes}
           loading={eager ? "eager" : "lazy"}
+          fetchPriority={eager ? "high" : "auto"}
+          style={{ height: "112%", transform: "translateY(-6%)" }}
           className={cn(
-            "h-[112%] w-full -translate-y-[6%] object-cover transition-[filter,transform] duration-500",
+            "w-full object-cover transition-[filter,transform] duration-500",
             grayscale && "grayscale group-hover:grayscale-0 group-hover:scale-[1.03]",
           )}
         />
@@ -289,14 +341,26 @@ export function Marquee({
     };
   }, [reduce, speed]);
 
-  const content = `${text} `.repeat(4);
+  /*
+   * Two repeats per half, not four. The band still has to be wider than any
+   * viewport for the wrap to be seamless, but at four the same string appeared
+   * eight times in the document — once for each visible repeat plus the mirror
+   * copy — which reads as keyword repetition to anything extracting the page
+   * and as a stutter to a screen reader. The whole band is decorative; the
+   * single readable copy below carries it for assistive technology and for
+   * anything lifting the text.
+   */
+  const content = `${text} `.repeat(2);
   return (
     <div className={cn("overflow-hidden py-4", dark ? "bg-ink text-paper" : "", className)}>
-      <div ref={trackRef} className="flex w-max whitespace-nowrap will-change-transform">
+      <span className="sr-only">{text.replace(/\s*\+\s*$/, "")}</span>
+      <div
+        ref={trackRef}
+        aria-hidden
+        className="flex w-max whitespace-nowrap will-change-transform"
+      >
         <span className="display pr-8 text-[clamp(1.5rem,3.4vw,3rem)]">{content}</span>
-        <span className="display pr-8 text-[clamp(1.5rem,3.4vw,3rem)]" aria-hidden>
-          {content}
-        </span>
+        <span className="display pr-8 text-[clamp(1.5rem,3.4vw,3rem)]">{content}</span>
       </div>
     </div>
   );

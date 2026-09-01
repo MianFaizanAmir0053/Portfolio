@@ -16,7 +16,9 @@ export default function Error({
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-paper px-5">
-      <div className="w-full max-w-md">
+      {/* A landmark, so this route is not the one page on the site with no
+          document structure at all. */}
+      <main id="main" className="w-full max-w-md">
         <p className="label mb-6 block text-cobalt">[ERROR]</p>
         <h1 className="display text-3xl md:text-4xl">This page didn&apos;t load</h1>
         <p className="mt-3 text-sm leading-7 text-ink-muted">
@@ -37,7 +39,7 @@ export default function Error({
             Go home
           </Link>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

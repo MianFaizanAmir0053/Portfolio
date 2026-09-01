@@ -1,8 +1,7 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import {
   Bebas_Neue,
   Barlow,
-  Barlow_Condensed,
   Instrument_Serif,
   Geist_Mono,
 } from "next/font/google";
@@ -10,6 +9,10 @@ import { LoadCurtain, RouteCurtain } from "@/components/site/Curtains";
 import { ScrollProgress } from "@/components/site/primitives";
 import { ScrollFxRoot } from "@/components/site/scroll-fx";
 import { DockNav } from "@/components/site/DockNav";
+import { SmoothScroll } from "@/components/site/SmoothScroll";
+import { JsonLd } from "@/components/site/JsonLd";
+import { SITE_URL, SITE_NAME, PERSON } from "@/lib/site";
+import { graph, personSchema, websiteSchema } from "@/lib/schema";
 import {
   GoogleAnalytics,
   GoogleTagManager,
@@ -27,14 +30,9 @@ const bebasNeue = Bebas_Neue({
 
 const barlow = Barlow({
   variable: "--font-barlow",
-  weight: ["300", "400", "500", "600"],
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const barlowCondensed = Barlow_Condensed({
-  variable: "--font-barlow-condensed",
-  weight: ["400", "600"],
+  /* 400 and 500 only: nothing on the site sets any other weight, and each
+     one is a separate font file on the critical path. */
+  weight: ["400", "500"],
   subsets: ["latin"],
   display: "swap",
 });
@@ -53,42 +51,112 @@ const geistMono = Geist_Mono({
   display: "swap",
 });
 
-const TITLE = "Faizan Amir — Senior Software Engineer, Full-Stack & AI";
+/* 60 characters: the name people search for, plus the two frameworks and the
+   specialisation they search for when they do not have a name yet. */
+const TITLE = "Faizan Amir — Senior Software Engineer | React, Next.js & AI";
+/* 154 characters — inside the ~160 Google renders before truncating. */
 const DESCRIPTION =
-  "Senior software engineer with 4 years shipping React, Next.js, Python and Node.js systems — RAG architectures, agentic AI and LLM integrations used by hundreds of people.";
+  "Faizan Amir is a senior software engineer building full-stack and AI products in React, Next.js, Node.js and Python. Case studies, stack and contact.";
 
 export const metadata: Metadata = {
-  title: TITLE,
+  /*
+   * Every relative URL below — canonicals, OG images, the manifest — resolves
+   * against this. Without it Next cannot build absolute social URLs at all,
+   * and a canonical tag that is not absolute is a canonical tag crawlers
+   * quietly disagree about.
+   */
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: TITLE,
+    /* Child routes supply their own subject; the name is appended once, here. */
+    template: "%s · Faizan Amir",
+  },
   description: DESCRIPTION,
-  authors: [{ name: "Faizan Amir" }],
+  applicationName: SITE_NAME,
+  authors: [{ name: PERSON.name, url: SITE_URL }],
+  creator: PERSON.name,
+  publisher: PERSON.name,
+  category: "technology",
+  alternates: { canonical: "/" },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      /* Let Google use the full snippet, image and video preview it wants. */
+      "max-snippet": -1,
+      "max-image-preview": "large",
+      "max-video-preview": -1,
+    },
+  },
   openGraph: {
     title: TITLE,
     description: DESCRIPTION,
-    type: "website",
+    type: "profile",
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    locale: "en_US",
+    firstName: "Faizan",
+    lastName: "Amir",
   },
   twitter: {
     card: "summary_large_image",
     title: TITLE,
     description: DESCRIPTION,
+    creator: PERSON.name,
   },
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/icon-192.png", type: "image/png", sizes: "192x192" },
+      { url: "/icon-512.png", type: "image/png", sizes: "512x512" },
+    ],
+    apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
+  },
+  manifest: "/manifest.webmanifest",
+  appleWebApp: { capable: true, title: PERSON.name, statusBarStyle: "black-translucent" },
+  /* Phone numbers are linked deliberately in the contact block; Safari should
+     not go looking for more and rewrite copy into tel: links. */
+  formatDetection: { telephone: false, address: false, email: false },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#060607",
+  colorScheme: "dark",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${bebasNeue.variable} ${barlow.variable} ${barlowCondensed.variable} ${instrumentSerif.variable} ${geistMono.variable}`}
+      className={`${bebasNeue.variable} ${barlow.variable} ${instrumentSerif.variable} ${geistMono.variable}`}
     >
       <body>
+        {/* First focusable thing in the document. Every page here opens with a
+            sticky bar and a breadcrumb, so a keyboard or screen-reader visitor
+            was tabbing through the same chrome on every navigation before
+            reaching anything they came for. */}
+        <a href="#main" className="skip-link">
+          Skip to content
+        </a>
+        {/* The site's identity graph — Person and WebSite — server-rendered on
+            every route so the pages consolidate into one entity rather than
+            reading as unrelated documents. Page-level nodes are emitted by the
+            pages themselves. */}
+        <JsonLd data={graph(personSchema(), websiteSchema())} />
         {/* Inside <body>, not between <html> and <body>: a bare <script> there
             is invalid nesting, and the hydration mismatch it caused made React
             discard the server HTML and rebuild the tree — which orphaned every
-            ScrollTrigger pin on the page. `beforeInteractive` still hoists this
-            into <head>, so load order is unchanged. */}
+            ScrollTrigger pin on the page. */}
         <GoogleTagManager />
         <GoogleTagManagerNoScript />
         <GoogleAnalytics />
         <GtmRouteTracker />
+        <SmoothScroll />
         <ScrollProgress />
         <ScrollFxRoot />
         <LoadCurtain />

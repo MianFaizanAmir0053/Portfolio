@@ -13,11 +13,11 @@ export function GoogleTagManager() {
   if (!GTM_ID) return null;
 
   return (
-    // The rule targets the Pages Router, where `beforeInteractive` belongs in
-    // `pages/_document.js`. This is the App Router root layout, which is
-    // exactly where Next's docs say to put it.
-    // eslint-disable-next-line @next/next/no-before-interactive-script-outside-document
-    <Script id="gtm-base" strategy="beforeInteractive">
+    // `afterInteractive`, not `beforeInteractive`: the container script was
+    // being hoisted into <head> and fetched ahead of first-party code, so a
+    // tag manager sat on the critical path of every page load. Measurement is
+    // not worth largest-contentful-paint. GTM still fires its own pageview.
+    <Script id="gtm-base" strategy="afterInteractive">
       {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
 j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=

@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import "lenis/dist/lenis.css";
 
 /*
  * FAIZAN AMIR — editorial design system.
@@ -27,7 +28,10 @@
   --color-link-hover: var(--link-hover);
   --color-subtle: var(--subtle);
 
-  --font-display: var(--font-bebas-neue), var(--font-barlow-condensed), sans-serif;
+  /* Barlow Condensed was loaded only to sit here as a fallback behind a face
+     that covers the same glyphs, which cost two font files for something that
+     never rendered. The generic condensed stack does the same job for free. */
+  --font-display: var(--font-bebas-neue), "Arial Narrow", sans-serif-condensed, sans-serif;
   --font-serif: var(--font-instrument-serif), Georgia, serif;
   --font-sans: var(--font-barlow), "Space Grotesk", sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
@@ -358,6 +362,70 @@
   }
 }
 
+/* Skip link: off-screen until focused, then pinned to the top-left in the
+   site's own palette. Not `display: none` — a hidden link is not focusable, and
+   an unfocusable skip link is decoration. */
+.skip-link {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  transform: translateY(-120%);
+  background: var(--cobalt);
+  color: var(--paper);
+  padding: 0.75rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: transform 0.15s ease;
+}
+
+.skip-link:focus-visible {
+  transform: translateY(0);
+  outline: 2px solid var(--ink);
+  outline-offset: -4px;
+}
+
+/* Load curtain. Declared here rather than driven from React so it starts when
+   the document parses and clears on a fixed schedule — the page behind it must
+   not wait for hydration to become visible. `forwards` parks it off-screen and
+   `pointer-events: none` keeps it inert once it is out of the way. */
+@keyframes curtain-lift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, -100%, 0);
+  }
+}
+
+.load-curtain {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  pointer-events: none;
+  background: var(--paper-deep);
+  animation: curtain-lift 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.15s forwards;
+}
+
+/* The signature line reveal, as a CSS animation for text that is above the
+   fold. The JavaScript version waits for hydration and an IntersectionObserver
+   before it will show a word, which put the hero headline — the page's largest
+   text — behind the entire client bundle. This runs from parse time instead.
+   `--line-delay` staggers the lines. */
+@keyframes line-rise {
+  from {
+    transform: translateY(110%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.line-rise {
+  transform: translateY(110%);
+  animation: line-rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) var(--line-delay, 0s) forwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -368,5 +436,16 @@
   .animate-flicker,
   [class*="animate-[fade-up"] {
     animation: none !important;
+  }
+
+  /* No wipe, no rise: show the page and the words immediately. */
+  .load-curtain {
+    animation: none;
+    display: none;
+  }
+
+  .line-rise {
+    transform: none;
+    animation: none;
   }
 }

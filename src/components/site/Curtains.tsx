@@ -6,26 +6,20 @@ import { usePathname } from "next/navigation";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
-/** Page-load curtain: ink panel wipes upward off-screen. */
+/**
+ * Page-load curtain: ink panel wipes upward off-screen.
+ *
+ * Pure CSS, deliberately. The previous version waited for hydration before
+ * starting a 1.2s timer and then animated for another second, so an opaque
+ * panel covered the page for roughly two and a half seconds — and on a slow
+ * connection, for as long as the JavaScript took to arrive. A keyframe
+ * animation declared in the stylesheet starts when the document parses, so the
+ * curtain is gone on a fixed schedule whether or not React has booted, and the
+ * content behind it paints on time. `prefers-reduced-motion` is handled in the
+ * stylesheet too — see `.load-curtain` in globals.css.
+ */
 export function LoadCurtain() {
-  const reduce = useReducedMotion();
-  const [gone, setGone] = useState(false);
-
-  useEffect(() => {
-    const t = window.setTimeout(() => setGone(true), reduce ? 100 : 1200);
-    return () => window.clearTimeout(t);
-  }, [reduce]);
-
-  if (gone) return null;
-  return (
-    <motion.div
-      aria-hidden
-      className="pointer-events-none fixed inset-0 z-[90] bg-paper-deep"
-      initial={{ y: 0 }}
-      animate={reduce ? { opacity: 0 } : { y: "-100%" }}
-      transition={{ duration: reduce ? 0.2 : 1, ease: EASE, delay: reduce ? 0 : 0.25 }}
-    />
-  );
+  return <div aria-hidden className="load-curtain" />;
 }
 
 /** Route curtain: cobalt panel wipes across on navigation. */

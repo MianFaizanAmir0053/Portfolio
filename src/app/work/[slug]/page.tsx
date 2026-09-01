@@ -6,9 +6,33 @@ import { projects, getProject, projectNeighbours } from "@/data/projects";
 import { UtilityBar } from "@/components/site/UtilityBar";
 import { Footer } from "@/components/site/Footer";
 import { CurtainText, CutFrame, FadeIn, Scramble, Tag } from "@/components/site/primitives";
+import { JsonLd } from "@/components/site/JsonLd";
+import { PERSON, CONTENT_REVIEWED } from "@/lib/site";
+import { breadcrumbSchema, caseStudySchema, graph, webPageSchema } from "@/lib/schema";
 
 export function generateStaticParams() {
   return projects.map((p) => ({ slug: p.slug }));
+}
+
+/**
+ * Six slugs, all known at build time. Anything else is a 404 rather than an
+ * on-demand render — a portfolio has no unknown case studies, and letting
+ * arbitrary paths render is how soft-404s get indexed.
+ */
+export const dynamicParams = false;
+
+/**
+ * A meta description sized for the SERP.
+ *
+ * `project.summary` alone runs 80–130 characters, which leaves a third of the
+ * snippet Google will render unused on every case study. This tops it up with
+ * the role and the headline numbers — the two things a reader scanning results
+ * actually wants — and trims at a word boundary rather than mid-word.
+ */
+function metaDescription(summary: string, role: string, metrics: string[]) {
+  const full = `${summary} ${role}. ${metrics.join(" · ")}.`;
+  if (full.length <= 158) return full;
+  return `${full.slice(0, 155).replace(/[\s,·]+\S*$/, "")}…`;
 }
 
 export async function generateMetadata({
@@ -17,13 +41,38 @@ export async function generateMetadata({
   const { slug } = await params;
   const project = getProject(slug);
   if (!project) {
-    return { title: "Case study not found — Faizan Amir", robots: { index: false } };
+    return { title: "Case study not found", robots: { index: false, follow: true } };
   }
-  const title = `${project.name} — ${project.tagline} · Faizan Amir`;
+  /*
+   * The root layout appends "· Faizan Amir" through the title template, so the
+   * name is deliberately absent here — carrying it twice cost ~15 characters of
+   * a 60-character SERP line for nothing.
+   */
+  const title = `${project.name} — ${project.tagline}`;
+  const path = `/work/${project.slug}`;
+  const description = metaDescription(project.summary, project.role, project.indexMetrics);
   return {
     title,
-    description: project.summary,
-    openGraph: { title, description: project.summary },
+    description,
+    alternates: { canonical: path },
+    keywords: [...project.stack, project.tagline, `${project.name} case study`],
+    openGraph: {
+      title: `${title} · Faizan Amir`,
+      description,
+      type: "article",
+      url: path,
+      authors: [PERSON.name],
+    },
+    /*
+     * Declared, not inherited. Without these the case studies served the
+     * homepage's Twitter title and description on every share — the card said
+     * "Senior Software Engineer" whatever project you had linked.
+     */
+    twitter: {
+      card: "summary_large_image",
+      title: `${title} · Faizan Amir`,
+      description,
+    },
   };
 }
 
@@ -33,20 +82,62 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
   if (!project) notFound();
 
   const { prev, next, position } = projectNeighbours(project.slug);
+  const path = `/work/${project.slug}`;
+  const crumbs = breadcrumbSchema(path, [
+    { name: "Home", path: "/" },
+    { name: "Work", path: "/work" },
+    { name: project.name, path },
+  ]);
 
   return (
     <div className="min-h-screen bg-paper">
+      <JsonLd
+        data={graph(
+          webPageSchema({
+            path,
+            name: `${project.name} — ${project.tagline}`,
+            description: project.summary,
+            breadcrumb: crumbs,
+          }),
+          crumbs,
+          caseStudySchema(project),
+        )}
+      />
       <UtilityBar />
 
       {/* 1. back bar */}
       <nav
         className="sticky top-11 z-40 bg-paper/95 backdrop-blur-[2px] rule-b"
-        aria-label="Case study navigation"
+        aria-label="Breadcrumb"
       >
         <div className="wrap flex h-11 items-center justify-between">
-          <Link href={`/#work-${project.slug}`} className="label text-ink hover:text-cobalt">
-            ← [INDEX]
-          </Link>
+          {/*
+           * A real breadcrumb, not a bare back arrow. It gives the crawler the
+           * same trail the BreadcrumbList declares, and it gives a reader
+           * arriving from search — who has never seen the index — somewhere to
+           * go that is not the browser's back button.
+           */}
+          <ol className="label flex items-center gap-2 text-ink">
+            <li>
+              <Link href="/" className="hover:text-cobalt">
+                HOME
+              </Link>
+            </li>
+            <li aria-hidden className="text-ink-muted">
+              /
+            </li>
+            <li>
+              <Link href="/work" className="hover:text-cobalt">
+                WORK
+              </Link>
+            </li>
+            <li aria-hidden className="text-ink-muted">
+              /
+            </li>
+            <li className="text-cobalt" aria-current="page">
+              {project.name.toUpperCase()}
+            </li>
+          </ol>
           <div className="flex items-center gap-5">
             <span className="label">
               [{String(position).padStart(2, "0")} / {String(projects.length).padStart(2, "0")}]
@@ -65,12 +156,13 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
         </div>
       </nav>
 
-      <main>
+      <main id="main">
         {/* 2. title block */}
         <section className="wrap py-16 md:py-24">
           <Tag className="mb-6 block">[CASE STUDY {project.index}]</Tag>
           <CurtainText
             as="h1"
+            immediate
             className="display text-[14vw] md:text-[clamp(3.5rem,8vw,8rem)]"
             lines={[
               <Fragment key="1">{project.name}</Fragment>,
@@ -85,7 +177,7 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
               <a
                 href={project.liveUrl}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener"
                 className="label mt-6 inline-block text-cobalt hover:underline"
               >
                 VISIT LIVE SITE ↗ {project.liveLabel}
@@ -113,7 +205,7 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
 
         {/* 4. hero image */}
         <section className="wrap py-12 md:py-16">
-          <CutFrame src={project.image} alt={project.alt} cut="cut-bl" ratio="aspect-[16/9]" eager />
+          <CutFrame src={project.image} alt={project.alt} cut="cut-bl" ratio="aspect-[16/9]" eager sizes="(min-width: 1024px) 1100px, 100vw" />
         </section>
 
         {/* 5. problem */}
@@ -143,8 +235,13 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
         </Block>
 
         {/* 7. build */}
-        <section className="wrap py-16 md:py-24">
-          <Tag className="mb-10 block">[03] THE BUILD</Tag>
+        <section className="wrap py-16 md:py-24" aria-labelledby="build-heading">
+          <Tag className="mb-4 block">[03] THE BUILD</Tag>
+          {/* The h3s below used to hang off the previous section's h2, which
+              left a hole in the outline exactly where the substance is. */}
+          <h2 id="build-heading" className="display mb-10 text-2xl md:text-4xl">
+            What {project.name} is made of
+          </h2>
           <div className="space-y-16">
             {project.build.map((b, i) => (
               <div key={b.title} className="grid items-center gap-8 md:grid-cols-2">
@@ -161,9 +258,12 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
         </section>
 
         {/* 8. results */}
-        <section className="rule-t bg-paper-deep">
+        <section className="rule-t bg-paper-deep" aria-labelledby="result-heading">
           <div className="wrap py-20 md:py-28">
-            <Tag className="mb-10 block">[04] THE RESULT</Tag>
+            <Tag className="mb-4 block">[04] THE RESULT</Tag>
+            <h2 id="result-heading" className="display mb-10 text-2xl md:text-4xl">
+              What {project.name} measured
+            </h2>
             <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-4">
               {project.metrics.map((m) => (
                 <div key={m.caption}>
@@ -182,6 +282,23 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
         <Block label="[05] WHAT I'D DO DIFFERENTLY" headline="Honestly">
           <p className="text-base leading-7 text-ink-muted">{project.reflection}</p>
         </Block>
+
+        {/*
+         * Byline. A case study with no author and no date is a page an answer
+         * engine has no reason to trust and no way to date — and both are
+         * weighted heavily. The name links to the entity the Person schema on
+         * this page already declares.
+         */}
+        <section className="wrap rule-t py-8" aria-label="Case study attribution">
+          <p className="label text-ink-muted">
+            WRITTEN BY{" "}
+            <Link href="/about" className="text-cobalt hover:underline">
+              {PERSON.name}
+            </Link>
+            , {project.role} ON {project.name.toUpperCase()} · LAST REVIEWED{" "}
+            <time dateTime={CONTENT_REVIEWED}>{CONTENT_REVIEWED}</time>
+          </p>
+        </section>
 
         {/* 10. next project */}
         {next && (

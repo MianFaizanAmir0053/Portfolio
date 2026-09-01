@@ -508,7 +508,28 @@ export const PixelatedCanvas: React.FC<PixelatedCanvasProps> = ({
 
   return (
     <div className="w-full min-w-0">
-      <canvas ref={canvasRef} className={className} aria-label={label} role="img" />
+      {/*
+       * `width`/`height` are set here as attributes, not only from the effect.
+       * Without them the canvas has no intrinsic ratio in the server HTML, so
+       * it lays out at zero height and the hero column jumps by ~600px the
+       * moment the image decodes. The effect still overwrites them with the
+       * device-pixel-ratio backing size; these are what hold the box until it
+       * does. `aspectRatio` covers the responsive case, where CSS width is
+       * 100% and the height has to be derived rather than fixed.
+       */}
+      <canvas
+        ref={canvasRef}
+        width={displayWidth}
+        height={displayHeight}
+        style={
+          responsive
+            ? { width: "100%", height: "auto", aspectRatio: `${displayWidth} / ${displayHeight}` }
+            : { width: displayWidth, height: displayHeight }
+        }
+        className={className}
+        aria-label={label}
+        role="img"
+      />
     </div>
   );
 };

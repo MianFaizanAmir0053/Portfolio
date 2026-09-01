@@ -89,13 +89,26 @@ export function ScrollFxRoot() {
      * By the second pass the starts are right, the ordering is right, and the
      * positions settle.
      */
+    /*
+     * Coalesced. Three sources — the curtain timer, the load event and
+     * document.fonts.ready — each used to fire the double refresh above, so a
+     * normal page load ran up to six full re-measures of every trigger on the
+     * main thread inside the first two seconds. They almost always land within
+     * a few hundred milliseconds of each other, so one trailing refresh after
+     * the last of them does the same job for a sixth of the work.
+     */
+    let pending: number | null = null;
     const refresh = () => {
-      ScrollTrigger.refresh();
-      requestAnimationFrame(() => ScrollTrigger.refresh());
+      if (pending !== null) window.clearTimeout(pending);
+      pending = window.setTimeout(() => {
+        pending = null;
+        ScrollTrigger.refresh();
+        requestAnimationFrame(() => ScrollTrigger.refresh());
+      }, 120);
     };
 
-    // The load curtain covers the page for ~1.2s; measure once it is gone.
-    const curtain = window.setTimeout(refresh, 1500);
+    // The load curtain clears at ~1s; measure once it is gone.
+    const curtain = window.setTimeout(refresh, 1200);
     window.addEventListener("load", refresh);
     document.fonts?.ready.then(refresh).catch(() => {});
 
@@ -125,6 +138,7 @@ export function ScrollFxRoot() {
 
     return () => {
       window.clearTimeout(curtain);
+      if (pending !== null) window.clearTimeout(pending);
       window.removeEventListener("load", refresh);
       gsap.ticker.remove(decay);
       page.kill();
@@ -486,6 +500,9 @@ export function HorizontalScroll({
 
           <div
             ref={scrollerRef}
+            // Its own scroller: Lenis must not intercept wheel or touch here,
+            // or a sideways flick would scroll the page instead of the rail.
+            data-lenis-prevent
             className={cn(
               "min-h-0 flex-1",
               mode === "swipe" &&
@@ -1094,23 +1111,30 @@ export function PinnedLitText({
             )}
           >
             {facts.map((f) => (
+              /*
+               * One wrapper, not two. A <dl> may wrap each dt/dd pair in a
+               * single <div>; nesting a second one broke the description list
+               * outright, so the term/definition relationship never formed for
+               * assistive technology or for anything parsing the markup. The
+               * positioning and the card styling merge onto this element.
+               *
+               * The hairline down the left edge is the same rule motif the rest
+               * of the page uses to mark an aside.
+               */
               <div
                 key={f.k}
                 data-fact
                 data-anchor={f.anchor}
                 className={cn(
+                  "cut-sm border-l-2 border-cobalt bg-paper-deep/90 px-4 py-3 backdrop-blur-[2px]",
                   // The list is click-through so it never shadows the copy it
                   // sits over; the cards themselves stay selectable.
                   scatter && `pointer-events-auto absolute w-[15rem] ${f.pos ?? "left-[4%] top-[20%]"}`,
                   pinned && "opacity-0",
                 )}
               >
-                {/* Hairline down the left edge: the same rule motif the rest of
-                    the page uses to mark an aside. */}
-                <div className="cut-sm border-l-2 border-cobalt bg-paper-deep/90 px-4 py-3 backdrop-blur-[2px]">
-                  <dt className="label text-cobalt">[{f.k}]</dt>
-                  <dd className="mt-1.5 text-[13px] leading-5 text-ink-muted">{f.v}</dd>
-                </div>
+                <dt className="label text-cobalt">[{f.k}]</dt>
+                <dd className="mt-1.5 text-[13px] leading-5 text-ink-muted">{f.v}</dd>
               </div>
             ))}
           </dl>

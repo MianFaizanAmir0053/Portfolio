@@ -4,41 +4,7 @@ import { Fragment, useState } from "react";
 import { Plus } from "lucide-react";
 import { CurtainText, Tag } from "./primitives";
 import { MagneticSurface } from "./scroll-fx";
-
-const SKILLS = [
-  { n: "01", label: "Languages", items: ["JavaScript", "TypeScript", "Python"] },
-  {
-    n: "02",
-    label: "Frontend",
-    items: [
-      "React.js",
-      "Next.js",
-      "Redux Toolkit",
-      "TanStack Query",
-      "Tailwind CSS",
-      "GSAP",
-      "Framer Motion",
-      "MUI",
-      "Shadcn",
-      "Headless UI",
-    ],
-  },
-  { n: "03", label: "Backend & APIs", items: ["Node.js", "Express.js", "REST APIs", "GraphQL", "NextAuth"] },
-  { n: "04", label: "AI / ML", items: ["LangChain", "Agentic RAG", "LLM Integration", "OpenAI"] },
-  { n: "05", label: "Infrastructure", items: ["PostgreSQL", "AWS S3", "CI/CD"] },
-];
-
-/** Derived, so it can never drift from the list above. */
-const TOTAL_TOOLS = SKILLS.reduce((sum, s) => sum + s.items.length, 0);
-
-/** What actually gets opened most days — each name is present in SKILLS. */
-const DAILY_DRIVERS = [
-  { k: "LANGUAGE", v: "TypeScript" },
-  { k: "FRAMEWORK", v: "Next.js" },
-  { k: "RUNTIME", v: "Node.js" },
-  { k: "DATA", v: "PostgreSQL" },
-  { k: "AI", v: "OpenAI · Agentic RAG" },
-];
+import { SKILLS, TOTAL_TOOLS, DAILY_DRIVERS } from "@/data/skills";
 
 export function Skills() {
   const [open, setOpen] = useState<string | null>("01");
@@ -69,6 +35,7 @@ export function Skills() {
                       type="button"
                       onClick={() => setOpen(isOpen ? null : s.n)}
                       aria-expanded={isOpen}
+                      aria-controls={`skills-panel-${s.n}`}
                       className="flex w-full items-center gap-4 py-5 text-left"
                     >
                       <span className="label">[{s.n}]</span>
@@ -82,15 +49,28 @@ export function Skills() {
                       </span>
                     </button>
                   </MagneticSurface>
-                  {isOpen && (
-                    <ul className="flex flex-wrap gap-x-6 gap-y-2 pb-6">
-                      {s.items.map((i) => (
-                        <li key={i} className="text-sm text-ink-muted">
-                          <span className="text-cobalt">*</span> {i}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                  {/*
+                   * Rendered always, hidden when closed. Conditional mounting
+                   * kept 22 of the 25 technology names out of the served HTML
+                   * entirely — the page claimed a stack it never actually
+                   * stated to anything that does not run JavaScript. `hidden`
+                   * collapses it for sighted users and screen readers alike
+                   * while leaving the text in the document.
+                   */}
+                  <ul
+                    id={`skills-panel-${s.n}`}
+                    hidden={!isOpen}
+                    className="flex flex-wrap gap-x-6 gap-y-2 pb-6"
+                  >
+                    {s.items.map((i) => (
+                      <li key={i} className="text-sm text-ink-muted">
+                        <span aria-hidden className="text-cobalt">
+                          *
+                        </span>{" "}
+                        {i}
+                      </li>
+                    ))}
+                  </ul>
                 </li>
               );
             })}

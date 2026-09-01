@@ -48,7 +48,7 @@ export function BeyondCode() {
               <a
                 href={SOCIAL.instagram}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener"
                 className="group relative block cut-tr grain bg-paper-deep p-7"
               >
                 <span
