@@ -689,14 +689,54 @@ const authored: Omit<Project, "index">[] = [
      * repository. "4 route groups" described a directory layout; these describe
      * what the platform does and what was built to make it do it.
      */
-    indexMetrics: ["1 request per screen", "auth resolved once, not per page", "0 cross-service outages"],
+    indexMetrics: ["0 money surfaces before identity resolves", "authorised at route and row", "6 capabilities that fail alone"],
     image: img.alfa,
     alt: "Alfa fintech dashboard",
-    problemHeadline: "Three roles, one routing surface",
+    problemHeadline: "Acting as the wrong account is not a UI bug",
     problem:
-      "Fintech products tend to break down exactly where account setup and role switching meet. A user can hold both a personal and a business account with no session chosen yet, or be mid-onboarding — and every page that guesses at that state becomes another place for the routing to go wrong.",
+      "A person can hold a personal account and a business account at the same time, arrive with neither selected, and be part-way through verification on one of them. Most applications treat that as a navigation question and let each page work out where the user should be. In a product that moves money it is not a navigation question: a transfer initiated while the app is guessing leaves the wrong balance, and a payment surface rendered before verification finishes lets someone move funds they are not yet cleared to move. The failure does not look like a broken route — it looks like an unauthorised debit, and it is found by the customer.",
+    constraints: [
+      {
+        title: "Verification gates money, not features",
+        body: "Onboarding is not a form to complete at leisure; until identity checks pass, the account is not cleared to move funds. That makes onboarding completeness a condition on rendering payment surfaces at all, rather than a banner asking someone to finish later — and it has to hold for a personal account and a business account independently, because the same person can be verified on one and not the other.",
+      },
+      {
+        title: "Identity documents are the most sensitive thing here",
+        body: "Verification means passports, incorporation papers and proof of address. That is the data with the worst consequences if it leaks, so it could never be uploaded straight from the browser with credentials the client could see, however much simpler that would have been.",
+      },
+      {
+        title: "A capability failing must not look like the bank being down",
+        body: "Currency conversion depends on a rate provider, cards on an issuer, top-ups on a funding rail. Each has its own reasons to be unavailable. If any one of them takes the platform down with it, a customer who only wanted to check a balance sees an outage — and in a money product that is the moment trust is lost.",
+      },
+    ],
+    tradeoffs: [
+      {
+        decision: "Resolve identity before a money surface exists",
+        instead: "Render the dashboard and let each page check what it is allowed to show",
+        cost: "A resolution step before the first meaningful paint, and one guard that has to be right for the whole application rather than many small checks that are individually easy to reason about.",
+        bought: "There is no window in which a transfer form is on screen for an account the system has not confirmed the user selected and cleared. The failure this removes is not a wrong redirect — it is money leaving the wrong balance, which is the kind of bug a customer reports rather than a test catches.",
+      },
+      {
+        decision: "Authorise twice — at the route, and at the row",
+        instead: "Trust the route guard, since the client cannot reach the data without passing it",
+        cost: "Rules exist in two places and both have to be maintained, which is real duplication rather than the elegant single source of truth.",
+        bought: "A mistake in application code cannot expose another account's transactions. Row-level rules sit next to the data and apply whatever calls it, which is the difference between an authorisation model and an authorisation convention.",
+      },
+      {
+        decision: "One service per financial capability",
+        instead: "One payments service, which is far less to run for a team this size",
+        cost: "Six deployables to operate, six sets of logs, and cross-capability changes that need more than one release.",
+        bought: "An incident stays inside the capability it happened in. A rate provider going down degrades currency conversion and leaves transfers, balances and cards untouched — so the customer sees one feature unavailable rather than concluding the bank is down.",
+      },
+      {
+        decision: "Identity documents move through the server",
+        instead: "Upload straight from the browser to object storage with a client-held credential",
+        cost: "Every file crosses the application on its way in, and route handlers have to deal with size and streaming rather than handing that to the storage provider.",
+        bought: "No credential that can reach the verification bucket exists in the browser. Passports and incorporation papers are the worst thing in this product to leak, and the simpler upload path is only simpler until it is not.",
+      },
+    ],
     approach:
-      "Two halves, each with one rule. On the server, every financial capability is its own FastAPI service behind a GraphQL layer, so a change to currency conversion cannot take transfers down with it. On the client, the auth decision splits in two: middleware does one cheap thing at the edge — check a token exists — and everything conditional (role, session, onboarding completeness) resolves against a single bootstrapped user object, so the rules live in one guard instead of scattered across pages.",
+      "Treat identity as something the system resolves before it renders anything that can move money, and treat each financial capability as something that can fail without taking the others with it. On the client, middleware does one cheap thing at the edge — is there a token at all — and every conditional question (which account, which role, is verification complete) is answered once against a single bootstrapped user object. No screen infers it. On the server, transfers, currency conversion, top-ups, bill splitting, recurring payments and cards are separate FastAPI services behind a GraphQL layer, so an incident is scoped to the capability it happened in. Authorisation is enforced twice on purpose: at the route, and again as row-level rules next to the data.",
     decisions: [
       "Built each financial capability as its own FastAPI service — transfers, bill splitting, top-ups, currency conversion, recurring payments — rather than one monolith where an incident anywhere is an incident everywhere.",
       "Put 10+ GraphQL APIs in front of those services, so the client asks for what a screen needs in one request instead of stitching together REST calls per role.",
@@ -727,6 +767,10 @@ const authored: Omit<Project, "index">[] = [
         alt: "RTK Query base API with injected domain endpoints",
       },
       {
+        title: "Verification, and the documents it runs on",
+        body: "Onboarding is routed by account type, because verifying a person and verifying a company ask for different things and fail in different places — so an incomplete business journey and an incomplete personal one are separate paths rather than one page branching inside itself. The guard treats an unfinished journey as a reason to redirect rather than a banner to display, which is what keeps a payment surface from rendering for an account that is not yet cleared. The documents themselves — identity, proof of address, incorporation papers — are uploaded and deleted through Next.js route handlers using the AWS SDK server-side, so no credential capable of touching that bucket is ever present in the browser. Direct-from-client upload would have been less code and a worse idea.",
+      },
+      {
         title: "Four route groups, one set of rules",
         body: "The app is partitioned by what a person is allowed to be doing rather than by feature: auth, onboarding, dashboard and admin. Onboarding is routed by account type, so an incomplete business journey and an incomplete personal one are different paths through the same group rather than the same page branching internally. Zod schemas are shared between onboarding and the dashboard, which means a field validated at signup is validated identically when it is edited a year later — the usual failure being two definitions of the same rule that drift.",
       },
@@ -739,28 +783,29 @@ const authored: Omit<Project, "index">[] = [
     ],
     metrics: [
       /*
-       * Efficiency and failure containment, not counts of what was integrated.
-       * Each of these is a comparison against the way it would otherwise work —
-       * one round trip instead of several, one auth resolution instead of one
-       * per page, one failing capability instead of all of them. There is no
-       * latency or conversion figure here because the platform has not been in
-       * front of enough customers to have measured one, and the last tile says
-       * so rather than implying otherwise.
+       * Controls, which is what this domain measures. A payments platform is
+       * judged on what it makes impossible — funds moving from an account the
+       * user did not select, one account reading another's rows, a rate
+       * provider taking the whole product down — not on how much was built.
+       * The figures a fintech normally publishes alongside these (authorisation
+       * rate, p95 on the transfer path, reconciliation breaks) need production
+       * traffic to mean anything, and the last tile says that plainly rather
+       * than filling the space with something unmeasured.
        */
       {
-        value: "1",
-        caption: "Request per screen",
-        note: "* one GraphQL call, not a REST fan-out per role",
-      },
-      {
-        value: "1x",
-        caption: "Auth resolved per session",
-        note: "* bootstrapped once, instead of re-derived on every page",
-      },
-      {
         value: "0",
-        caption: "Cross-service outages possible",
-        note: "* currency conversion failing cannot stop transfers",
+        caption: "Money surfaces before identity resolves",
+        note: "* the guard settles the account, then the screen exists",
+      },
+      {
+        value: "2",
+        caption: "Layers authorising a read",
+        note: "* route guard, and row-level rules at the data",
+      },
+      {
+        value: "6",
+        caption: "Capabilities that fail alone",
+        note: "* an FX outage is not a transfers outage",
       },
       { value: "WIP", caption: "In active development", note: "* not a finished claim" },
     ],
