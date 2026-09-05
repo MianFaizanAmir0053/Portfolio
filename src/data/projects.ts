@@ -54,6 +54,29 @@ export type Project = {
   diagram?: { src: string; alt: string; caption: string };
   build: BuildBlock[];
   metrics: Metric[];
+  /*
+   * Where the numbers above came from, and what they are not.
+   *
+   * A percentage with no baseline and no method is one a reader discounts, and
+   * every case study here carries several. This is the line that says which
+   * are platform records, which are self-reported, and which are counts of
+   * what exists rather than readings of what happened.
+   */
+  metricsNote?: string;
+  /**
+   * Per-project section headings.
+   *
+   * These default to one phrasing for all six, which was fine when two case
+   * studies carried the format and became a template once all six did. A
+   * rescue and a greenfield build should not have the same silhouette, so each
+   * project can name its own sections.
+   */
+  headlines?: {
+    constraints?: string;
+    tradeoffs?: string;
+    build?: string;
+    result?: string;
+  };
   reflection: string;
 
   /*
@@ -137,7 +160,7 @@ const authored: Omit<Project, "index">[] = [
       },
     ],
     approach:
-      "Keep Laravel as the core and give the workloads that were hurting it their own home. Media moves out to object storage so uploads stop occupying request workers; billing and quota state stop being things the application tries to remember. Everything is shaped by one rule: the system has to be changeable while it is running, because it never stops running.",
+      "I kept Laravel as the core and gave the workloads that were hurting it their own home. Media moved out to object storage so uploads stopped occupying request workers, and billing and quota state stopped being things the application tries to remember. Everything I built here was shaped by one rule: the system has to be changeable while it is running, because it never stops running.",
     decisions: [
       "Kept Laravel as the core and moved the two workloads that were hurting it — media and billing — onto their own paths.",
       "Made entitlement a question answered from Stripe on every publish, page save and domain lookup, rather than a flag stored on an account.",
@@ -179,11 +202,11 @@ const authored: Omit<Project, "index">[] = [
     broke: [
       {
         title: "Entitlement drifted from billing",
-        body: "The first version mirrored subscription state locally and trusted it. Stripe webhooks do not arrive in order, do arrive more than once, and occasionally arrive much later than the event they describe — so the local copy and the billing record disagreed, and the disagreement was invisible until a user complained about access they should or should not have had.",
+        body: "My first version mirrored subscription state locally and trusted it, which is the obvious design and the one I would have defended in review. Stripe webhooks do not arrive in order, do arrive more than once, and occasionally arrive much later than the event they describe — so the local copy and the billing record disagreed, and the disagreement was invisible until a user complained about access they should or should not have had.",
       },
       {
         title: "The fix was to stop remembering",
-        body: "Entitlement is now derived from Stripe rather than stored beside it, the webhook handler is idempotent on the event id, and an event carrying a state older than the one already recorded is discarded rather than applied. Replaying the same webhook twice is now a no-op instead of a bug.",
+        body: "I stopped storing it. Entitlement is now derived from Stripe rather than kept beside it, the webhook handler is idempotent on the event id — it recognises an event it has already applied and does nothing — and an event carrying a state older than the one already recorded is discarded rather than applied. Replaying the same webhook twice is a no-op instead of a bug.",
       },
     ],
     diagram: {
@@ -206,7 +229,7 @@ const authored: Omit<Project, "index">[] = [
       },
       {
         title: "An admin panel over the whole tenancy",
-        body: "Every account, every site under it, every subscription and the companies those roll up to, in one back office. It exists because the alternative is support running SQL against production: a plan that needs correcting, a site that has to be suspended, a customer asking what they were charged for. Reading the tenancy is one problem and writing to it is a different one — a change made here moves real money and real published pages, so the panel works through the same billing and entitlement paths the product does rather than writing around them.",
+        body: "Every account, every site under it, every subscription and the companies those roll up to, in one back office. I built it because the alternative was support running SQL against production: a plan that needs correcting, a site that has to be suspended, a customer asking what they were charged for. Reading the tenancy is one problem and writing to it is a different one — a change made here moves real money and real published pages, so I made the panel work through the same billing and entitlement paths the product does rather than writing around them.",
         // No image, deliberately: the admin panel is internal and has no public
         // screen. Drop a redacted screenshot in here if one ever exists.
       },
@@ -223,6 +246,14 @@ const authored: Omit<Project, "index">[] = [
       { value: "3", caption: "Metered tiers", note: "* free · $12 · $29, 5 / 10 / 30 generations" },
       { value: "0", caption: "Downtime migrations", note: "* expand / contract, against live data" },
     ],
+    headlines: {
+      constraints: "What a live product would not let us do",
+      tradeoffs: "What each choice cost",
+      build: "What Carder is made of",
+      result: "What Carder measured",
+    },
+    metricsNote:
+      "User count and tier structure are platform records and the public pricing page — both checkable. The +40% is the softest number here and worth reading as such: the analytics that produced it only landed part-way through the project, so it measures adoption from the first instrumented month to February 2026 rather than across the whole rebuild. Zero-downtime migrations counts schema changes shipped against live data, not an uptime percentage.",
     reflection:
       "I’d put the analytics layer in from day one. We shipped adoption features on intuition for the first few months, and the +40% only became legible once instrumentation landed — which means we were probably slower than we needed to be to find it.",
   },
@@ -273,7 +304,7 @@ const authored: Omit<Project, "index">[] = [
       },
     ],
     approach:
-      "The fix wasn’t a better prompt. It was retrieval that preserves legal structure, and agents that know which extraction path a document belongs to. Around that sits the part that makes it a product rather than a demo: metering the expensive operations honestly, and collapsing a multi-step legal flow into something a non-lawyer will actually finish.",
+      "The fix wasn’t a better prompt, and I spent longer than I should have proving that to myself. What worked was retrieval that preserves legal structure, and agents that know which extraction path a document belongs to. Around that I built the part that makes it a product rather than a demo: metering the expensive operations honestly, and collapsing a multi-step legal flow into something a non-lawyer will actually finish.",
     tradeoffs: [
       {
         decision: "Sell AI work as credits, priced per action",
@@ -285,7 +316,7 @@ const authored: Omit<Project, "index">[] = [
         decision: "Tune retrieval for precision, not coverage",
         instead: "Retrieve generously and let the model decide what is relevant",
         cost: "More work in chunking and routing, and an occasional relevant passage that does not surface.",
-        bought: "Far fewer confident wrong answers. On legal text a passage retrieved without its context can be quoted accurately and still be misleading, and that failure is much more expensive than a miss the user can see.",
+        bought: "Far fewer confident wrong answers. I optimised for the failure the user can catch: on legal text a passage retrieved without its context can be quoted accurately and still be misleading, and a reader has no way to know. A miss they can see costs them a search. A confident wrong answer costs them the clause.",
       },
       {
         decision: "One working surface for drafting, review and signing",
@@ -308,7 +339,11 @@ const authored: Omit<Project, "index">[] = [
     build: [
       {
         title: "Retrieval that keeps the document’s shape",
-        body: "Chunking follows the document’s own hierarchy — sections, clauses, sub-clauses — and every chunk carries its ancestry, so a retrieved clause arrives with the context that makes it mean something. On top of that, a classifier routes each upload to a dedicated extraction agent with its own tool set and validation schema, rather than one prompt trying to cover contracts, filings and correspondence at once. Between them those two things are what killed the hallucinated citations: the model stops being asked to infer context it was never handed.",
+        body: "I chunk along the document’s own hierarchy — sections, clauses, sub-clauses — and every chunk carries its ancestry. A retrieved clause therefore arrives with the context that makes it mean something, instead of as a paragraph the model has to guess the position of. That single change is what killed the hallucinated citations: the model stopped being asked to infer context it was never handed.",
+      },
+      {
+        title: "One agent per document type",
+        body: "A classifier routes each upload to a dedicated extraction agent, and each agent has its own tool set and its own validation schema. Contracts, filings and correspondence fail in different ways, and one prompt covering all three fails at whichever it was tuned for least. Routing first means an extraction can be validated against what that kind of document is actually supposed to contain.",
       },
       {
         title: "Legal pathways, as a graph you can see",
@@ -318,7 +353,7 @@ const authored: Omit<Project, "index">[] = [
       },
       {
         title: "Signature, and what the signature commits you to",
-        body: "Multi-party signing with a certificate and an audit trail is the table-stakes half. The half worth building was what happens after: the platform reads the executed document and extracts its obligations and their dates — notice periods, renewal windows, payment deadlines — then puts them somewhere they will be seen again. A signed contract is a set of future commitments, and the usual failure is not disputing them, it is forgetting one.",
+        body: "Multi-party signing with a certificate and an audit trail is the table-stakes half. The half I thought was worth building is what happens after: the platform reads the executed document and extracts its obligations and their dates — notice periods, renewal windows, payment deadlines — then puts them somewhere they will be seen again. A signed contract is a set of future commitments, and the usual failure is not disputing them, it is forgetting one.",
         image: "/projects/golegal-signature.png",
         alt: "A fully signed document in Go Legal AI showing both signers with timestamps, alongside the Extract obligations action and the signing certificate",
       },
@@ -330,7 +365,7 @@ const authored: Omit<Project, "index">[] = [
       },
       {
         title: "When the AI is not enough, order a person",
-        body: "Some problems need a regulated solicitor, and pretending otherwise is how legal tech gets people into trouble. The services module is a priced catalogue of real work — a lawyer checking your AI draft, a contract review with tracked mark-up, a letter before action, a statutory demand drafted and served — ordered and paid for in the platform, with the fee credited against the first instruction. Every price carries VAT, jurisdiction is stated up front, and the page says plainly that Go Legal AI is not a law firm.",
+        body: "Some problems need a regulated solicitor, and pretending otherwise is how legal tech gets people into trouble — so I built the exit rather than papering over it. The services module is a priced catalogue of real work — a lawyer checking your AI draft, a contract review with tracked mark-up, a letter before action, a statutory demand drafted and served — ordered and paid for in the platform, with the fee credited against the first instruction. Every price carries VAT, jurisdiction is stated up front, and the page says plainly that Go Legal AI is not a law firm.",
         image: "/projects/golegal-services.png",
         alt: "The Legal Services catalogue: fifteen priced services across consultation, contracts, disputes, document services, intellectual property, investigations and property, each with a fixed fee plus VAT",
       },
@@ -341,6 +376,14 @@ const authored: Omit<Project, "index">[] = [
       { value: "-30%", caption: "Manual document work", note: "* reported by users, Jan 2026" },
       { value: "50+", caption: "Active users", note: "* legal professionals, Jan 2026" },
     ],
+    headlines: {
+      constraints: "Why a better prompt was never the answer",
+      tradeoffs: "What accuracy cost",
+      build: "The five modules",
+      result: "What Golegal measured",
+    },
+    metricsNote:
+      "The 95% is exact-match extraction scored against the evaluated set we built, not a claim about every document type the product accepts — a set I would now call too small, which is what the reflection below is about. The −30% is self-reported by users in feedback rather than measured inside the product, and should be read as an impression rather than an instrument reading. Files per month and active users are platform counts taken at handover in January 2026.",
     reflection:
       "I’d build the evaluation harness before the pipeline, not alongside it. We tuned chunking by feel for too long, and every change felt like a coin flip until there was a scored regression set to argue with.",
   },
@@ -349,7 +392,8 @@ const authored: Omit<Project, "index">[] = [
     name: "Muterpe",
     accentWord: "Muterpe",
     tagline: "AI Image Generation SaaS",
-    summary: "An AI model-training and image-generation platform, built from the ground up and monetized.",
+    summary:
+      "An AI model-training and image-generation platform I built from the ground up as founding engineer and took to paying users — per-user model training, a generation pipeline fast enough to hold attention, and usage-based billing wired into the flow itself.",
     role: "Founding Engineer",
     timeline: "2023 – Present",
     status: "Live, monetized",
@@ -384,17 +428,17 @@ const authored: Omit<Project, "index">[] = [
       },
       {
         title: "The training set is photographs of the user",
-        body: "People upload their own faces to train a likeness. That is personal data with an obvious worst case, and it made storage and delivery a question about access rather than a question about cost.",
+        body: "People upload their own faces to train a likeness. That is personal data with an obvious worst case, so storage and delivery became a question I had to answer about access rather than about cost — which is a different design from the one you reach for when the files are just assets.",
       },
     ],
     approach:
-      "Training is slow and generation must feel instant, so the architecture is built around never letting one block the other.",
+      "Training is slow and generation has to feel instant, so I built the architecture around never letting one block the other. Everything expensive happens on a queue; everything the user is waiting on streams.",
     tradeoffs: [
       {
         decision: "Rent the model runtime rather than run GPUs",
         instead: "Self-host training and inference, which is cheaper per run at volume and gives you the whole stack",
         cost: "A provider dependency on the most important thing in the product, a price floor set by someone else, and no control over cold starts or queue depth when they are busy.",
-        bought: "A founding engineer shipped a product instead of an ML platform. Running our own GPUs would have meant capacity planning, driver management and idle cost from the first user onward — months spent on infrastructure that Fal.ai already operates better than a one-person team could.",
+        bought: "I shipped a product instead of an ML platform. Running our own GPUs would have meant capacity planning, driver management and idle cost from the first user onward — months on infrastructure that Fal.ai already operates better than I could alone, spent before a single person had generated anything.",
       },
       {
         decision: "Train a model per user",
@@ -434,7 +478,19 @@ const authored: Omit<Project, "index">[] = [
         title: "Generation that feels immediate",
         body: "Prompts are shaped server-side before they hit the generation provider, and results stream in as they land. Perceived speed improved ~40% without changing the underlying model.",
       },
+      {
+        title: "Metering, added later than it should have been",
+        body: "Billing went in after the pipeline was already running, which meant instrumenting an operation that had never been asked to count itself. Retrofitting it was harder than building it in would have been: a generation can fail part-way, retry, or be cancelled, and each of those had to be decided on after the fact rather than designed for. It works, and I would not do it in that order again — the metering is the product's price, and a price added last is a price you are reverse-engineering from code that was written without one.",
+      },
     ],
+    headlines: {
+      constraints: "What a per-user model costs before it earns",
+      tradeoffs: "Where quality beat instant",
+      build: "Train, then generate",
+      result: "What Muterpe measured",
+    },
+    metricsNote:
+      "Users and revenue are platform and billing records. The ~40% is perceived speed — time to first visible result once prompt shaping and streaming went in, against the first release — and not generation throughput, which did not change at all; the model is the same one, asked the same thing. Uptime is the rolling twelve-month figure from monitoring.",
     metrics: [
       { value: "200+", caption: "Users", note: "* self-serve signup" },
       { value: "$5K+", caption: "Revenue", note: "* usage-based" },
@@ -453,7 +509,7 @@ const authored: Omit<Project, "index">[] = [
     accentWord: "Volumize",
     tagline: "Telehealth E-Commerce Platform",
     summary:
-      "A telehealth commerce platform for hair-loss treatment — medical intake, doctor approval, prescriptions, payments, despatch, and subscriptions in one lifecycle across two apps.",
+      "A telehealth commerce platform for hair-loss treatment — medical intake, doctor approval, prescriptions, payments, despatch and subscriptions as one lifecycle across two apps. I built that lifecycle end to end, from the questionnaire a patient fills in to the despatch label that goes out two weeks early.",
     role: "Full-Stack Engineer",
     timeline: "Feb 2026 – Present",
     status: "Live",
@@ -502,7 +558,7 @@ const authored: Omit<Project, "index">[] = [
     constraints: [
       {
         title: "A missed dose is the failure that matters",
-        body: "This is a treatment where stopping regresses the result — the FAQ says so in the company's own words. So the thing the system absolutely cannot do is let a subscriber run out between cycles. That single requirement drove more of the architecture than the commerce did: it is why despatch runs early, why retries exist, and why the order state machine refuses to go backwards.",
+        body: "This is a treatment where stopping regresses the result — the FAQ says so in the company's own words. So the one thing I could not let the system do is let a subscriber run out between cycles. That single requirement drove more of my architecture than the commerce did: it is why despatch runs early, why retries exist, and why the order state machine refuses to go backwards.",
       },
       {
         title: "The AI cannot be the prescriber",
@@ -514,7 +570,7 @@ const authored: Omit<Project, "index">[] = [
       },
     ],
     approach:
-      "Put the whole lifecycle behind one architecture: a Turborepo monorepo with a customer app and an operational back office, sharing auth, data models, and UI so the two surfaces cannot drift apart. Then design the subscription around continuity rather than around the billing date, because on a course of treatment the calendar the customer cares about is when the medicine runs out.",
+      "I put the whole lifecycle behind one architecture: a Turborepo monorepo with a customer app and an operational back office, sharing auth, data models and UI so the two surfaces cannot drift apart. Then I designed the subscription around continuity rather than around the billing date — because on a course of treatment, the calendar the customer cares about is not when they are charged, it is when the medicine runs out.",
     tradeoffs: [
       {
         decision: "Despatch the next cycle two weeks before the current one runs out",
@@ -568,7 +624,7 @@ const authored: Omit<Project, "index">[] = [
       },
       {
         title: "Four roles, one back office",
-        body: "Admin, pharmacist, doctor and marketing all work in the same operational app and must not see the same thing. A doctor needs the clinical questionnaire and the approval decision; a pharmacist needs the approved prescription and the despatch queue; marketing needs the content and the campaign surfaces and no patient data at all. Role-based access is enforced on the server per route rather than by hiding buttons, because in a system carrying medical answers and prescriptions the interface is not the security boundary.",
+        body: "Admin, pharmacist, doctor and marketing all work in the same operational app and must not see the same thing. A doctor needs the clinical questionnaire and the approval decision; a pharmacist needs the approved prescription and the despatch queue; marketing needs the content and the campaign surfaces and no patient data at all. I enforce that on the server, per route, rather than by hiding buttons — in a system carrying medical answers and prescriptions the interface is not the security boundary, and a hidden button is a URL somebody can still type.",
       },
       {
         title: "Content the marketing team owns",
@@ -606,6 +662,14 @@ const authored: Omit<Project, "index">[] = [
       },
       { value: "4", caption: "Back-office roles", note: "* admin · pharmacist · doctor · marketing" },
     ],
+    headlines: {
+      constraints: "What medicine on a schedule rules out",
+      tradeoffs: "Where continuity beat convention",
+      build: "The lifecycle, part by part",
+      result: "What Volumize measured",
+    },
+    metricsNote:
+      "Subscriptions and revenue are booked figures from the platform. The two percentages are before-and-after on the same flow rather than controlled measurements, and each compares a specific pair: −45% is clinician review time once the questionnaire started arriving with a suggested plan and its reasoning, against reading raw form answers cold; −85% is despatch time through the Royal Mail integration, against generating labels and copying tracking by hand. Both are averages over the orders that ran through each path, not a guarantee on any single order.",
     reflection:
       "The security work was reactive — 34 findings had already accumulated before anyone went looking. The fix was a one-off cycle when it should have been a gate: audit thresholds in CI, so the graph never drifts that far again. Cutting vulnerabilities by 97% reads well, but not having needed to reads better.",
   },
@@ -615,7 +679,7 @@ const authored: Omit<Project, "index">[] = [
     accentWord: "WisdomUp",
     tagline: "Multi-Service E-Commerce Platform",
     summary:
-      "A three-service commerce platform — storefront, transactional API, and CMS admin — built around checkout that survives its own edge cases.",
+      "A three-service commerce platform — storefront, transactional API and CMS admin — that I built around a checkout designed to survive its own edge cases rather than its happy path.",
     role: "Full-Stack Product Engineer",
     timeline: "2026 – Present",
     status: "In development",
@@ -664,17 +728,17 @@ const authored: Omit<Project, "index">[] = [
       },
       {
         title: "Nothing here has production traffic to check it against",
-        body: "The reliability work is tested rather than observed. That is a real limit on what the build can claim: guard layers and settlement tests prove the logic does what it was written to do, not that the assumptions behind it hold against real payment traffic — and the two are not the same thing.",
+        body: "The reliability work is tested rather than observed, and that is a real limit on what I can claim here. Guard layers and settlement tests prove the logic does what I wrote it to do; they do not prove the assumptions behind it survive real payment traffic, and those are not the same thing. I would rather say that than present a tested system as a proven one.",
       },
     ],
     approach:
-      "Separate the three concerns into independently deployable services, then treat settlement as a distributed-systems problem rather than a happy path: assume events arrive twice, late, or out of order, and make the order state machine refuse to go backwards.",
+      "I separated the three concerns into independently deployable services, then treated settlement as a distributed-systems problem rather than a happy path. The whole payment layer is written on one assumption I decided to take seriously: events arrive twice, late, or out of order — so the order state machine refuses to go backwards, and every write that touches money can be replayed without doing anything a second time.",
     tradeoffs: [
       {
         decision: "Settle down two independent paths",
         instead: "Trust the webhook alone, which is what Stripe's own documentation recommends and is one code path instead of two",
         cost: "Two writers reach the same order, so every guard has to be idempotent and the two paths have to agree about what has already happened. It is strictly more to get right than one path would be.",
-        bought: "Neither failure mode can lose an order. A browser that dies after payment is covered by the webhook; a webhook that is delayed or dropped is covered by the confirmation the client already made. The single-path version is correct until the one time it is not, and that time is somebody's money.",
+        bought: "Neither failure mode can lose an order, which is why I took the more expensive path. A browser that dies after payment is covered by the webhook; a webhook that is delayed or dropped is covered by the confirmation the client already made. The single-path version is correct until the one time it is not, and that time is somebody's money — I would rather maintain two paths than explain that call.",
       },
       {
         decision: "Order status only moves forward",
@@ -686,7 +750,7 @@ const authored: Omit<Project, "index">[] = [
         decision: "Three services over one shared database",
         instead: "A database per service, which is what service separation is normally taken to mean",
         cost: "This is not real isolation. The services share a schema, so a model change is coordinated across three codebases and one of them can still write something another did not expect.",
-        bought: "No distributed transaction anywhere near a checkout. A database per service would have put eventual consistency between taking a payment and recording an order, and for a team this size the honest answer is that separate deployables with bounded write ownership buys most of the benefit at none of that cost.",
+        bought: "No distributed transaction anywhere near a checkout. A database per service would have put eventual consistency between taking a payment and recording an order, and my honest answer is that separate deployables with bounded write ownership buy most of the benefit at none of that cost. I would rather ship the version I can reason about than the one that matches the diagram in the article.",
       },
       {
         decision: "Content is data the CMS owns, not components the repository owns",
@@ -730,6 +794,14 @@ const authored: Omit<Project, "index">[] = [
         note: "* client confirmation · webhook fallback",
       },
     ],
+    headlines: {
+      constraints: "What a payment system has to assume",
+      tradeoffs: "Where correctness beat the simpler path",
+      build: "The three services",
+      result: "What is built — and what is not yet observed",
+    },
+    metricsNote:
+      "None of these is a production reading, because there is no production traffic yet. They are counts of what exists, checked against the codebase: three deployables, eight guards on the settlement path, fourteen passing tests over the confirmation logic, two independent routes to a settled order. The tests passing proves the logic does what I wrote it to do. It does not prove the assumptions behind it hold, and the reflection below is about exactly that gap.",
     reflection:
       "Everything measurable here is about the build, not the business. The payment layer is hardened and tested, but checkout success rate, reconciliation accuracy, and promo conversion are still targets rather than readings — I set them without shipping the instrumentation to answer them. Reliability engineering you cannot observe in production is a hypothesis, and I would wire the funnel telemetry before adding another feature.",
   },
@@ -739,7 +811,7 @@ const authored: Omit<Project, "index">[] = [
     accentWord: "Alfa",
     tagline: "Multi-Role Fintech Platform",
     summary:
-      "A role-aware fintech platform serving personal, business, and admin journeys from one architecture — onboarding, transfers, bill splitting, top-ups, currency conversion, scheduled payments, and card management over Python microservices.",
+      "A role-aware fintech platform serving personal, business and admin journeys from one architecture — onboarding, transfers, bill splitting, top-ups, currency conversion, scheduled payments and card management over Python microservices. I own the session and authorisation model, onboarding and verification, document handling, and the client data layer the whole product reads through.",
     role: "Full-Stack Engineer — Python microservices & Next.js client",
     timeline: "Feb 2026 – Present",
     status: "In development",
@@ -792,7 +864,7 @@ const authored: Omit<Project, "index">[] = [
       },
       {
         title: "Identity documents are the most sensitive thing here",
-        body: "Verification means passports, incorporation papers and proof of address. That is the data with the worst consequences if it leaks, so it could never be uploaded straight from the browser with credentials the client could see, however much simpler that would have been.",
+        body: "Verification means passports, incorporation papers and proof of address. That is the data with the worst consequences if it leaks, so I could never let it go straight from the browser to storage with a credential the client can see — however much simpler that would have been, and it would have been considerably simpler.",
       },
       {
         title: "A capability failing must not look like the bank being down",
@@ -826,9 +898,10 @@ const authored: Omit<Project, "index">[] = [
       },
     ],
     approach:
-      "Treat identity as something the system resolves before it renders anything that can move money, and treat each financial capability as something that can fail without taking the others with it. On the client, middleware does one cheap thing at the edge — is there a token at all — and every conditional question (which account, which role, is verification complete) is answered once against a single bootstrapped user object. No screen infers it. On the server, transfers, currency conversion, top-ups, bill splitting, recurring payments and cards are separate FastAPI services behind a GraphQL layer, so an incident is scoped to the capability it happened in. Authorisation is enforced twice on purpose: at the route, and again as row-level rules next to the data.",
+      "I treat identity as something the system resolves before it renders anything that can move money, and each financial capability as something that can fail without taking the others down with it. On the client, middleware does one cheap thing at the edge — is there a token at all — and every conditional question (which account, which role, is verification complete) is answered once against a single bootstrapped user object. No screen is allowed to infer it. On the server, transfers, currency conversion, top-ups, bill splitting, recurring payments and cards are separate FastAPI services behind a GraphQL layer, so an incident stays scoped to the capability it happened in. I enforce authorisation twice on purpose: at the route, and again as row-level rules sitting next to the data.",
     decisions: [
-      "Kept edge middleware to one cheap question — is there a token at all — and answered every conditional question about role, session and verification once, in a single guard against bootstrapped state.",
+      "Kept edge middleware to one cheap question: is there a token at all.",
+      "Answered role, session and verification once, in a single guard against bootstrapped state, rather than per screen.",
       "Put 10+ GraphQL APIs in front of the services, so a screen asks for what it needs in one request instead of a REST fan-out that differs per role.",
       "Created one RTK Query base API and had seven domains inject their own endpoints into it — one reducer, one middleware, one cache.",
       "Instrumented the four measures a payments platform is actually judged on — authorisation rate, transfer p95, reconciliation break rate, KYC completion — before there was traffic to run through them.",
@@ -849,7 +922,7 @@ const authored: Omit<Project, "index">[] = [
       },
       {
         title: "Verification, and the documents it runs on",
-        body: "Onboarding is routed by account type, because verifying a person and verifying a company ask for different things and fail in different places — so an incomplete business journey and an incomplete personal one are separate paths rather than one page branching inside itself. The guard treats an unfinished journey as a reason to redirect rather than a banner to display, which is what keeps a payment surface from rendering for an account that is not yet cleared. The documents themselves — identity, proof of address, incorporation papers — are uploaded and deleted through Next.js route handlers using the AWS SDK server-side, so no credential capable of touching that bucket is ever present in the browser. Direct-from-client upload would have been less code and a worse idea.",
+        body: "Onboarding is routed by account type, because verifying a person and verifying a company ask for different things and fail in different places — so an incomplete business journey and an incomplete personal one are separate paths rather than one page branching inside itself. The guard treats an unfinished journey as a reason to redirect rather than a banner to display, which is what keeps a payment surface from rendering for an account that is not yet cleared. The documents themselves — identity, proof of address, incorporation papers — are uploaded and deleted through Next.js route handlers using the AWS SDK server-side, so no credential capable of touching that bucket is ever present in the browser. Direct-from-client upload would have been less code and a worse idea, and it is the one place in this build where I deliberately chose the heavier option.",
       },
       {
         title: "Four route groups, one set of rules",
@@ -861,7 +934,15 @@ const authored: Omit<Project, "index">[] = [
       },
       {
         title: "The four numbers this gets judged on",
-        body: "A payments platform is not assessed on how much of it exists, and the metrics a fintech actually reports are the same four everywhere. Authorisation rate — the share of attempted payments that clear — is the one watched first, because a drop of a point or two is invisible in an error log and enormous in revenue, and it catches an issuer problem, a rail problem and a bug in your own retry logic with the same signal. p95 on the transfer path, not the average, measured from the request entering the transfer service to the ledger entry being written: the mean hides exactly the tail where someone abandons a payment and calls support. Reconciliation break rate — movements where our record and the provider's disagree at end of day — is the one that has to trend to zero rather than to something tolerable, because every break is money sitting somewhere other than where the system says it is. And KYC completion, measured per onboarding step rather than as a single funnel number, because verification gates funding: an account that stalls on proof of address is not a conversion problem, it is a customer who cannot use the product. None of the four has a production reading yet — Alfa is pre-traffic, and a figure printed here would be one I invented. What exists is the emission at each of those points, the thresholds, and the decision about which of them is allowed to wake someone up.",
+        body: "A payments platform is not judged on how much of it exists. It is judged on four readings, and I instrumented all four before there was traffic to produce them. Authorisation rate is the share of attempted payments that clear, and it is the one watched first: a drop of a point is invisible in an error log and enormous in revenue, and it catches an issuer problem, a rail problem and a bug in my own retry logic with the same signal.",
+      },
+      {
+        title: "p95, not the average",
+        body: "Transfer latency is measured at the 95th percentile, from the request entering the transfer service to the ledger entry being written. The mean hides exactly the tail that matters — the slow requests are where someone abandons a payment and calls support, and an average is very good at making a hundred of those disappear behind ten thousand fast ones. Reconciliation break rate sits beside it: the share of movements where my record and the provider's disagree at end of day. That one has to trend to zero rather than to something tolerable, because every break is money sitting somewhere other than where the system says it is.",
+      },
+      {
+        title: "Verification, measured per step",
+        body: "KYC completion is measured at each onboarding step rather than as one funnel number, because verification gates funding rather than features. An account that stalls on proof of address is not a conversion problem to optimise later — it is a customer who cannot use the product, and a single completion percentage tells you that happened without telling you where. None of these four has a production reading yet; Alfa is pre-traffic, and a figure printed here would be one I invented. What exists is the emission at each point, the thresholds, and the decision about which of them is allowed to wake someone up.",
       },
     ],
     metrics: [
@@ -897,6 +978,14 @@ const authored: Omit<Project, "index">[] = [
         note: "* auth rate · transfer p95 · recon breaks · KYC completion",
       },
     ],
+    headlines: {
+      constraints: "What moving money rules out",
+      tradeoffs: "Where safety beat simplicity",
+      build: "What Alfa is made of",
+      result: "What Alfa guarantees — and what it will measure",
+    },
+    metricsNote:
+      "None of these is a production reading, and the heading above says so deliberately. Alfa has no live traffic. The first three are properties of the architecture rather than measurements of behaviour — they are verifiable by reading the code, not by watching it run — and the fourth counts instrumentation, not output. The four measures that will actually judge this platform are defined in the build section above, and they will carry values when there is traffic to produce them. Until then I would rather show you what the system makes impossible than a number I made up.",
     reflection:
       "The architecture is sound but under-tested for what it is. Money movement and auth are exactly the paths that deserve integration and end-to-end coverage, and right now correctness rests on the guard logic being right rather than on anything proving it. That is the next thing I would build, before analytics on onboarding drop-off or feature flags for staged rollout.",
   }

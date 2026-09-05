@@ -275,7 +275,10 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
 
         {/* 5b. constraints — what could not be done */}
         {project.constraints && (
-          <Block label={`[${n("constraints")}] THE CONSTRAINTS`} headline="What the job ruled out">
+          <Block
+            label={`[${n("constraints")}] THE CONSTRAINTS`}
+            headline={project.headlines?.constraints ?? "What the job ruled out"}
+          >
             <ul className="space-y-6">
               {project.constraints.map((c) => (
                 <li key={c.title}>
@@ -314,7 +317,10 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
          * because a decision with no alternative and no price was not a decision.
          */}
         {project.tradeoffs && (
-          <Block label={`[${n("tradeoffs")}] THE TRADE-OFFS`} headline="What each choice cost">
+          <Block
+            label={`[${n("tradeoffs")}] THE TRADE-OFFS`}
+            headline={project.headlines?.tradeoffs ?? "What each choice cost"}
+          >
             <ul className="space-y-10">
               {project.tradeoffs.map((t) => (
                 <li key={t.decision} className="rule-t pt-6">
@@ -344,7 +350,7 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
           {/* The h3s below used to hang off the previous section's h2, which
               left a hole in the outline exactly where the substance is. */}
           <h2 id="build-heading" className="display mb-10 text-2xl md:text-4xl">
-            What {project.name} is made of
+            {project.headlines?.build ?? `What ${project.name} is made of`}
           </h2>
           <div className="space-y-16">
             {project.build.map((b, i) => {
@@ -402,7 +408,7 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
           <div className="wrap py-20 md:py-28">
             <Tag className="mb-4 block">[{n("result")}] THE RESULT</Tag>
             <h2 id="result-heading" className="display mb-10 text-2xl md:text-4xl">
-              What {project.name} measured
+              {project.headlines?.result ?? `What ${project.name} measured`}
             </h2>
             <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-4">
               {project.metrics.map((m) => (
@@ -419,6 +425,20 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
                 </div>
               ))}
             </div>
+            {/*
+             * Provenance. The tiles are large and confident and every one of
+             * them is a claim; this is the sentence that says which are
+             * platform records, which are self-reported, and which are counts
+             * of what exists rather than measurements of what happened. It
+             * costs a line and it is the difference between a number a reader
+             * believes and one they discount.
+             */}
+            {project.metricsNote && (
+              <p className="mt-14 max-w-3xl rule-t pt-6 text-sm leading-7 text-ink-muted">
+                <span className="label mr-2 text-cobalt">[HOW THESE WERE MEASURED]</span>
+                {project.metricsNote}
+              </p>
+            )}
           </div>
         </section>
 
