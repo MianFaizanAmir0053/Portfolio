@@ -360,8 +360,61 @@ const authored: Omit<Project, "index">[] = [
     problemHeadline: "Generic models don’t hold a likeness",
     problem:
       "Generic image generators don’t hold a brand or a person’s likeness. Muterpe needed per-user model training, plus a generation pipeline fast enough that users wouldn’t abandon mid-flow.",
+    context: [
+      { k: "ROLE", v: "Founding engineer — pipeline, prompt shaping, storage, metering and billing, end to end" },
+      { k: "USERS", v: "200+ on self-serve signup, paying for what they generate rather than for a seat" },
+      {
+        k: "OWNED",
+        v: "Training and generation pipeline · async job queue · asset storage and delivery · usage metering and billing",
+      },
+      {
+        k: "NOT MINE",
+        v: "The models themselves — training and inference run on Fal.ai, prompt shaping goes through OpenAI",
+      },
+      { k: "PRODUCT", v: "Train a model on your own images once, then generate against it, billed per generation" },
+    ],
+    constraints: [
+      {
+        title: "Every signup costs money before it earns any",
+        body: "Training a model per user is GPU time, and it is spent up front — before the user has generated anything, and whether or not they ever come back. That put a floor under what the product could charge and ruled out the usual free tier that lets anyone train a model to see what happens.",
+      },
+      {
+        title: "The wait is at the front, where people leave",
+        body: "Training takes minutes and generation takes seconds, but the minutes come first. A new user's first experience of the product is a wait for something they cannot see progress on, which is the single worst place in a funnel to put one.",
+      },
+      {
+        title: "The training set is photographs of the user",
+        body: "People upload their own faces to train a likeness. That is personal data with an obvious worst case, and it made storage and delivery a question about access rather than a question about cost.",
+      },
+    ],
     approach:
       "Training is slow and generation must feel instant, so the architecture is built around never letting one block the other.",
+    tradeoffs: [
+      {
+        decision: "Rent the model runtime rather than run GPUs",
+        instead: "Self-host training and inference, which is cheaper per run at volume and gives you the whole stack",
+        cost: "A provider dependency on the most important thing in the product, a price floor set by someone else, and no control over cold starts or queue depth when they are busy.",
+        bought: "A founding engineer shipped a product instead of an ML platform. Running our own GPUs would have meant capacity planning, driver management and idle cost from the first user onward — months spent on infrastructure that Fal.ai already operates better than a one-person team could.",
+      },
+      {
+        decision: "Train a model per user",
+        instead: "Prompt one shared model with the user's photos as reference images, which needs no training step at all",
+        cost: "Minutes of GPU time and a stored model per account, spent before the user has produced anything — and a first-run wait where a shared model would have been instant.",
+        bought: "The likeness actually holds. Reference-image conditioning gets close and then drifts, which is exactly the failure the product exists to avoid: a generic generator that almost looks like you is not worth paying for. The wait buys the one property the whole thing is sold on.",
+      },
+      {
+        decision: "Stream partial results instead of returning a finished batch",
+        instead: "Wait for the set to complete and render it at once, which is far simpler to reason about",
+        cost: "Partial state in the interface, and cancellation and error handling that have to work halfway through rather than at a single boundary.",
+        bought: "Roughly 40% better perceived speed with no change to the model underneath. The generator did not get faster; the product stopped making people stare at nothing while it worked, which is the half of latency you can fix without a bigger GPU.",
+      },
+      {
+        decision: "Charge per generation, not per month",
+        instead: "A flat subscription, which is easier to sell and far easier to build",
+        cost: "Metering that has to be correct in the request path, a counter that survives partial failures, and — because it went in late — a retrofit onto a pipeline that was already running.",
+        bought: "The one operation with a real unit cost is the one the billing counts, so a heavy user cannot quietly make an account unprofitable and a light user is not subsidising them. On a product where every action spends GPU time, a flat price is a bet on usage rather than a business model.",
+      },
+    ],
     decisions: [
       "Trained a model per user on Fal.ai behind an async job queue, so a run measured in minutes never occupies the interface.",
       "Shaped prompts server-side through OpenAI before they reach the generation provider, and streamed results back as they land rather than as a finished batch.",
@@ -584,8 +637,64 @@ const authored: Omit<Project, "index">[] = [
     problemHeadline: "Checkout breaks in the edge cases",
     problem:
       "E-commerce builds tend to fail in the same three places. Content changes need a developer, so campaigns wait on deploys. Payment edge cases — duplicate webhooks, events arriving out of order, amounts that do not match — turn into real financial risk. And a monolith makes both problems harder to fix safely.",
+    context: [
+      { k: "ROLE", v: "Full-stack product engineer across all three services" },
+      {
+        k: "OWNED",
+        v: "Storefront · Express transactional API · Payload CMS admin · the settlement path that runs between them",
+      },
+      { k: "SURFACES", v: "Three independently deployable services over one shared MongoDB" },
+      {
+        k: "SCOPE",
+        v: "Catalog derived from host and market, so one codebase serves a local and a global storefront",
+      },
+      {
+        k: "STATUS",
+        v: "In development — the payment path is hardened and tested, and has not yet carried production traffic",
+      },
+    ],
+    constraints: [
+      {
+        title: "The money settles once; the events describing it do not",
+        body: "Stripe confirms a payment a single time and then tells you about it repeatedly — duplicated, delayed, and occasionally in the wrong order. Nothing in the design was allowed to assume an event is the first time it has been seen, because in a payment system that assumption is not a bug that shows up in a log, it is a customer charged twice or an order that ships against a payment that failed.",
+      },
+      {
+        title: "A campaign cannot wait for a release",
+        body: "Merchandising changes — a banner, a testimonial, an FAQ, a hero — arrive faster than deploys do, and the usual outcome is either a queue of trivial pull requests or copy that is quietly out of date. Content had to be editable by the people who write it, which meant the page could no longer assume any field it renders is actually there.",
+      },
+      {
+        title: "Nothing here has production traffic to check it against",
+        body: "The reliability work is tested rather than observed. That is a real limit on what the build can claim: guard layers and settlement tests prove the logic does what it was written to do, not that the assumptions behind it hold against real payment traffic — and the two are not the same thing.",
+      },
+    ],
     approach:
       "Separate the three concerns into independently deployable services, then treat settlement as a distributed-systems problem rather than a happy path: assume events arrive twice, late, or out of order, and make the order state machine refuse to go backwards.",
+    tradeoffs: [
+      {
+        decision: "Settle down two independent paths",
+        instead: "Trust the webhook alone, which is what Stripe's own documentation recommends and is one code path instead of two",
+        cost: "Two writers reach the same order, so every guard has to be idempotent and the two paths have to agree about what has already happened. It is strictly more to get right than one path would be.",
+        bought: "Neither failure mode can lose an order. A browser that dies after payment is covered by the webhook; a webhook that is delayed or dropped is covered by the confirmation the client already made. The single-path version is correct until the one time it is not, and that time is somebody's money.",
+      },
+      {
+        decision: "Order status only moves forward",
+        instead: "Apply whatever the latest event says, which is the obvious reading of an event stream",
+        cost: "Legitimate reversals — a refund, a cancellation — need their own explicit transition rather than simply setting the status back. The state machine has to be extended rather than assigned to.",
+        bought: "A stale event cannot un-ship an order. Out-of-order delivery stops being a correctness problem and becomes a no-op: an event describing a state the order has already passed is discarded rather than applied, which is the difference between handling reordering and hoping it does not happen.",
+      },
+      {
+        decision: "Three services over one shared database",
+        instead: "A database per service, which is what service separation is normally taken to mean",
+        cost: "This is not real isolation. The services share a schema, so a model change is coordinated across three codebases and one of them can still write something another did not expect.",
+        bought: "No distributed transaction anywhere near a checkout. A database per service would have put eventual consistency between taking a payment and recording an order, and for a team this size the honest answer is that separate deployables with bounded write ownership buys most of the benefit at none of that cost.",
+      },
+      {
+        decision: "Content is data the CMS owns, not components the repository owns",
+        instead: "Hard-code the sections and ship a release when marketing wants a change",
+        cost: "Every rendered field is now something that might be absent, so the storefront needs typed contracts and defensive rendering throughout — and a content editor can technically break a page in a way a compiler will not catch.",
+        bought: "A campaign is an edit rather than a deploy. Eleven admin collections plus navigation and site settings as editable globals mean the release cadence of the storefront stops being the release cadence of its copy, which is the difference between a marketing team that ships and one that files tickets.",
+      },
+    ],
     decisions: [
       "Split into a storefront, an Express transactional API and a Payload CMS admin, each deployable on its own with bounded ownership over a shared database.",
       "Settled payments down two independent paths — immediate confirmation after client success, and a webhook fallback — so a dropped browser never loses an order.",
@@ -660,6 +769,22 @@ const authored: Omit<Project, "index">[] = [
     problemHeadline: "Acting as the wrong account is not a UI bug",
     problem:
       "A person can hold a personal account and a business account at the same time, arrive with neither selected, and be part-way through verification on one of them. Most applications treat that as a navigation question and let each page work out where the user should be. In a product that moves money it is not a navigation question: a transfer initiated while the app is guessing leaves the wrong balance, and a payment surface rendered before verification finishes lets someone move funds they are not yet cleared to move. The failure does not look like a broken route — it looks like an unauthorised debit, and it is found by the customer.",
+    context: [
+      { k: "ROLE", v: "Full-stack engineer — the FastAPI services and the Next.js client on top of them" },
+      {
+        k: "OWNED",
+        v: "Session and authorisation model · onboarding and verification · document handling · the client data layer",
+      },
+      {
+        k: "NOT MINE",
+        v: "The banking rails — issuing, funding and exchange rates sit behind providers, and the regulated permissions are the operator's",
+      },
+      { k: "SURFACES", v: "Three journeys out of one architecture — personal, business and admin" },
+      {
+        k: "STATUS",
+        v: "In development and pre-traffic, which is why the measures below are instrumented rather than reported",
+      },
+    ],
     constraints: [
       {
         title: "Verification gates money, not features",
