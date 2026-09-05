@@ -14,8 +14,6 @@ const img = {
   alfa: "/projects/alfa.svg",
   volumize: "/projects/volumize.svg",
   wisdomup: "/projects/wisdomup.svg",
-  diagram: "/projects/diagram.svg",
-  terminal: "/projects/terminal.svg",
 } as const;
 
 export const projectImages = img;
@@ -141,12 +139,10 @@ const authored: Omit<Project, "index">[] = [
     approach:
       "Keep Laravel as the core and give the workloads that were hurting it their own home. Media moves out to object storage so uploads stop occupying request workers; billing and quota state stop being things the application tries to remember. Everything is shaped by one rule: the system has to be changeable while it is running, because it never stops running.",
     decisions: [
-      "Designed the schema and a migration strategy so the product could evolve without downtime.",
-      "Made Stripe the source of truth for what each tier unlocks — pages, site count, custom domain — rather than mirroring entitlement locally.",
-      "Metered AI generations per plan (5 / 10 / 30 a month) with a monthly reset, so a paid capability could not be spent for free.",
-      "Built an internal admin panel over the whole tenancy — users, their sites, subscriptions and the companies above them — so support did not mean running SQL against production.",
-      "Moved all user media to AWS S3 with signed delivery instead of app-server storage.",
-      "Built CI/CD so releases stopped being manual events.",
+      "Kept Laravel as the core and moved the two workloads that were hurting it — media and billing — onto their own paths.",
+      "Made entitlement a question answered from Stripe on every publish, page save and domain lookup, rather than a flag stored on an account.",
+      "Metered AI generation per plan with a monthly reset, and left every existing site fully editable once the allowance was spent.",
+      "Built an admin back office over the whole tenancy — accounts, sites, subscriptions, companies — writing through the same billing paths the product uses.",
     ],
     tradeoffs: [
       {
@@ -299,11 +295,10 @@ const authored: Omit<Project, "index">[] = [
       },
     ],
     decisions: [
-      "Built an agentic RAG pipeline over PostgreSQL with vector retrieval.",
-      "Chunked and embedded documents with structure preserved, so clause context survives retrieval.",
-      "Used agent workflows to route document types to the right extraction path.",
-      "Shipped a React Flow visual workflow builder so non-engineers can compose pipelines.",
-      "Used Plate.js for the in-app document editor, with extraction results written inline.",
+      "Chunked documents along their own clause hierarchy, so a retrieved passage arrives carrying the ancestry that makes it mean something.",
+      "Routed each document type to a dedicated extraction agent with its own tools and validation schema, rather than one prompt covering everything.",
+      "Modelled a legal matter as a pathway graph where every node is an action the platform can perform — draft, run an AI step, order a service, produce a court form.",
+      "Extracted obligations and their dates out of executed documents and wrote them into the calendar the user already works in.",
     ],
     diagram: {
       src: "/projects/golegal-rag.svg",
@@ -312,16 +307,8 @@ const authored: Omit<Project, "index">[] = [
     },
     build: [
       {
-        title: "Structure-preserving retrieval",
-        body: "Chunking follows the document’s own hierarchy — sections, clauses, sub-clauses — and every chunk carries its ancestry. A retrieved clause arrives with the context that makes it mean something, which is what killed the hallucinated citations.",
-        image: img.golegal,
-        alt: "Document retrieval view in Golegal",
-      },
-      {
-        title: "Agent routing by document type",
-        body: "A classifier routes each upload to a dedicated extraction agent. Contracts, filings, and correspondence each get their own tool set and validation schema rather than one prompt trying to cover everything.",
-        image: img.diagram,
-        alt: "Agent routing diagram",
+        title: "Retrieval that keeps the document’s shape",
+        body: "Chunking follows the document’s own hierarchy — sections, clauses, sub-clauses — and every chunk carries its ancestry, so a retrieved clause arrives with the context that makes it mean something. On top of that, a classifier routes each upload to a dedicated extraction agent with its own tool set and validation schema, rather than one prompt trying to cover contracts, filings and correspondence at once. Between them those two things are what killed the hallucinated citations: the model stops being asked to infer context it was never handed.",
       },
       {
         title: "Legal pathways, as a graph you can see",
@@ -376,10 +363,9 @@ const authored: Omit<Project, "index">[] = [
     approach:
       "Training is slow and generation must feel instant, so the architecture is built around never letting one block the other.",
     decisions: [
-      "Built the model-training and generation pipeline on Fal.ai with OpenAI in the loop for prompt shaping.",
-      "Used an async job queue so training and generation never block the UI.",
-      "Stored and delivered every asset from S3 rather than the application server.",
-      "Wired usage-based monetization directly into the generation flow.",
+      "Trained a model per user on Fal.ai behind an async job queue, so a run measured in minutes never occupies the interface.",
+      "Shaped prompts server-side through OpenAI before they reach the generation provider, and streamed results back as they land rather than as a finished batch.",
+      "Metered generation in the flow itself, so the one operation carrying a real unit cost is the one the billing counts.",
     ],
     diagram: {
       src: "/projects/muterpe-pipeline.svg",
@@ -390,14 +376,10 @@ const authored: Omit<Project, "index">[] = [
       {
         title: "Per-user model training",
         body: "Users upload a set, the job queue picks it up, and training progress streams back to the UI. Nothing about the app is blocked while a model bakes.",
-        image: img.muterpe,
-        alt: "Muterpe model training screen",
       },
       {
         title: "Generation that feels immediate",
         body: "Prompts are shaped server-side before they hit the generation provider, and results stream in as they land. Perceived speed improved ~40% without changing the underlying model.",
-        image: img.terminal,
-        alt: "Generation job logs",
       },
     ],
     metrics: [
@@ -507,18 +489,11 @@ const authored: Omit<Project, "index">[] = [
       },
     ],
     decisions: [
-      "Split the product into a customer app and an admin app over three shared packages — auth, db, ui — so session logic and domain models have exactly one definition.",
-      "Issued separate session tokens for users and admins rather than one shared trust boundary, keeping role-scoped checks simple and the blast radius small.",
-      "Modelled the order lifecycle as explicit statuses and transitions, connecting questionnaire, doctor review, prescription generation, and fulfilment into one traceable pipeline.",
-      "Kept refunds executing against the same Stripe environment as the original transaction, so payment operations reconcile instead of drifting.",
-      "Made product pages config-driven, so merchandising changes are composition rather than layout rewrites.",
-      "Ran the medical questionnaire through a retrieval-augmented pipeline over the treatment material, so intake returns a suggested plan with its reasoning for a clinician to accept or override — never an automatic prescription.",
-      "Enforced role-based access server-side for admin, pharmacist, doctor and marketing, so a marketing login cannot reach patient answers by knowing a URL.",
-      "Put the blog and campaign content in the same admin, so marketing ships copy without a deploy.",
-      "Wired Socket.IO for event-driven status updates, giving doctors and admins live operational visibility.",
-      "Scheduled the next cycle to despatch two weeks before the current course runs out, with retries, so a subscriber never waits on the post to take a dose.",
-      "Ran health checks across the services and wired Sentry, so an outage reaches us before it reaches a patient.",
-      "Integrated the Royal Mail API so despatch generates labels and syncs tracking back onto the order, taking approved prescriptions to shipped without manual handling.",
+      "Split the product into a customer app and an operational back office over three shared packages — auth, db, ui — so an order means the same thing on both sides of the platform.",
+      "Issued separate session tokens for customers and staff rather than one shared trust boundary, keeping the blast radius of a leaked session inside a single surface.",
+      "Modelled the order lifecycle as explicit statuses and transitions, so questionnaire, clinical review, prescription and fulfilment are one traceable pipeline rather than four systems agreeing by convention.",
+      "Kept refunds executing against the same Stripe environment as the original charge, so payment operations reconcile instead of drifting.",
+      "Integrated the Royal Mail API so despatch generates the label and writes tracking back onto the order, taking an approved prescription to shipped without anyone handling it.",
     ],
     diagram: {
       src: "/projects/volumize-lifecycle.svg",
@@ -529,14 +504,10 @@ const authored: Omit<Project, "index">[] = [
       {
         title: "Two apps, one domain layer",
         body: "The customer app and the back office are separate deployments over shared auth, database, and UI packages. Fifteen Mongoose models live in one place, so an order means the same thing on both sides of the platform.",
-        image: img.volumize,
-        alt: "Volumize monorepo structure",
       },
       {
         title: "Intake to delivery, as one pipeline",
         body: "Signup leads into a medical questionnaire, then checkout, then doctor review. Approval generates a prescription PDF and hands off to the pharmacy; rejection stops the order. Despatch runs through the Royal Mail API — labels generated and tracking written straight back onto the order — so nobody is creating labels by hand. Delivery rolls into the subscription renewal cycle, and refunds are a modelled branch rather than an afterthought.",
-        image: img.diagram,
-        alt: "Treatment and commerce lifecycle flow",
       },
       {
         title: "A questionnaire that recommends, not just records",
@@ -553,8 +524,6 @@ const authored: Omit<Project, "index">[] = [
       {
         title: "Security hardening pass",
         body: "A phased dependency remediation — non-breaking fixes first, breaking upgrades second — prioritising routing, middleware, email transport, and the parsing and network stack. Next.js moved to 16.3.0 and Nodemailer to 9.0.4, clearing every high and moderate finding across a 1,127-package graph. Query optimisation and edge caching took 1.8s off page load and 35% off API response time in the same pass.",
-        image: img.terminal,
-        alt: "Dependency audit output",
       },
     ],
     metrics: [
@@ -618,12 +587,10 @@ const authored: Omit<Project, "index">[] = [
     approach:
       "Separate the three concerns into independently deployable services, then treat settlement as a distributed-systems problem rather than a happy path: assume events arrive twice, late, or out of order, and make the order state machine refuse to go backwards.",
     decisions: [
-      "Split into a storefront, an Express transactional API, and a Payload CMS admin, each deployable on its own with bounded ownership over a shared database.",
-      "Settled payments down two paths — immediate confirmation after client success, plus a webhook fallback — so a dropped browser never loses an order.",
-      "Guarded settlement with signature verification, ownership and amount checks, idempotency keys, unique transaction indexing, and replay protection.",
-      "Enforced monotonic order status, so a stale webhook cannot regress an order that has already moved on.",
-      "Derived catalog scope from host and market, enforced again at checkout, so local and global products cannot cross storefronts.",
-      "Drove homepage sections, navigation, FAQs, and testimonials from the CMS with typed contracts and defensive rendering, so a missing field degrades instead of breaking the page.",
+      "Split into a storefront, an Express transactional API and a Payload CMS admin, each deployable on its own with bounded ownership over a shared database.",
+      "Settled payments down two independent paths — immediate confirmation after client success, and a webhook fallback — so a dropped browser never loses an order.",
+      "Guarded settlement with signature verification, ownership and amount checks, idempotency keys, a unique transaction index and replay protection, then made order status monotonic so a stale event is discarded rather than applied.",
+      "Derived catalog scope from host and market and enforced it again at checkout, so a local product cannot be bought through the wrong storefront.",
     ],
     diagram: {
       src: "/projects/wisdomup-settlement.svg",
@@ -634,27 +601,25 @@ const authored: Omit<Project, "index">[] = [
       {
         title: "Two paths to settled",
         body: "The client confirms with Stripe and the backend records it immediately. The webhook then arrives and reconciles — verifying signature, checking the amount and owner, deduplicating on a unique transaction index, and refusing any event that would move the order backwards. Fourteen tests cover that logic specifically.",
-        image: img.wisdomup,
-        alt: "Checkout and settlement flow",
       },
       {
         title: "Merchandising without a deploy",
         body: "Hero, banners, feature bars, FAQs, and testimonials are CMS collections, not components. Eleven admin collections plus site settings and navigation as editable globals mean a campaign change is an edit, not a release — with CSV product import for bulk catalog work.",
-        image: img.diagram,
-        alt: "Payload CMS collections and globals",
       },
       {
         title: "Storefront surface",
-        body: "Listing and detail flows with category filtering and search, cart and wishlist, guest checkout with resumable session state, promo codes validated server-side for eligibility and discount, and reviews rendered moderation-aware. Fifty components across twenty-three route directories.",
-        image: img.terminal,
-        alt: "Storefront routes and components",
+        body: "Listing and detail flows with category filtering and search, cart and wishlist, guest checkout with resumable session state, promo codes validated server-side for both eligibility and discount, and reviews rendered moderation-aware. Guest checkout is the one worth naming: session state survives a closed tab, because the most common way to lose an order is not a payment failure, it is someone leaving to check something and coming back to an empty cart.",
       },
     ],
     metrics: [
       { value: "3", caption: "Deployable services", note: "* storefront · API · CMS" },
       { value: "8", caption: "Payment guard layers", note: "* signature to state machine" },
       { value: "14", caption: "Settlement tests passing", note: "* confirmation logic" },
-      { value: "39", caption: "Backend route handlers", note: "* across 10 route files" },
+      {
+        value: "2",
+        caption: "Independent paths to settled",
+        note: "* client confirmation · webhook fallback",
+      },
     ],
     reflection:
       "Everything measurable here is about the build, not the business. The payment layer is hardened and tested, but checkout success rate, reconciliation accuracy, and promo conversion are still targets rather than readings — I set them without shipping the instrumentation to answer them. Reliability engineering you cannot observe in production is a hypothesis, and I would wire the funnel telemetry before adding another feature.",
@@ -689,7 +654,7 @@ const authored: Omit<Project, "index">[] = [
      * repository. "4 route groups" described a directory layout; these describe
      * what the platform does and what was built to make it do it.
      */
-    indexMetrics: ["0 money surfaces before identity resolves", "authorised at route and row", "6 capabilities that fail alone"],
+    indexMetrics: ["6 isolated capabilities", "2 authorisation layers", "4 measures instrumented"],
     image: img.alfa,
     alt: "Alfa fintech dashboard",
     problemHeadline: "Acting as the wrong account is not a UI bug",
@@ -738,15 +703,10 @@ const authored: Omit<Project, "index">[] = [
     approach:
       "Treat identity as something the system resolves before it renders anything that can move money, and treat each financial capability as something that can fail without taking the others with it. On the client, middleware does one cheap thing at the edge — is there a token at all — and every conditional question (which account, which role, is verification complete) is answered once against a single bootstrapped user object. No screen infers it. On the server, transfers, currency conversion, top-ups, bill splitting, recurring payments and cards are separate FastAPI services behind a GraphQL layer, so an incident is scoped to the capability it happened in. Authorisation is enforced twice on purpose: at the route, and again as row-level rules next to the data.",
     decisions: [
-      "Built each financial capability as its own FastAPI service — transfers, bill splitting, top-ups, currency conversion, recurring payments — rather than one monolith where an incident anywhere is an incident everywhere.",
-      "Put 10+ GraphQL APIs in front of those services, so the client asks for what a screen needs in one request instead of stitching together REST calls per role.",
-      "Used Supabase for auth and persistence, keeping row-level rules next to the data rather than re-implemented in every service.",
-      "Kept middleware to a token-presence gate; role and session rules run in a RequireAuth guard against Redux state.",
-      "Bootstrapped the session once from /auth/user/me into a userSlice, making it the single source of truth for the app.",
-      "Used one RTK Query baseApi with domain endpoints injected per feature, so seven API areas share one reducer, one middleware, and one cache.",
-      "Routed onboarding by account type, letting the guard redirect incomplete journeys instead of each page checking for itself.",
-      "Handled S3 document upload and delete inside Next.js route handlers with AWS SDK v3, keeping credentials server-side.",
-      "Validated forms with Zod schemas shared between onboarding and dashboard flows.",
+      "Kept edge middleware to one cheap question — is there a token at all — and answered every conditional question about role, session and verification once, in a single guard against bootstrapped state.",
+      "Put 10+ GraphQL APIs in front of the services, so a screen asks for what it needs in one request instead of a REST fan-out that differs per role.",
+      "Created one RTK Query base API and had seven domains inject their own endpoints into it — one reducer, one middleware, one cache.",
+      "Instrumented the four measures a payments platform is actually judged on — authorisation rate, transfer p95, reconciliation break rate, KYC completion — before there was traffic to run through them.",
     ],
     diagram: {
       src: "/projects/alfa-services.svg",
@@ -757,14 +717,10 @@ const authored: Omit<Project, "index">[] = [
       {
         title: "Hybrid auth model",
         body: "Login optionally passes through 2FA before an access token lands in a cookie. A bootstrap provider then fetches the user once and hands Redux the session. From there the guard resolves one of four outcomes — admin area, dashboard, onboarding, or an account selector when someone holds both account types and has not picked a session.",
-        image: img.alfa,
-        alt: "Alfa authentication and session flow",
       },
       {
         title: "One API, seven domains",
         body: "Rather than a slice per feature, a single baseApi is created once and each domain injects its own endpoints: auth, business, cards, transactions, schedules, wallet, admin. Adding an endpoint means touching one file and getting caching, tag invalidation, and generated hooks for free.",
-        image: img.diagram,
-        alt: "RTK Query base API with injected domain endpoints",
       },
       {
         title: "Verification, and the documents it runs on",
@@ -772,13 +728,15 @@ const authored: Omit<Project, "index">[] = [
       },
       {
         title: "Four route groups, one set of rules",
-        body: "The app is partitioned by what a person is allowed to be doing rather than by feature: auth, onboarding, dashboard and admin. Onboarding is routed by account type, so an incomplete business journey and an incomplete personal one are different paths through the same group rather than the same page branching internally. Zod schemas are shared between onboarding and the dashboard, which means a field validated at signup is validated identically when it is edited a year later — the usual failure being two definitions of the same rule that drift.",
+        body: "The app is partitioned by what a person is allowed to be doing rather than by feature: auth, onboarding, dashboard and admin. Zod schemas are shared across those groups, so a field validated at signup is validated identically when it is edited a year later — the usual failure being two definitions of the same rule that drift apart until one of them lets something through.",
       },
       {
         title: "Money movement surfaces",
         body: "Transfers for personal and business contexts, payment requests, calendar-driven scheduled payments, transaction history, and card issuing and assignment — each built from shared layout shells and form primitives so a new dashboard screen starts from composition rather than scratch.",
-        image: img.terminal,
-        alt: "Alfa dashboard modules",
+      },
+      {
+        title: "The four numbers this gets judged on",
+        body: "A payments platform is not assessed on how much of it exists, and the metrics a fintech actually reports are the same four everywhere. Authorisation rate — the share of attempted payments that clear — is the one watched first, because a drop of a point or two is invisible in an error log and enormous in revenue, and it catches an issuer problem, a rail problem and a bug in your own retry logic with the same signal. p95 on the transfer path, not the average, measured from the request entering the transfer service to the ledger entry being written: the mean hides exactly the tail where someone abandons a payment and calls support. Reconciliation break rate — movements where our record and the provider's disagree at end of day — is the one that has to trend to zero rather than to something tolerable, because every break is money sitting somewhere other than where the system says it is. And KYC completion, measured per onboarding step rather than as a single funnel number, because verification gates funding: an account that stalls on proof of address is not a conversion problem, it is a customer who cannot use the product. None of the four has a production reading yet — Alfa is pre-traffic, and a figure printed here would be one I invented. What exists is the emission at each of those points, the thresholds, and the decision about which of them is allowed to wake someone up.",
       },
     ],
     metrics: [
@@ -787,10 +745,11 @@ const authored: Omit<Project, "index">[] = [
        * judged on what it makes impossible — funds moving from an account the
        * user did not select, one account reading another's rows, a rate
        * provider taking the whole product down — not on how much was built.
-       * The figures a fintech normally publishes alongside these (authorisation
-       * rate, p95 on the transfer path, reconciliation breaks) need production
-       * traffic to mean anything, and the last tile says that plainly rather
-       * than filling the space with something unmeasured.
+       * The four figures a fintech publishes alongside these — authorisation
+       * rate, p95 on the transfer path, reconciliation break rate and KYC
+       * completion — need production traffic to mean anything. The last tile
+       * therefore counts the instrumentation, and the build block above defines
+       * each measure and its threshold. Printing a value would be inventing one.
        */
       {
         value: "0",
@@ -807,7 +766,11 @@ const authored: Omit<Project, "index">[] = [
         caption: "Capabilities that fail alone",
         note: "* an FX outage is not a transfers outage",
       },
-      { value: "WIP", caption: "In active development", note: "* not a finished claim" },
+      {
+        value: "4",
+        caption: "Service levels instrumented",
+        note: "* auth rate · transfer p95 · recon breaks · KYC completion",
+      },
     ],
     reflection:
       "The architecture is sound but under-tested for what it is. Money movement and auth are exactly the paths that deserve integration and end-to-end coverage, and right now correctness rests on the guard logic being right rather than on anything proving it. That is the next thing I would build, before analytics on onboarding drop-off or feature flags for staged rollout.",
