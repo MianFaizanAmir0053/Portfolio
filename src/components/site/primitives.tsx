@@ -273,18 +273,19 @@ export function CutFrame({
   sizes?: string;
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
-  const imgRef = useRef<HTMLImageElement>(null);
+  /** The overscan layer — the thing that travels. See the note on it below. */
+  const overscanRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!parallax) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const el = wrapRef.current;
-    const img = imgRef.current;
-    if (!el || !img) return;
+    const layer = overscanRef.current;
+    if (!el || !layer) return;
     gsap.registerPlugin(ScrollTrigger);
     const ctx = gsap.context(() => {
       gsap.fromTo(
-        img,
+        layer,
         { yPercent: -6 },
         {
           yPercent: 6,
@@ -300,31 +301,43 @@ export function CutFrame({
     <div ref={wrapRef} className={cn("relative", className)}>
       <div className={cn("relative overflow-hidden bg-paper-deep", ratio, cut)}>
         {/*
-         * next/image, not a bare <img>: it emits a srcset sized to the viewport
-         * and converts raster sources to AVIF/WebP, which the case-study
-         * screenshots need the moment they stop being placeholder SVGs. An .svg
-         * source is served untouched — Next skips optimisation for it
-         * automatically.
+         * The overscan lives on this wrapper, not on the image.
          *
-         * `fill` plus an explicit style: the frame overscans by 12% and sits 6%
-         * high so the GSAP parallax has somewhere to travel without exposing an
-         * edge. The style prop is merged after Next's own fill styles, so it
-         * wins.
+         * The frame is 12% taller than its box and parked 6% high, so the GSAP
+         * parallax has somewhere to travel without ever exposing an edge. That
+         * used to be a `style={{ height: "112%" }}` on the image itself, on the
+         * assumption that the style prop merged over Next's own fill styles —
+         * it does not. `fill` is height:100% by definition and next/image
+         * rejects the combination outright, which took every page carrying a
+         * frame down to the error boundary in development.
+         *
+         * Giving the geometry its own element also separates the two transforms
+         * that were previously fighting over the image: the parallax scrub
+         * belongs to this wrapper, and the hover scale below belongs to the
+         * image. The class here is the resting position, which is what shows
+         * before GSAP takes the property over.
          */}
-        <Image
-          ref={imgRef}
-          src={src}
-          alt={alt}
-          fill
-          sizes={sizes}
-          loading={eager ? "eager" : "lazy"}
-          fetchPriority={eager ? "high" : "auto"}
-          style={{ height: "112%", transform: "translateY(-6%)" }}
-          className={cn(
-            "w-full object-cover transition-[filter,transform] duration-500",
-            grayscale && "grayscale group-hover:grayscale-0 group-hover:scale-[1.03]",
-          )}
-        />
+        <div ref={overscanRef} className="absolute inset-x-0 top-0 h-[112%] -translate-y-[6%]">
+          {/*
+           * next/image, not a bare <img>: it emits a srcset sized to the
+           * viewport and converts raster sources to AVIF/WebP, which the
+           * case-study screenshots need the moment they stop being placeholder
+           * SVGs. An .svg source is served untouched — Next skips optimisation
+           * for it automatically.
+           */}
+          <Image
+            src={src}
+            alt={alt}
+            fill
+            sizes={sizes}
+            loading={eager ? "eager" : "lazy"}
+            fetchPriority={eager ? "high" : "auto"}
+            className={cn(
+              "object-cover transition-[filter,transform] duration-500",
+              grayscale && "grayscale group-hover:grayscale-0 group-hover:scale-[1.03]",
+            )}
+          />
+        </div>
       </div>
       {plus && (
         <span

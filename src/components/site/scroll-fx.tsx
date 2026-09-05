@@ -48,19 +48,41 @@ export const barHeight = () =>
 /** Height of a pinned viewport: the screen, less the bar it sits under. */
 const PINNED_HEIGHT = "h-[calc(100svh-var(--bar-h))]";
 
-/** Snap easing shared by every pinned section, so they all settle alike. */
-const SNAP = {
-  duration: { min: 0.15, max: 0.5 },
-  delay: 0.05,
-  ease: "power2.inOut",
-} as const;
+/**
+ * How every pinned section on the site is pinned.
+ *
+ * ScrollTrigger's default is `pinType: "fixed"` — it takes the section out of
+ * flow and holds it with `position: fixed`. That is right for a native
+ * scroller, and wrong here. Lenis interpolates, so it scrolls the window to
+ * *fractional* offsets (1234.37px, not 1234px) on every frame. A fixed element
+ * is positioned by the browser independently of the scrolled content, and at a
+ * fractional offset the two get rounded independently — so the pinned section
+ * and the page behind it disagree by a fraction of a pixel, differently from
+ * frame to frame. That reads as the section catching and slipping while you
+ * scroll through it, in both directions, which is exactly the judder the
+ * experience rail had.
+ *
+ * `transform` pins by translating the element instead. It then travels through
+ * the same transform pipeline as everything else Lenis moves, so it cannot
+ * disagree with the page about where it is.
+ */
+const PIN_TYPE = "transform" as const;
 
-/** Nearest entry in `points` to `value` — the shape ScrollTrigger's snapTo wants. */
-const nearest = (points: number[], value: number) =>
-  points.reduce(
-    (best, p) => (Math.abs(p - value) < Math.abs(best - value) ? p : best),
-    points[0] ?? 0,
-  );
+/*
+ * No snapping on the pinned sections, deliberately.
+ *
+ * ScrollTrigger snaps by tweening the window's scroll position once it decides
+ * scrolling has stopped. Lenis owns that position — it lerps toward its own
+ * target every frame off the GSAP ticker — so the two wrote to the same value
+ * in the same frame and the scroll stalled while they disagreed. It was worse
+ * than an occasional collision: Lenis decays velocity asymptotically and never
+ * reports a true zero, so the "scrolling has stopped" heuristic fired *during*
+ * an ordinary scroll, roughly every time the wheel paused for a frame. That is
+ * the judder that used to hit the Experience rail.
+ *
+ * Nothing replaces it. A rail whose panels are different widths has no natural
+ * grid to snap to, and reading is better served by stopping wherever you like.
+ */
 
 /**
  * Which flavour of an effect to render.
@@ -228,14 +250,28 @@ export function ScrollRail({
       const p = gsap.utils.clamp(0, 1, progress);
       const fill = fillRef.current;
       if (fill) {
-        if (orientation === "vertical") fill.style.height = `${p * 100}%`;
-        else fill.style.width = `${p * 100}%`;
+        /*
+         * Scaled, not resized. `width`/`height` are layout properties, so
+         * writing them every frame invalidated layout every frame — which is
+         * what turned any rect read elsewhere in that frame into a forced
+         * reflow, in the middle of the pinned sections this rail reports on.
+         * The bar is a solid block, so a scale is visually identical.
+         */
+        if (orientation === "vertical") fill.style.transform = `scaleY(${p})`;
+        else fill.style.transform = `scaleX(${p})`;
       }
       for (let i = 0; i < dotRefs.current.length; i += 1) {
         const dot = dotRefs.current[i];
         if (!dot) continue;
         const threshold = count > 1 ? i / (count - 1) : 0;
-        dot.dataset.on = p + 0.0001 >= threshold ? "true" : "false";
+        const on = p + 0.0001 >= threshold ? "true" : "false";
+        /*
+         * Only on a change. Writing the attribute unconditionally re-ran the
+         * `data-[on=true]:` selector match and invalidated the dot's style on
+         * every scrubbed frame, for every dot, even though the value changes
+         * about five times in the whole section.
+         */
+        if (dot.dataset.on !== on) dot.dataset.on = on;
       }
     },
     [orientation, count],
@@ -269,7 +305,11 @@ export function ScrollRail({
   if (orientation === "horizontal") {
     return (
       <div aria-hidden className={cn("relative h-px bg-ink/25", className)}>
-        <span ref={fillRef} className="absolute inset-y-0 left-0 block bg-cobalt" style={{ width: 0 }} />
+        <span
+          ref={fillRef}
+          className="absolute inset-y-0 left-0 block w-full origin-left bg-cobalt"
+          style={{ transform: "scaleX(0)" }}
+        />
         {steps.map((s, i) => (
           <span
             key={s.label}
@@ -288,7 +328,12 @@ export function ScrollRail({
   return (
     <ol className={cn("relative", className)}>
       <span aria-hidden className="absolute inset-y-0 left-[5px] w-px bg-ink/25" />
-      <span ref={fillRef} aria-hidden className="absolute left-[5px] top-0 w-px bg-cobalt" style={{ height: 0 }} />
+      <span
+        ref={fillRef}
+        aria-hidden
+        className="absolute left-[5px] top-0 h-full w-px origin-top bg-cobalt"
+        style={{ transform: "scaleY(0)" }}
+      />
       {steps.map((s, i) => (
         <li key={s.label} className="relative py-3 pl-8">
           <span
@@ -399,20 +444,6 @@ export function HorizontalScroll({
     const ctx = gsap.context(() => {
       const distance = () => Math.max(0, track.scrollWidth - viewport.clientWidth);
 
-      /*
-       * Panels are deliberately different widths, so evenly spaced snap
-       * increments would land between them. Derive the stops from where the
-       * panels actually sit, recomputed on every snap so a resize can't stale
-       * them.
-       */
-      const stops = () => {
-        const span = distance();
-        if (span <= 0) return [0];
-        return Array.from(track.querySelectorAll<HTMLElement>("[data-hpanel]")).map((panel) =>
-          gsap.utils.clamp(0, 1, panel.offsetLeft / span),
-        );
-      };
-
       const tween = gsap.to(track, {
         x: () => -distance(),
         ease: "none",
@@ -421,10 +452,21 @@ export function HorizontalScroll({
           start: () => `top top+=${barHeight()}`,
           end: () => `+=${distance()}`,
           pin: true,
-          scrub: 0.8,
-          anticipatePin: 1,
+          pinType: PIN_TYPE,
+          /*
+           * `true`, not a number. A numeric scrub adds its own catch-up on top
+           * of the smoothing Lenis is already applying to the wheel, so the
+           * track visibly trailed the scroll. One layer of smoothing is what
+           * makes this feel direct; two made it feel heavy.
+           */
+          scrub: true,
+          /*
+           * No `anticipatePin`. It engages the pin slightly early, guessing the
+           * point from scroll velocity — but Lenis reports a smoothed, decaying
+           * velocity, so the guess is wrong right at the boundary and the pin
+           * engages and releases around it as you arrive.
+           */
           invalidateOnRefresh: true,
-          snap: { snapTo: (value) => nearest(stops(), value), ...SNAP },
           onUpdate: (self) => report(self.progress),
           onRefresh: (self) => report(self.progress),
         },
@@ -513,9 +555,17 @@ export function HorizontalScroll({
 
           <div
             ref={scrollerRef}
-            // Its own scroller: Lenis must not intercept wheel or touch here,
-            // or a sideways flick would scroll the page instead of the rail.
-            data-lenis-prevent
+            /*
+             * Only the swipe row is a scroller, so only the swipe row opts out
+             * of Lenis. Marking it in `pinned` mode too was the stall: this box
+             * fills the screen while the section is pinned, so every wheel
+             * event over the rail was handed back to the browser. The page then
+             * jumped a raw wheel delta at a time while Lenis sat on a stale
+             * target and resynced after the fact — scroll, catch, snap, in both
+             * directions. Pinned, the box cannot scroll at all, so there is
+             * nothing here to protect from Lenis.
+             */
+            data-lenis-prevent={mode === "swipe" ? "" : undefined}
             className={cn(
               "min-h-0 flex-1",
               mode === "swipe" &&
@@ -527,7 +577,22 @@ export function HorizontalScroll({
               className={cn(
                 "relative flex px-5 md:px-10",
                 mode === "stack" ? "flex-col" : "w-max flex-row items-stretch gap-8 md:h-full md:gap-14",
-                mode === "pinned" && "will-change-transform",
+                /*
+                 * Clearance for the fixed dock rail. This track is not inside
+                 * `.wrap`, so it never got the right-hand allowance the rest of
+                 * the page has, and the last panel's values sat underneath the
+                 * rail's tiles.
+                 *
+                 * Deliberately no `will-change` here. This is the widest
+                 * element on the page — a `w-max` row several viewports across
+                 * carrying three grain-textured panels — and promoting it
+                 * permanently makes the browser rasterise that entire surface
+                 * up front. That is a hitch you feel on the approach, not a
+                 * saving. GSAP promotes it for the duration of its own
+                 * transform and releases it after, which is the right
+                 * behaviour at this size.
+                 */
+                mode === "pinned" && "md:pr-24",
                 trackClassName,
               )}
             >
@@ -626,10 +691,10 @@ export function TypeTunnel({
           start: () => `top top+=${barHeight()}`,
           end: () => `+=${window.innerHeight * 1.15}`,
           pin: true,
-          scrub: 0.7,
-          anticipatePin: 1,
+          pinType: PIN_TYPE,
+          // Direct, for the same reason as the horizontal rail above.
+          scrub: true,
           invalidateOnRefresh: true,
-          snap: { snapTo: (value) => nearest([0, 1], value), ...SNAP },
         },
       });
 
@@ -847,13 +912,23 @@ export function KineticHeadline({
         },
       )
         // the hold — scrolling continues, the line does not
-        .to({}, { duration: 0.55 })
-        .to(el.querySelectorAll("[data-kinetic-accent]"), {
+        .to({}, { duration: 0.55 });
+
+      /*
+       * Only if there is an accent to swell. A headline with no `accent` words
+       * yields an empty NodeList, and GSAP logs "target [object NodeList] not
+       * found" for every one of them on every render — noise that buries real
+       * warnings in the dev console.
+       */
+      const accents = el.querySelectorAll("[data-kinetic-accent]");
+      if (accents.length) {
+        tl.to(accents, {
           scale: 1.05,
           duration: 0.35,
           ease: "power2.out",
           transformOrigin: "left center",
         });
+      }
     }, el);
 
     return () => ctx.revert();
@@ -981,11 +1056,23 @@ export function PinnedLitText({
           // Long enough to read at, short enough not to feel trapped.
           end: () => `+=${window.innerHeight * 1.35}`,
           pin: true,
-          scrub: 0.5,
-          anticipatePin: 1,
+          pinType: PIN_TYPE,
+          // One layer of smoothing, not two — Lenis already smooths the wheel.
+          scrub: true,
+          /*
+           * No `anticipatePin`, for the same reason as the rail: it guesses the
+           * pin point from a velocity Lenis reports as smoothed and decaying,
+           * so the guess misfires at the boundary.
+           */
           invalidateOnRefresh: true,
           onUpdate: (self) => {
-            if (barRef.current) barRef.current.style.width = `${self.progress * 100}%`;
+            /*
+             * `scaleX`, not `width`. This ran on every scrubbed frame of the
+             * one section the page stops at, and `width` is a layout property —
+             * so every frame invalidated layout, which is what turned reads
+             * elsewhere on the page into forced reflows right here.
+             */
+            if (barRef.current) barRef.current.style.transform = `scaleX(${self.progress})`;
           },
         },
       });
@@ -1097,7 +1184,11 @@ export function PinnedLitText({
           {/* How much of the hold is left, so the pin never feels open-ended. */}
           {pinned && (
             <span aria-hidden className="relative mt-10 block h-px w-24 bg-ink/20">
-              <span ref={barRef} className="absolute inset-y-0 left-0 block bg-cobalt" style={{ width: 0 }} />
+              <span
+                ref={barRef}
+                className="absolute inset-y-0 left-0 block w-full origin-left bg-cobalt"
+                style={{ transform: "scaleX(0)" }}
+              />
             </span>
           )}
 
@@ -1140,7 +1231,7 @@ export function PinnedLitText({
                 data-fact
                 data-anchor={f.anchor}
                 className={cn(
-                  "cut-sm border-l-2 border-cobalt bg-paper-deep/90 px-4 py-3 backdrop-blur-[2px]",
+                  "cut-sm border-l-2 border-cobalt bg-paper-deep/90 px-4 py-3",
                   // The list is click-through so it never shadows the copy it
                   // sits over; the cards themselves stay selectable.
                   scatter && `pointer-events-auto absolute w-[15rem] ${f.pos ?? "left-[4%] top-[20%]"}`,
@@ -1429,21 +1520,25 @@ function useRevealed(ref: RefObject<HTMLElement | null>, rootMargin = "0px 0px -
 
     /*
      * The observer alone is not enough. Jumping straight to a `#work-<slug>`
-     * deep link moves earlier rows from below the viewport to above it without
-     * ever crossing a threshold, so no callback fires and they stay covered
-     * for good. This catches anything already at or past the fold; it costs one
-     * passive listener that removes itself the moment the element resolves.
+     * deep link lands earlier rows *above* the viewport without them ever
+     * crossing a threshold, so no callback fires and they stay covered for
+     * good. One check at mount catches exactly that case.
+     *
+     * It used to run on every scroll event, which meant each unrevealed row
+     * held a listener that forced a layout read on every frame of every scroll
+     * anywhere on the page — four of them at once on the index, all measuring
+     * cards several screens below the reader. The observer already handles
+     * every arrival that happens *by* scrolling; the only gap was the position
+     * the page started at, and that is known at mount.
      */
     const check = () => {
       if (el.getBoundingClientRect().top < window.innerHeight) setRevealed(true);
     };
     check();
-    window.addEventListener("scroll", check, { passive: true });
     window.addEventListener("resize", check);
 
     return () => {
       io.disconnect();
-      window.removeEventListener("scroll", check);
       window.removeEventListener("resize", check);
     };
   }, [ref, rootMargin, revealed]);
@@ -1531,13 +1626,43 @@ export function CardStack({
       measure();
     };
 
-    gsap.ticker.add(tick);
-    window.addEventListener("scroll", markDirty, { passive: true });
+    /*
+     * Only while the deck is anywhere near the screen.
+     *
+     * This used to sit on the ticker for the life of the page, re-measuring on
+     * every scroll event no matter where the reader was — so scrolling through
+     * the hero, the about statement or the experience rail paid for six
+     * `getBoundingClientRect` calls a frame against a section several screens
+     * below, and each one flushed layout while GSAP was mid-pin. The section
+     * only needs measuring when it can be seen.
+     */
+    let running = false;
+    const start = () => {
+      if (running) return;
+      running = true;
+      dirty = true;
+      gsap.ticker.add(tick);
+      window.addEventListener("scroll", markDirty, { passive: true });
+    };
+    const stop = () => {
+      if (!running) return;
+      running = false;
+      gsap.ticker.remove(tick);
+      window.removeEventListener("scroll", markDirty);
+    };
+
+    const gate = ScrollTrigger.create({
+      trigger: root,
+      start: "top bottom",
+      end: "bottom top",
+      onToggle: (self) => (self.isActive ? start() : stop()),
+    });
+
     window.addEventListener("resize", markDirty);
 
     return () => {
-      gsap.ticker.remove(tick);
-      window.removeEventListener("scroll", markDirty);
+      gate.kill();
+      stop();
       window.removeEventListener("resize", markDirty);
       cards.forEach((card) => gsap.set(card, { scale: 1, opacity: 1 }));
     };

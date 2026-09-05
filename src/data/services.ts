@@ -148,7 +148,7 @@ export const services: Service[] = [
     headline: ["Front ends that hold", "their own state"],
     accent: "state",
     answer:
-      "Next.js and React development for applications with genuine state: multiple roles, partial onboarding, sessions that have not been chosen yet, money moving. Faizan Amir builds these in the App Router with TypeScript, Redux Toolkit and RTK Query, most recently a fintech front end serving personal, business and admin journeys from one routing surface.",
+      "Next.js and React development for applications with genuine state: multiple roles, partial onboarding, sessions that have not been chosen yet, money moving. Faizan Amir builds these in the App Router with TypeScript, Redux Toolkit and RTK Query, most recently a fintech platform serving personal, business and admin journeys from one routing surface.",
     includes: [
       {
         title: "One guard, not fifteen",
@@ -198,13 +198,13 @@ export const services: Service[] = [
         slug: "alfa",
         project: "Alfa",
         claim:
-          "Multi-role fintech front end: three user roles, seven API domains behind one injected base API, four route groups, with the auth decision split between an edge token gate and a single client-side guard.",
+          "Multi-role fintech platform: 6+ independently deployable FastAPI services — transfers, bill splitting, top-ups, currency conversion and recurring payments — behind 10+ GraphQL APIs on Supabase, with the auth decision split between an edge token gate and a single client-side guard.",
       },
       {
         slug: "carder",
         project: "Carder",
         claim:
-          "Digital business card platform scaled to 150+ users across the Middle East and Europe, with 40% adoption growth after relaunch.",
+          "AI mini-site builder scaled to 150+ users across the Middle East and Europe, with 40% adoption growth after relaunch and three metered subscription tiers derived from Stripe.",
       },
     ],
     stack: [
@@ -244,7 +244,7 @@ export const services: Service[] = [
     headline: ["Backends built to be", "operated, not just shipped"],
     accent: "operated",
     answer:
-      "Backend and API work in Node.js, Express, PostgreSQL and MongoDB, with an emphasis on systems somebody has to run after launch. Faizan Amir has built 30 or more REST and GraphQL APIs across client products, including a telehealth platform with 94 API route files and a payments layer reconciled against Stripe rather than guessed at locally.",
+      "Backend and API work in Node.js, Express, PostgreSQL and MongoDB, with an emphasis on systems somebody has to run after launch. Faizan Amir has built 30 or more REST and GraphQL APIs across client products, including a live telehealth platform that cut approval turnaround by 45% and despatch time by 85%, with a payments layer reconciled against Stripe rather than guessed at locally.",
     includes: [
       {
         title: "Explicit lifecycles",
@@ -294,7 +294,7 @@ export const services: Service[] = [
         slug: "volumize",
         project: "Volumize",
         claim:
-          "94 API route files across a customer app and an operational back office, 15 shared data models, and a security pass that cut vulnerabilities by 97%.",
+          "A live telehealth platform carrying 250+ subscriptions and £31,000+ in subscription revenue: approval turnaround down 45%, order despatch down 85%, and 15 admin hours a week returned, over 94 API routes and 15 shared data models.",
       },
       {
         slug: "wisdomup",
@@ -403,7 +403,7 @@ export const services: Service[] = [
         slug: "volumize",
         project: "Volumize",
         claim:
-          "Turborepo monorepo with a customer app and an operational back office over three shared packages, covering intake, doctor approval, prescriptions, payments, despatch and subscriptions.",
+          "Turborepo monorepo with a customer app and an operational back office over three shared packages, covering intake, doctor approval, prescriptions, payments, despatch and subscriptions — live, at 250+ subscriptions.",
       },
       {
         slug: "carder",

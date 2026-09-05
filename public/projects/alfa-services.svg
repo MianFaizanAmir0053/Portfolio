@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" width="1600" height="1000" role="img" aria-label="Alfa architecture: an edge token gate and a single client-side guard resolve role and session once per visit, one RTK Query base API serves seven domains, and ten or more GraphQL APIs sit in front of six independently deployable FastAPI services over Supabase">
+  <style>
+    .t   { font-family: "Barlow Condensed", "Arial Narrow", sans-serif; fill: #ffffff; }
+    .lbl { font-family: "Barlow Condensed", "Arial Narrow", sans-serif; fill: #9f9fa7; font-size: 20px; letter-spacing: 2.4px; }
+    .box { fill: #16161a; stroke: #ffffff; stroke-opacity: 0.28; }
+    .acc { fill: #16161a; stroke: #c8ff3d; stroke-opacity: 0.85; }
+    .svc { fill: #16161a; stroke: #ffffff; stroke-opacity: 0.4; }
+    .h   { font-size: 25px; font-weight: 600; }
+    .s   { font-size: 17px; fill: #9f9fa7; }
+    .xs  { font-size: 15px; fill: #9f9fa7; }
+    .sv  { font-size: 17px; fill: #ffffff; }
+    .fl  { stroke: #ffffff; stroke-opacity: 0.35; fill: none; stroke-width: 2; }
+    .fa  { stroke: #c8ff3d; stroke-opacity: 0.9; fill: none; stroke-width: 2; }
+    .cap { font-family: "Barlow Condensed", "Arial Narrow", sans-serif; font-size: 15px; fill: #9f9fa7; letter-spacing: 1.3px; }
+  </style>
+
+  <rect width="1600" height="1000" fill="#0b0b0d"/>
+  <g stroke="#e6e6e6" stroke-opacity="0.05" stroke-width="1">
+    <line x1="200" y1="0" x2="200" y2="1000"/><line x1="400" y1="0" x2="400" y2="1000"/>
+    <line x1="600" y1="0" x2="600" y2="1000"/><line x1="800" y1="0" x2="800" y2="1000"/>
+    <line x1="1000" y1="0" x2="1000" y2="1000"/><line x1="1200" y1="0" x2="1200" y2="1000"/>
+    <line x1="1400" y1="0" x2="1400" y2="1000"/>
+    <line x1="0" y1="250" x2="1600" y2="250"/><line x1="0" y1="500" x2="1600" y2="500"/>
+    <line x1="0" y1="750" x2="1600" y2="750"/>
+  </g>
+
+  <text class="lbl" x="80" y="86">ALFA — DECIDE ONCE PER SESSION, NOT ONCE PER PAGE</text>
+  <line x1="80" y1="110" x2="1520" y2="110" stroke="#ffffff" stroke-opacity="0.25"/>
+
+  <!-- auth chain -->
+  <rect class="box" x="80" y="168" width="250" height="112"/>
+  <text class="t h" x="102" y="210">Request</text>
+  <text class="t xs" x="102" y="242">personal · business · admin</text>
+
+  <rect class="acc" x="390" y="168" width="270" height="112"/>
+  <text class="t h" x="412" y="210" fill="#c8ff3d">Edge middleware</text>
+  <text class="t xs" x="412" y="242">one cheap thing: is there</text>
+  <text class="t xs" x="412" y="264">a token at all</text>
+
+  <rect class="acc" x="720" y="168" width="290" height="112"/>
+  <text class="t h" x="742" y="210" fill="#c8ff3d">RequireAuth guard</text>
+  <text class="t xs" x="742" y="242">role · session · onboarding,</text>
+  <text class="t xs" x="742" y="264">resolved in one place</text>
+
+  <rect class="box" x="1070" y="168" width="380" height="112"/>
+  <text class="t h" x="1092" y="210">Four outcomes</text>
+  <text class="t xs" x="1092" y="242">dashboard · onboarding · admin ·</text>
+  <text class="t xs" x="1092" y="264">account selector when both exist</text>
+
+  <path class="fl" d="M330 224 H 390"/><polygon points="390,224 376,218 376,230" fill="#ffffff" fill-opacity="0.35"/>
+  <path class="fa" d="M660 224 H 720"/><polygon points="720,224 706,218 706,230" fill="#c8ff3d" fill-opacity="0.9"/>
+  <path class="fa" d="M1010 224 H 1070"/><polygon points="1070,224 1056,218 1056,230" fill="#c8ff3d" fill-opacity="0.9"/>
+
+  <text class="cap" x="80" y="316">SESSION BOOTSTRAPPED ONCE INTO REDUX — THE SINGLE SOURCE OF TRUTH</text>
+
+  <!-- rtk query -->
+  <rect class="box" x="300" y="360" width="1000" height="112"/>
+  <text class="t h" x="322" y="402">One RTK Query base API</text>
+  <text class="t s" x="322" y="436">seven domains inject their own endpoints — auth · business · cards · transactions · schedules · wallet · admin</text>
+  <text class="t xs" x="322" y="462">one reducer, one middleware, one cache</text>
+
+  <path class="fl" d="M800 280 V 360"/><polygon points="800,360 794,346 806,346" fill="#ffffff" fill-opacity="0.35"/>
+
+  <!-- graphql -->
+  <rect class="acc" x="480" y="530" width="640" height="96"/>
+  <text class="t h" x="502" y="570" fill="#c8ff3d">10+ GraphQL APIs</text>
+  <text class="t xs" x="502" y="600">one request per screen, instead of a REST fan-out per role</text>
+
+  <path class="fl" d="M800 472 V 530"/><polygon points="800,530 794,516 806,516" fill="#ffffff" fill-opacity="0.35"/>
+
+  <!-- six services -->
+  
+
+  <rect class="svc" x="80" y="712" width="230" height="86"/><text class="t sv" x="100" y="762">Transfers</text>
+  <rect class="svc" x="336" y="712" width="230" height="86"/><text class="t sv" x="356" y="762">Bill splitting</text>
+  <rect class="svc" x="592" y="712" width="230" height="86"/><text class="t sv" x="612" y="762">Top-ups</text>
+  <rect class="svc" x="848" y="712" width="230" height="86"/><text class="t sv" x="868" y="762">Currency</text>
+  <rect class="svc" x="1104" y="712" width="230" height="86"/><text class="t sv" x="1124" y="762">Recurring</text>
+  <rect class="svc" x="1360" y="712" width="160" height="86"/><text class="t sv" x="1380" y="762">Cards</text>
+
+  <path class="fl" d="M800 626 V 668 H 195 V 712"/><polygon points="195,712 189,698 201,698" fill="#ffffff" fill-opacity="0.35"/>
+  <path class="fl" d="M800 668 H 451 V 712"/><polygon points="451,712 445,698 457,698" fill="#ffffff" fill-opacity="0.35"/>
+  <path class="fl" d="M707 668 V 712"/><polygon points="707,712 701,698 713,698" fill="#ffffff" fill-opacity="0.35"/>
+  <path class="fl" d="M800 668 H 963 V 712"/><polygon points="963,712 957,698 969,698" fill="#ffffff" fill-opacity="0.35"/>
+  <path class="fl" d="M800 668 H 1219 V 712"/><polygon points="1219,712 1213,698 1225,698" fill="#ffffff" fill-opacity="0.35"/>
+  <path class="fl" d="M800 668 H 1440 V 712"/><polygon points="1440,712 1434,698 1446,698" fill="#ffffff" fill-opacity="0.35"/>
+
+  <!-- supabase -->
+  <rect class="box" x="480" y="852" width="640" height="96"/>
+  <text class="t h" x="502" y="892">Supabase</text>
+  <text class="t xs" x="502" y="922">auth and persistence — row-level rules next to the data, not re-implemented per service</text>
+
+  <path class="fl" d="M195 798 V 826 H 800 V 852" stroke-dasharray="7 7"/>
+  <polygon points="800,852 794,838 806,838" fill="#ffffff" fill-opacity="0.35"/>
+  <path class="fl" d="M1440 798 V 826 H 800" stroke-dasharray="7 7"/>
+
+  <line x1="80" y1="962" x2="1520" y2="962" stroke="#ffffff" stroke-opacity="0.25"/>
+  <text class="lbl" x="80" y="992">FOUR SESSION STATES · ONE GUARD · SIX SERVICES THAT CANNOT TAKE EACH OTHER DOWN</text>
+</svg>

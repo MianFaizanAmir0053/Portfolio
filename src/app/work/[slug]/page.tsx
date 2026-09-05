@@ -83,6 +83,28 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
 
   const { prev, next, position } = projectNeighbours(project.slug);
   const path = `/work/${project.slug}`;
+
+  /*
+   * The running order, declared once.
+   *
+   * Three of the sections below are optional — a case study with no stated
+   * constraints, no trade-off table or no incident to report simply omits them
+   * — so the numerals cannot be written into the markup or they leave gaps in
+   * the sequence on every project that skips one. Deriving them from this list
+   * keeps the label an actual counter, and keeps the page's order legible in
+   * one place rather than spread across three hundred lines of JSX.
+   */
+  const sections = [
+    "problem",
+    project.constraints && "constraints",
+    "approach",
+    project.tradeoffs && "tradeoffs",
+    "build",
+    project.broke && "broke",
+    "result",
+    "reflection",
+  ].filter(Boolean) as string[];
+  const n = (key: string) => String(sections.indexOf(key) + 1).padStart(2, "0");
   const crumbs = breadcrumbSchema(path, [
     { name: "Home", path: "/" },
     { name: "Work", path: "/work" },
@@ -107,7 +129,7 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
 
       {/* 1. back bar */}
       <nav
-        className="sticky top-11 z-40 bg-paper/95 backdrop-blur-[2px] rule-b"
+        className="sticky top-11 z-40 bg-paper/95 rule-b"
         aria-label="Breadcrumb"
       >
         {/*
@@ -191,13 +213,20 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
           <FadeIn delay={0.2}>
             <p className="mt-8 max-w-2xl text-base leading-7 text-ink-muted">{project.summary}</p>
             {project.liveUrl && (
+              /*
+               * Some of these products are behind a login. Sending a reader to
+               * an auth wall under a link that promised a live site is worse
+               * than not linking at all, so a gated app says so before it is
+               * clicked.
+               */
               <a
                 href={project.liveUrl}
                 target="_blank"
                 rel="noopener"
                 className="label mt-6 inline-block text-cobalt hover:underline"
               >
-                VISIT LIVE SITE ↗ {project.liveLabel}
+                {project.liveGated ? "VIEW THE APP" : "VISIT LIVE SITE"} ↗ {project.liveLabel}
+                {project.liveGated && <span className="text-ink-muted"> · LOGIN REQUIRED</span>}
               </a>
             )}
           </FadeIn>
@@ -225,13 +254,41 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
           <CutFrame src={project.image} alt={project.alt} cut="cut-bl" ratio="aspect-[16/9]" eager sizes="(min-width: 1024px) 1100px, 100vw" />
         </section>
 
+        {/* 4b. context — who was on it, at what scale, owning what */}
+        {project.context && (
+          <section className="wrap pb-4" aria-label="Engagement context">
+            <dl className="grid gap-x-10 gap-y-5 sm:grid-cols-2">
+              {project.context.map((c) => (
+                <div key={c.k}>
+                  <dt className="label mb-1 text-cobalt">{c.k}</dt>
+                  <dd className="text-sm leading-6 text-ink-muted">{c.v}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+        )}
+
         {/* 5. problem */}
-        <Block label="[01] THE PROBLEM" headline={project.problemHeadline}>
+        <Block label={`[${n("problem")}] THE PROBLEM`} headline={project.problemHeadline}>
           <p className="text-base leading-7 text-ink-muted">{project.problem}</p>
         </Block>
 
+        {/* 5b. constraints — what could not be done */}
+        {project.constraints && (
+          <Block label={`[${n("constraints")}] THE CONSTRAINTS`} headline="What the job ruled out">
+            <ul className="space-y-6">
+              {project.constraints.map((c) => (
+                <li key={c.title}>
+                  <h3 className="display text-lg md:text-xl">{c.title}</h3>
+                  <p className="mt-2 text-sm leading-7 text-ink-muted">{c.body}</p>
+                </li>
+              ))}
+            </ul>
+          </Block>
+        )}
+
         {/* 6. approach */}
-        <Block label="[02] THE APPROACH" headline="How it was built">
+        <Block label={`[${n("approach")}] THE APPROACH`} headline="How it was built">
           <p className="text-base leading-7 text-ink-muted">{project.approach}</p>
           <ol className="mt-8 space-y-4">
             {project.decisions.map((d, i) => (
@@ -251,33 +308,99 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
           )}
         </Block>
 
+        {/*
+         * 6b. trade-offs — the section that turns a task list into a record of
+         * decisions. Each row names what was rejected and what the choice cost,
+         * because a decision with no alternative and no price was not a decision.
+         */}
+        {project.tradeoffs && (
+          <Block label={`[${n("tradeoffs")}] THE TRADE-OFFS`} headline="What each choice cost">
+            <ul className="space-y-10">
+              {project.tradeoffs.map((t) => (
+                <li key={t.decision} className="rule-t pt-6">
+                  <h3 className="display text-lg md:text-xl">{t.decision}</h3>
+                  <p className="label mt-2 text-ink-muted">
+                    <span className="text-cobalt">INSTEAD OF</span> {t.instead}
+                  </p>
+                  <dl className="mt-4 grid gap-x-8 gap-y-4 sm:grid-cols-2">
+                    <div>
+                      <dt className="label mb-1">[COST]</dt>
+                      <dd className="text-sm leading-7 text-ink-muted">{t.cost}</dd>
+                    </div>
+                    <div>
+                      <dt className="label mb-1 text-cobalt">[BOUGHT]</dt>
+                      <dd className="text-sm leading-7 text-ink-muted">{t.bought}</dd>
+                    </div>
+                  </dl>
+                </li>
+              ))}
+            </ul>
+          </Block>
+        )}
+
         {/* 7. build */}
         <section className="wrap py-16 md:py-24" aria-labelledby="build-heading">
-          <Tag className="mb-4 block">[03] THE BUILD</Tag>
+          <Tag className="mb-4 block">[{n("build")}] THE BUILD</Tag>
           {/* The h3s below used to hang off the previous section's h2, which
               left a hole in the outline exactly where the substance is. */}
           <h2 id="build-heading" className="display mb-10 text-2xl md:text-4xl">
             What {project.name} is made of
           </h2>
           <div className="space-y-16">
-            {project.build.map((b, i) => (
-              <div key={b.title} className="grid items-center gap-8 md:grid-cols-2">
-                <div className={i % 2 === 1 ? "md:order-2" : ""}>
-                  <CutFrame src={b.image} alt={b.alt} cut={i % 2 === 0 ? "cut-tr" : "cut-bl"} />
+            {project.build.map((b, i) => {
+              /*
+               * A block with nothing to show reads across the full measure
+               * rather than leaving half the row empty. It keeps the rule above
+               * it, so it still reads as one of the set.
+               */
+              if (!b.image) {
+                return (
+                  <FadeIn key={b.title} className="rule-t pt-8">
+                    <h3 className="display text-2xl md:text-3xl">{b.title}</h3>
+                    <p className="mt-4 max-w-3xl text-sm leading-7 text-ink-muted">{b.body}</p>
+                  </FadeIn>
+                );
+              }
+              return (
+                <div key={b.title} className="grid items-center gap-8 md:grid-cols-2">
+                  <div className={i % 2 === 1 ? "md:order-2" : ""}>
+                    <CutFrame src={b.image} alt={b.alt ?? ""} cut={i % 2 === 0 ? "cut-tr" : "cut-bl"} />
+                  </div>
+                  <FadeIn className={i % 2 === 1 ? "md:order-1" : ""}>
+                    <h3 className="display text-2xl md:text-3xl">{b.title}</h3>
+                    <p className="mt-4 text-sm leading-7 text-ink-muted">{b.body}</p>
+                  </FadeIn>
                 </div>
-                <FadeIn className={i % 2 === 1 ? "md:order-1" : ""}>
-                  <h3 className="display text-2xl md:text-3xl">{b.title}</h3>
-                  <p className="mt-4 text-sm leading-7 text-ink-muted">{b.body}</p>
-                </FadeIn>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
+
+        {/*
+         * 7b. what broke. mailagent already carries a section like this and it
+         * is the most credible thing on the site; a case study that only lists
+         * wins asks to be taken on trust.
+         */}
+        {project.broke && (
+          <Block label={`[${n("broke")}] WHAT BROKE`} headline="And what fixed it">
+            <ol className="space-y-8">
+              {project.broke.map((item, i) => (
+                <li key={item.title} className="flex gap-4">
+                  <span className="label shrink-0 pt-1 text-cobalt">!{String(i + 1).padStart(2, "0")}</span>
+                  <div>
+                    <h3 className="display text-lg md:text-xl">{item.title}</h3>
+                    <p className="mt-2 text-sm leading-7 text-ink-muted">{item.body}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </Block>
+        )}
 
         {/* 8. results */}
         <section className="rule-t bg-paper-deep" aria-labelledby="result-heading">
           <div className="wrap py-20 md:py-28">
-            <Tag className="mb-4 block">[04] THE RESULT</Tag>
+            <Tag className="mb-4 block">[{n("result")}] THE RESULT</Tag>
             <h2 id="result-heading" className="display mb-10 text-2xl md:text-4xl">
               What {project.name} measured
             </h2>
@@ -300,7 +423,7 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
         </section>
 
         {/* 9. reflection */}
-        <Block label="[05] WHAT I'D DO DIFFERENTLY" headline="Honestly">
+        <Block label={`[${n("reflection")}] WHAT I'D DO DIFFERENTLY`} headline="Honestly">
           <p className="text-base leading-7 text-ink-muted">{project.reflection}</p>
         </Block>
 

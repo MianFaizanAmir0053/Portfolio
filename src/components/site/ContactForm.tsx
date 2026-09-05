@@ -57,11 +57,9 @@ export function ContactForm() {
    * screen reader never announces (aria-describedby is read on entering the
    * field, not when it changes) and a keyboard visitor may not have scrolled to.
    */
-  const refs: Record<Field, React.RefObject<HTMLInputElement | HTMLTextAreaElement | null>> = {
-    name: useRef<HTMLInputElement>(null),
-    email: useRef<HTMLInputElement>(null),
-    message: useRef<HTMLTextAreaElement>(null),
-  };
+  const nameRef = useRef<HTMLInputElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
+  const messageRef = useRef<HTMLTextAreaElement>(null);
 
   // Typing a correction clears its error immediately. Leaving it on screen
   // while the visitor fixes the field is the form arguing with them.
@@ -77,7 +75,14 @@ export function ContactForm() {
     setErrors(next);
     const firstInvalid = FIELDS.find((k) => next[k]);
     if (firstInvalid) {
-      refs[firstInvalid].current?.focus();
+      // Resolved in the handler, not by indexing a ref object during render.
+      const target =
+        firstInvalid === "name"
+          ? nameRef.current
+          : firstInvalid === "email"
+            ? emailRef.current
+            : messageRef.current;
+      target?.focus();
       return;
     }
 
@@ -145,7 +150,7 @@ export function ContactForm() {
         <input
           id="name"
           name="name"
-          ref={refs.name as React.RefObject<HTMLInputElement>}
+          ref={nameRef}
           autoComplete="name"
           value={values.name}
           onChange={(e) => set("name")(e.target.value)}
@@ -170,7 +175,7 @@ export function ContactForm() {
           id="email"
           name="email"
           type="email"
-          ref={refs.email as React.RefObject<HTMLInputElement>}
+          ref={emailRef}
           autoComplete="email"
           inputMode="email"
           spellCheck={false}
@@ -197,7 +202,7 @@ export function ContactForm() {
           id="message"
           name="message"
           rows={5}
-          ref={refs.message as React.RefObject<HTMLTextAreaElement>}
+          ref={messageRef}
           value={values.message}
           onChange={(e) => set("message")(e.target.value)}
           onBlur={blur("message")}

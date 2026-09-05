@@ -1,0 +1,132 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" width="1600" height="1000" role="img" aria-label="Carder architecture: Laravel core with Node services, Stripe as the source of truth for entitlement, S3 media delivery and an admin back office over the tenancy">
+  <style>
+    .t  { font-family: "Barlow Condensed", "Arial Narrow", sans-serif; fill: #ffffff; }
+    .lbl{ font-family: "Barlow Condensed", "Arial Narrow", sans-serif; fill: #9f9fa7; font-size: 20px; letter-spacing: 2.4px; text-transform: uppercase; }
+    .box{ fill: #16161a; stroke: #ffffff; stroke-opacity: 0.28; }
+    .acc{ fill: #16161a; stroke: #c8ff3d; stroke-opacity: 0.85; }
+    .h  { font-size: 30px; font-weight: 600; }
+    .s  { font-size: 20px; fill: #9f9fa7; }
+    .fl { stroke: #ffffff; stroke-opacity: 0.35; fill: none; }
+    .fa { stroke: #c8ff3d; stroke-opacity: 0.9; fill: none; }
+    .cap{ font-family: "Barlow Condensed", "Arial Narrow", sans-serif; font-size: 17px; fill: #9f9fa7; letter-spacing: 1.4px; }
+  </style>
+
+  <rect width="1600" height="1000" fill="#0b0b0d"/>
+
+  <!-- grid -->
+  <g stroke="#e6e6e6" stroke-opacity="0.05" stroke-width="1">
+    <line x1="200" y1="0" x2="200" y2="1000"/><line x1="400" y1="0" x2="400" y2="1000"/>
+    <line x1="600" y1="0" x2="600" y2="1000"/><line x1="800" y1="0" x2="800" y2="1000"/>
+    <line x1="1000" y1="0" x2="1000" y2="1000"/><line x1="1200" y1="0" x2="1200" y2="1000"/>
+    <line x1="1400" y1="0" x2="1400" y2="1000"/>
+    <line x1="0" y1="200" x2="1600" y2="200"/><line x1="0" y1="400" x2="1600" y2="400"/>
+    <line x1="0" y1="600" x2="1600" y2="600"/><line x1="0" y1="800" x2="1600" y2="800"/>
+  </g>
+
+  <text class="lbl" x="80" y="86">CARDER — REQUEST, BILLING AND MEDIA PATHS</text>
+  <line x1="80" y1="110" x2="1520" y2="110" stroke="#ffffff" stroke-opacity="0.25"/>
+
+  <!-- visitors -->
+  <rect class="box" x="80" y="180" width="250" height="110"/>
+  <text class="t h" x="104" y="228">Visitor</text>
+  <text class="t s" x="104" y="262">carder.app/lina-bakery</text>
+
+  <!-- owner -->
+  <rect class="box" x="80" y="360" width="250" height="110"/>
+  <text class="t h" x="104" y="408">Owner</text>
+  <text class="t s" x="104" y="442">edits · publishes</text>
+
+  <!-- admin -->
+  <rect class="acc" x="80" y="700" width="250" height="130"/>
+  <text class="t h" x="104" y="748" fill="#c8ff3d">Admin</text>
+  <text class="t s" x="104" y="780">accounts · sites</text>
+  <text class="t s" x="104" y="806">plans · companies</text>
+
+  <!-- laravel core -->
+  <rect class="box" x="520" y="180" width="330" height="290"/>
+  <text class="t h" x="548" y="230">Laravel core</text>
+  <text class="t s" x="548" y="268">sites · pages · tenancy</text>
+  <text class="t s" x="548" y="296">publish + render</text>
+  <line x1="548" y1="322" x2="822" y2="322" stroke="#ffffff" stroke-opacity="0.18"/>
+  <text class="t s" x="548" y="356">entitlement check</text>
+  <text class="t s" x="548" y="384">on every save/publish</text>
+  <text class="t s" x="548" y="428" fill="#c8ff3d">quota: 5 / 10 / 30</text>
+
+  <!-- node services -->
+  <rect class="box" x="520" y="540" width="330" height="140"/>
+  <text class="t h" x="548" y="588">Node services</text>
+  <text class="t s" x="548" y="622">media pipeline · QR</text>
+  <text class="t s" x="548" y="650">off the request path</text>
+
+  <!-- admin back office -->
+  <rect class="acc" x="520" y="740" width="330" height="130"/>
+  <text class="t h" x="548" y="788" fill="#c8ff3d">Admin back office</text>
+  <text class="t s" x="548" y="822">writes through the same</text>
+  <text class="t s" x="548" y="848">billing + entitlement paths</text>
+
+  <!-- stripe -->
+  <rect class="acc" x="1080" y="180" width="300" height="200"/>
+  <text class="t h" x="1108" y="230" fill="#c8ff3d">Stripe</text>
+  <text class="t s" x="1108" y="266">source of truth</text>
+  <text class="t s" x="1108" y="294">for entitlement</text>
+  <line x1="1108" y1="316" x2="1352" y2="316" stroke="#c8ff3d" stroke-opacity="0.35"/>
+  <text class="t s" x="1108" y="350">free · $12 · $29</text>
+
+  <!-- postgres/sql -->
+  <rect class="box" x="1080" y="440" width="300" height="140"/>
+  <text class="t h" x="1108" y="488">SQL</text>
+  <text class="t s" x="1108" y="522">expand / contract</text>
+  <text class="t s" x="1108" y="550">migrations, live</text>
+
+  <!-- s3 -->
+  <rect class="box" x="1080" y="640" width="300" height="160"/>
+  <text class="t h" x="1108" y="688">S3 + edge</text>
+  <text class="t s" x="1108" y="722">signed URLs</text>
+  <text class="t s" x="1108" y="750">app never touches</text>
+  <text class="t s" x="1108" y="778">the bytes</text>
+
+  <!-- flows -->
+  <path class="fl" d="M330 235 H 520"/>
+  <polygon points="520,235 506,229 506,241" fill="#ffffff" fill-opacity="0.35"/>
+
+  <path class="fl" d="M330 415 H 430 V 300 H 520"/>
+  <polygon points="520,300 506,294 506,306" fill="#ffffff" fill-opacity="0.35"/>
+
+  <path class="fa" d="M330 765 H 520"/>
+  <polygon points="520,765 506,759 506,771" fill="#c8ff3d" fill-opacity="0.9"/>
+
+  <!-- laravel -> stripe (entitlement) -->
+  <path class="fa" d="M850 300 H 1080"/>
+  <polygon points="1080,300 1066,294 1066,306" fill="#c8ff3d" fill-opacity="0.9"/>
+  <text class="cap" x="880" y="286">ASK, DON'T MIRROR</text>
+
+  <!-- stripe webhook back -->
+  <path class="fa" d="M1080 240 H 960 V 210 H 850" stroke-dasharray="7 7"/>
+  <polygon points="850,210 864,204 864,216" fill="#c8ff3d" fill-opacity="0.9"/>
+  <text class="cap" x="866" y="196">WEBHOOK · IDEMPOTENT</text>
+
+  <!-- laravel -> sql -->
+  <path class="fl" d="M850 420 H 960 V 500 H 1080"/>
+  <polygon points="1080,500 1066,494 1066,506" fill="#ffffff" fill-opacity="0.35"/>
+
+  <!-- node -> s3 -->
+  <path class="fl" d="M850 610 H 960 V 700 H 1080"/>
+  <polygon points="1080,700 1066,694 1066,706" fill="#ffffff" fill-opacity="0.35"/>
+
+  <!-- laravel -> node -->
+  <path class="fl" d="M685 470 V 540" stroke-dasharray="7 7"/>
+  <polygon points="685,540 679,526 691,526" fill="#ffffff" fill-opacity="0.35"/>
+  <text class="cap" x="700" y="514">UPLOAD, OFFLOADED</text>
+
+  <!-- admin back office -> laravel -->
+  <path class="fa" d="M685 740 V 680" stroke-dasharray="7 7"/>
+  <polygon points="685,680 679,694 691,694" fill="#c8ff3d" fill-opacity="0.9"/>
+
+  <!-- s3 -> visitor (delivery) -->
+  <path class="fl" d="M1230 640 V 470 H 1440 V 130 H 205 V 180" stroke-dasharray="7 7"/>
+  <polygon points="205,180 199,194 211,194" fill="#ffffff" fill-opacity="0.35"/>
+  <text class="cap" x="250" y="152">CACHED AT THE EDGE</text>
+
+  <line x1="80" y1="920" x2="1520" y2="920" stroke="#ffffff" stroke-opacity="0.25"/>
+  <text class="lbl" x="80" y="958">LARAVEL CORE · NODE FOR SPECIFIC JOBS · STRIPE AS TRUTH · SIGNED MEDIA</text>
+</svg>

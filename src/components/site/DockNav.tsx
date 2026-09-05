@@ -3,7 +3,11 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Briefcase } from "lucide-react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { FloatingDock, type DockItem } from "@/components/ui/floating-dock";
+
+if (typeof window !== "undefined") gsap.registerPlugin(ScrollTrigger);
 
 const iconClass = "h-full w-full";
 
@@ -91,43 +95,43 @@ export function DockNav() {
       return () => cancelAnimationFrame(reset);
     }
 
-    // Whichever section straddles the viewport midline is the active one.
-    const compute = () => {
-      const mid = window.innerHeight / 2;
-      let found: string | null = null;
-      for (const id of SECTION_IDS) {
-        const el = document.getElementById(id);
-        if (!el) continue;
-        const r = el.getBoundingClientRect();
-        if (r.top <= mid && r.bottom >= mid) {
-          found = id;
-          break;
-        }
-      }
-      setSection((prev) => (prev === found ? prev : found));
-    };
-
     /*
-     * Batched to one measurement per frame. `compute` reads a bounding rect per
-     * section, and a scroll event can fire more than once a frame — so at worst
-     * it was flushing layout seven times, in the middle of the frames where
-     * GSAP is writing pin transforms and the card stack is writing scale.
+     * One trigger per section, and no measuring during the scroll at all.
+     *
+     * This used to read a bounding rect for every section on every scroll
+     * frame — seven forced layout flushes, in the same frames GSAP is writing
+     * pin transforms, for the whole length of the page. ScrollTrigger already
+     * measures each section once per refresh and just compares the cached
+     * numbers as you scroll, so the same "which section straddles the middle"
+     * question is answered for free. `onToggle` fires only at a boundary.
+     *
+     * The stack keeps the answer stable when two triggers overlap: the newest
+     * active section wins, and leaving one falls back to whichever is still
+     * active underneath rather than blanking the marker.
      */
-    let frame = requestAnimationFrame(compute);
-    const schedule = () => {
-      if (frame) return;
-      frame = requestAnimationFrame(() => {
-        frame = 0;
-        compute();
+    const active: string[] = [];
+    const triggers = SECTION_IDS.map((id) => {
+      const el = document.getElementById(id);
+      if (!el) return null;
+      return ScrollTrigger.create({
+        trigger: el,
+        start: "top center",
+        end: "bottom center",
+        onToggle: (self) => {
+          const at = active.indexOf(id);
+          if (self.isActive) {
+            if (at === -1) active.push(id);
+          } else if (at !== -1) {
+            active.splice(at, 1);
+          }
+          const next = active.length ? active[active.length - 1] : null;
+          setSection((prev) => (prev === next ? prev : next));
+        },
       });
-    };
+    });
 
-    window.addEventListener("scroll", schedule, { passive: true });
-    window.addEventListener("resize", schedule);
     return () => {
-      if (frame) cancelAnimationFrame(frame);
-      window.removeEventListener("scroll", schedule);
-      window.removeEventListener("resize", schedule);
+      for (const t of triggers) t?.kill();
     };
   }, [pathname]);
 

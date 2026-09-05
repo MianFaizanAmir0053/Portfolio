@@ -33,19 +33,19 @@ export const EXPERIENCE: Role[] = [
     role: "Senior Software Engineer",
     company: "Wanile Technologies",
     start: "2024-07",
-    // Two entries in this list end in "Present", and left unexplained that
-    // reads as a stale date rather than as two engagements running at once.
-    // Ward Web Solutions is the primary role — it is what `worksFor` and the
-    // homepage's CURRENTLY card name — so the qualifier goes on this one, and
-    // it rides in `dates` rather than a new field so it reaches every surface
-    // already printing them: the horizontal rail, the About list, llms.txt.
-    dates: "Jul 2024 – Present · concurrent",
+    end: "2026-08",
+    // Closed, not open-ended. This read "Present · concurrent" while the CV
+    // dates it to August 2026 — the overlap with Ward Web Solutions was real
+    // but it ran Feb to Aug 2026, and it has ended.
+    dates: "Jul 2024 – Aug 2026",
     place: "Lahore",
     body: "Leading full-stack development across 8+ client projects in React, Next.js, Node.js, and Python, turning business requirements into shipped products 20% faster. Built 30+ REST APIs and data pipelines, cutting response times by 18%. Shipped 10+ production apps and closed 50+ issues, cutting incidents by 25%.",
   },
   {
     n: "03",
-    role: "Senior Software Engineer",
+    // "Software Engineer", per the CV. The site carried "Senior" here, which
+    // outranked the record it is supposed to match.
+    role: "Software Engineer",
     company: "Nazadv",
     start: "2022-11",
     end: "2026-02",

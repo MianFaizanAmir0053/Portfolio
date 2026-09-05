@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" width="1600" height="1000" role="img" aria-label="WisdomUp architecture: a storefront, an Express transactional API and a Payload CMS admin deploy independently over one shared database, with payment settled down two paths — immediate client confirmation and a webhook fallback — behind eight guard layers and a monotonic order state machine">
+  <style>
+    .t   { font-family: "Barlow Condensed", "Arial Narrow", sans-serif; fill: #ffffff; }
+    .lbl { font-family: "Barlow Condensed", "Arial Narrow", sans-serif; fill: #9f9fa7; font-size: 20px; letter-spacing: 2.4px; }
+    .box { fill: #16161a; stroke: #ffffff; stroke-opacity: 0.28; }
+    .acc { fill: #16161a; stroke: #c8ff3d; stroke-opacity: 0.85; }
+    .h   { font-size: 25px; font-weight: 600; }
+    .s   { font-size: 17px; fill: #9f9fa7; }
+    .xs  { font-size: 15px; fill: #9f9fa7; }
+    .fl  { stroke: #ffffff; stroke-opacity: 0.35; fill: none; stroke-width: 2; }
+    .fa  { stroke: #c8ff3d; stroke-opacity: 0.9; fill: none; stroke-width: 2; }
+    .cap { font-family: "Barlow Condensed", "Arial Narrow", sans-serif; font-size: 15px; fill: #9f9fa7; letter-spacing: 1.3px; }
+  </style>
+
+  <rect width="1600" height="1000" fill="#0b0b0d"/>
+  <g stroke="#e6e6e6" stroke-opacity="0.05" stroke-width="1">
+    <line x1="200" y1="0" x2="200" y2="1000"/><line x1="400" y1="0" x2="400" y2="1000"/>
+    <line x1="600" y1="0" x2="600" y2="1000"/><line x1="800" y1="0" x2="800" y2="1000"/>
+    <line x1="1000" y1="0" x2="1000" y2="1000"/><line x1="1200" y1="0" x2="1200" y2="1000"/>
+    <line x1="1400" y1="0" x2="1400" y2="1000"/>
+    <line x1="0" y1="250" x2="1600" y2="250"/><line x1="0" y1="500" x2="1600" y2="500"/>
+    <line x1="0" y1="750" x2="1600" y2="750"/>
+  </g>
+
+  <text class="lbl" x="80" y="86">WISDOMUP — ASSUME THE EVENT ARRIVES TWICE, LATE, OR OUT OF ORDER</text>
+  <line x1="80" y1="110" x2="1520" y2="110" stroke="#ffffff" stroke-opacity="0.25"/>
+
+  <!-- three services -->
+  <rect class="box" x="80" y="172" width="300" height="132"/>
+  <text class="t h" x="102" y="216">Storefront</text>
+  <text class="t s" x="102" y="248">Next.js · catalog scoped</text>
+  <text class="t s" x="102" y="274">by host and market</text>
+
+  <rect class="acc" x="440" y="172" width="300" height="132"/>
+  <text class="t h" x="462" y="216" fill="#c8ff3d">Express API</text>
+  <text class="t s" x="462" y="248">transactional —</text>
+  <text class="t s" x="462" y="274">settlement lives here</text>
+
+  <rect class="box" x="800" y="172" width="300" height="132"/>
+  <text class="t h" x="822" y="216">Payload CMS</text>
+  <text class="t s" x="822" y="248">sections, nav, FAQs,</text>
+  <text class="t s" x="822" y="274">testimonials</text>
+
+  <rect class="box" x="1160" y="172" width="290" height="132"/>
+  <text class="t h" x="1182" y="216">Stripe</text>
+  <text class="t s" x="1182" y="248">confirms once,</text>
+  <text class="t s" x="1182" y="274">notifies repeatedly</text>
+
+  <text class="cap" x="80" y="336">THREE DEPLOYABLES · BOUNDED OWNERSHIP · ONE SHARED DATABASE</text>
+
+  <!-- shared db -->
+  <rect class="box" x="440" y="820" width="660" height="110"/>
+  <text class="t h" x="462" y="864">MongoDB</text>
+  <text class="t s" x="462" y="896">one database, three owners with bounded write scope</text>
+
+  <path class="fl" d="M150 304 V 780 H 440"/><polygon points="440,780 426,774 426,786" fill="#ffffff" fill-opacity="0.35"/>
+  <path class="fl" d="M950 304 V 780 H 800" stroke-dasharray="7 7"/><polygon points="800,780 814,774 814,786" fill="#ffffff" fill-opacity="0.35"/>
+
+  <!-- dual settlement -->
+  <text class="cap" x="440" y="386" fill="#c8ff3d">TWO PATHS TO SETTLED — EITHER ALONE IS ENOUGH</text>
+
+  <rect class="box" x="440" y="404" width="300" height="112"/>
+  <text class="t h" x="462" y="446">Path A</text>
+  <text class="t xs" x="462" y="476">client confirms, backend</text>
+  <text class="t xs" x="462" y="498">records immediately</text>
+
+  <rect class="box" x="440" y="540" width="300" height="112"/>
+  <text class="t h" x="462" y="582">Path B</text>
+  <text class="t xs" x="462" y="612">webhook arrives later</text>
+  <text class="t xs" x="462" y="634">and reconciles</text>
+
+  <path class="fl" d="M230 304 V 460 H 440"/><polygon points="440,460 426,454 426,466" fill="#ffffff" fill-opacity="0.35"/>
+  <path class="fa" d="M1305 304 V 596 H 740" stroke-dasharray="7 7"/><polygon points="740,596 754,590 754,602" fill="#c8ff3d" fill-opacity="0.9"/>
+
+  <!-- guards -->
+  <rect class="acc" x="820" y="404" width="330" height="248"/>
+  <text class="t h" x="842" y="446" fill="#c8ff3d">Eight guard layers</text>
+  <text class="t xs" x="842" y="484">signature verification</text>
+  <text class="t xs" x="842" y="510">ownership check</text>
+  <text class="t xs" x="842" y="536">amount check</text>
+  <text class="t xs" x="842" y="562">idempotency key</text>
+  <text class="t xs" x="842" y="588">unique transaction index</text>
+  <text class="t xs" x="842" y="614">replay protection</text>
+
+  <path class="fl" d="M740 460 H 820"/><polygon points="820,460 806,454 806,466" fill="#ffffff" fill-opacity="0.35"/>
+  <path class="fl" d="M740 596 H 820"/><polygon points="820,596 806,590 806,602" fill="#ffffff" fill-opacity="0.35"/>
+
+  <!-- state machine -->
+  <rect class="acc" x="1210" y="404" width="240" height="248"/>
+  <text class="t h" x="1232" y="446" fill="#c8ff3d">Order status</text>
+  <text class="t xs" x="1232" y="484">monotonic —</text>
+  <text class="t xs" x="1232" y="510">it only moves</text>
+  <text class="t xs" x="1232" y="536">forward</text>
+  <text class="t xs" x="1232" y="580">a stale event is</text>
+  <text class="t xs" x="1232" y="606">discarded, not</text>
+  <text class="t xs" x="1232" y="632">applied</text>
+
+  <path class="fa" d="M1150 528 H 1210"/><polygon points="1210,528 1196,522 1196,534" fill="#c8ff3d" fill-opacity="0.9"/>
+  <path class="fl" d="M1330 652 V 760 H 1100 V 820"/><polygon points="1100,820 1094,806 1106,806" fill="#ffffff" fill-opacity="0.35"/>
+
+  <text class="cap" x="200" y="700">14 SETTLEMENT TESTS COVER THIS LOGIC SPECIFICALLY</text>
+  <text class="cap" x="200" y="730">A DROPPED BROWSER NEVER LOSES AN ORDER</text>
+
+  <line x1="80" y1="954" x2="1520" y2="954" stroke="#ffffff" stroke-opacity="0.25"/>
+  <text class="lbl" x="80" y="988">3 DEPLOYABLE SERVICES · 8 PAYMENT GUARD LAYERS · 14 SETTLEMENT TESTS</text>
+</svg>

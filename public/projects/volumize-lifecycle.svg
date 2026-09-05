@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" width="1600" height="1000" role="img" aria-label="Volumize treatment lifecycle: signup, medical questionnaire, checkout, doctor review, then either prescription and pharmacy despatch through Royal Mail into subscription renewal, or rejection and refund">
+  <style>
+    .t   { font-family: "Barlow Condensed", "Arial Narrow", sans-serif; fill: #ffffff; }
+    .lbl { font-family: "Barlow Condensed", "Arial Narrow", sans-serif; fill: #9f9fa7; font-size: 20px; letter-spacing: 2.4px; }
+    .box { fill: #16161a; stroke: #ffffff; stroke-opacity: 0.28; }
+    .acc { fill: #16161a; stroke: #c8ff3d; stroke-opacity: 0.85; }
+    .stop{ fill: #16161a; stroke: #9f9fa7; stroke-opacity: 0.5; }
+    .h   { font-size: 26px; font-weight: 600; }
+    .s   { font-size: 18px; fill: #9f9fa7; }
+    .fl  { stroke: #ffffff; stroke-opacity: 0.35; fill: none; stroke-width: 2; }
+    .fa  { stroke: #c8ff3d; stroke-opacity: 0.9; fill: none; stroke-width: 2; }
+    .fs  { stroke: #9f9fa7; stroke-opacity: 0.45; fill: none; stroke-width: 2; }
+    .cap { font-family: "Barlow Condensed", "Arial Narrow", sans-serif; font-size: 16px; fill: #9f9fa7; letter-spacing: 1.4px; }
+    .num { font-family: "Barlow Condensed", "Arial Narrow", sans-serif; font-size: 15px; fill: #c8ff3d; letter-spacing: 1.6px; }
+  </style>
+
+  <rect width="1600" height="1000" fill="#0b0b0d"/>
+
+  <g stroke="#e6e6e6" stroke-opacity="0.05" stroke-width="1">
+    <line x1="200" y1="0" x2="200" y2="1000"/><line x1="400" y1="0" x2="400" y2="1000"/>
+    <line x1="600" y1="0" x2="600" y2="1000"/><line x1="800" y1="0" x2="800" y2="1000"/>
+    <line x1="1000" y1="0" x2="1000" y2="1000"/><line x1="1200" y1="0" x2="1200" y2="1000"/>
+    <line x1="1400" y1="0" x2="1400" y2="1000"/>
+    <line x1="0" y1="250" x2="1600" y2="250"/><line x1="0" y1="500" x2="1600" y2="500"/>
+    <line x1="0" y1="750" x2="1600" y2="750"/>
+  </g>
+
+  <text class="lbl" x="80" y="86">VOLUMIZE — ONE ORDER, END TO END</text>
+  <line x1="80" y1="110" x2="1520" y2="110" stroke="#ffffff" stroke-opacity="0.25"/>
+
+  <!-- row 1: intake -->
+  <text class="num" x="80" y="182">01</text>
+  <rect class="box" x="80" y="200" width="250" height="120"/>
+  <text class="t h" x="104" y="246">Signup</text>
+  <text class="t s" x="104" y="278">account created</text>
+
+  <text class="num" x="400" y="182">02</text>
+  <rect class="box" x="400" y="200" width="270" height="120"/>
+  <text class="t h" x="424" y="246">Questionnaire</text>
+  <text class="t s" x="424" y="278">medical intake</text>
+
+  <text class="num" x="740" y="182">03</text>
+  <rect class="box" x="740" y="200" width="250" height="120"/>
+  <text class="t h" x="764" y="246">Checkout</text>
+  <text class="t s" x="764" y="278">Stripe · £19/mo</text>
+
+  <text class="num" x="1060" y="182">04</text>
+  <rect class="acc" x="1060" y="200" width="290" height="120"/>
+  <text class="t h" x="1084" y="246" fill="#c8ff3d">Doctor review</text>
+  <text class="t s" x="1084" y="278">the branch point</text>
+
+  <path class="fl" d="M330 260 H 400"/><polygon points="400,260 386,254 386,266" fill="#ffffff" fill-opacity="0.35"/>
+  <path class="fl" d="M670 260 H 740"/><polygon points="740,260 726,254 726,266" fill="#ffffff" fill-opacity="0.35"/>
+  <path class="fl" d="M990 260 H 1060"/><polygon points="1060,260 1046,254 1046,266" fill="#ffffff" fill-opacity="0.35"/>
+
+  <!-- approved branch -->
+  <path class="fa" d="M1205 320 V 380 H 300 V 440"/>
+  <polygon points="300,440 294,426 306,426" fill="#c8ff3d" fill-opacity="0.9"/>
+  <text class="cap" x="700" y="368" fill="#c8ff3d">APPROVED</text>
+
+  <!-- rejected branch -->
+  <path class="fs" d="M1350 260 H 1440 V 620 H 1350" stroke-dasharray="7 7"/>
+  <polygon points="1350,620 1364,614 1364,626" fill="#9f9fa7" fill-opacity="0.6"/>
+  <text class="cap" x="1392" y="440" transform="rotate(90 1392 440)">REJECTED</text>
+
+  <!-- row 2: fulfilment -->
+  <text class="num" x="180" y="462">05</text>
+  <rect class="box" x="180" y="480" width="250" height="120"/>
+  <text class="t h" x="204" y="526">Prescription</text>
+  <text class="t s" x="204" y="558">PDF generated</text>
+
+  <text class="num" x="500" y="462">06</text>
+  <rect class="box" x="500" y="480" width="250" height="120"/>
+  <text class="t h" x="524" y="526">Pharmacy</text>
+  <text class="t s" x="524" y="558">handoff</text>
+
+  <text class="num" x="820" y="462">07</text>
+  <rect class="acc" x="820" y="480" width="290" height="120"/>
+  <text class="t h" x="844" y="526" fill="#c8ff3d">Royal Mail</text>
+  <text class="t s" x="844" y="558">label + tracking sync</text>
+
+  <path class="fl" d="M430 540 H 500"/><polygon points="500,540 486,534 486,546" fill="#ffffff" fill-opacity="0.35"/>
+  <path class="fl" d="M750 540 H 820"/><polygon points="820,540 806,534 806,546" fill="#ffffff" fill-opacity="0.35"/>
+
+  <!-- rejected terminal -->
+  <rect class="stop" x="1140" y="560" width="210" height="120"/>
+  <text class="t h" x="1164" y="606" fill="#9f9fa7">Refund</text>
+  <text class="t s" x="1164" y="638">same Stripe env</text>
+
+  <!-- row 3: subscription -->
+  <path class="fa" d="M965 600 V 700 H 430 V 760"/>
+  <polygon points="430,760 424,746 436,746" fill="#c8ff3d" fill-opacity="0.9"/>
+  <text class="cap" x="640" y="688" fill="#c8ff3d">DELIVERED</text>
+
+  <text class="num" x="310" y="782">08</text>
+  <rect class="acc" x="310" y="800" width="250" height="120"/>
+  <text class="t h" x="334" y="846" fill="#c8ff3d">Renewal</text>
+  <text class="t s" x="334" y="878">3- and 6-month plans</text>
+
+  <!-- renewal loops back to fulfilment -->
+  <path class="fa" d="M310 860 H 130 V 540 H 180" stroke-dasharray="7 7"/>
+  <polygon points="180,540 166,534 166,546" fill="#c8ff3d" fill-opacity="0.9"/>
+  <text class="cap" x="122" y="700" transform="rotate(-90 122 700)" fill="#c8ff3d">REPEAT DESPATCH</text>
+
+  <!-- status note -->
+  <rect class="box" x="700" y="800" width="650" height="120"/>
+  <text class="t s" x="724" y="842">Every box above is an explicit order status.</text>
+  <text class="t s" x="724" y="872">Transitions are one-way: a stale event cannot</text>
+  <text class="t s" x="724" y="902">move an order backwards.</text>
+
+  <line x1="80" y1="946" x2="1520" y2="946" stroke="#ffffff" stroke-opacity="0.25"/>
+  <text class="lbl" x="80" y="982">INTAKE · CLINICAL REVIEW · FULFILMENT · SUBSCRIPTION — ONE TRACEABLE PIPELINE</text>
+</svg>

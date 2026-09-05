@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" width="1600" height="1000" role="img" aria-label="Golegal agentic RAG pipeline: documents are chunked along their own clause hierarchy so every chunk carries its ancestry, embedded into pgvector, retrieved with that ancestry intact, then routed by a classifier to a per-document-type agent with its own tools and validation schema, with results written back into the editor">
+  <style>
+    .t   { font-family: "Barlow Condensed", "Arial Narrow", sans-serif; fill: #ffffff; }
+    .lbl { font-family: "Barlow Condensed", "Arial Narrow", sans-serif; fill: #9f9fa7; font-size: 20px; letter-spacing: 2.4px; }
+    .box { fill: #16161a; stroke: #ffffff; stroke-opacity: 0.28; }
+    .acc { fill: #16161a; stroke: #c8ff3d; stroke-opacity: 0.85; }
+    .h   { font-size: 26px; font-weight: 600; }
+    .s   { font-size: 18px; fill: #9f9fa7; }
+    .xs  { font-size: 16px; fill: #9f9fa7; }
+    .fl  { stroke: #ffffff; stroke-opacity: 0.35; fill: none; stroke-width: 2; }
+    .fa  { stroke: #c8ff3d; stroke-opacity: 0.9; fill: none; stroke-width: 2; }
+    .cap { font-family: "Barlow Condensed", "Arial Narrow", sans-serif; font-size: 16px; fill: #9f9fa7; letter-spacing: 1.4px; }
+    .num { font-family: "Barlow Condensed", "Arial Narrow", sans-serif; font-size: 15px; fill: #c8ff3d; letter-spacing: 1.6px; }
+  </style>
+
+  <rect width="1600" height="1000" fill="#0b0b0d"/>
+
+  <g stroke="#e6e6e6" stroke-opacity="0.05" stroke-width="1">
+    <line x1="200" y1="0" x2="200" y2="1000"/><line x1="400" y1="0" x2="400" y2="1000"/>
+    <line x1="600" y1="0" x2="600" y2="1000"/><line x1="800" y1="0" x2="800" y2="1000"/>
+    <line x1="1000" y1="0" x2="1000" y2="1000"/><line x1="1200" y1="0" x2="1200" y2="1000"/>
+    <line x1="1400" y1="0" x2="1400" y2="1000"/>
+    <line x1="0" y1="250" x2="1600" y2="250"/><line x1="0" y1="500" x2="1600" y2="500"/>
+    <line x1="0" y1="750" x2="1600" y2="750"/>
+  </g>
+
+  <text class="lbl" x="80" y="86">GOLEGAL — RETRIEVAL THAT KEEPS THE DOCUMENT'S SHAPE</text>
+  <line x1="80" y1="110" x2="1520" y2="110" stroke="#ffffff" stroke-opacity="0.25"/>
+
+  <!-- 01 ingest -->
+  <text class="num" x="80" y="176">01</text>
+  <rect class="box" x="80" y="194" width="230" height="130"/>
+  <text class="t h" x="102" y="240">Ingest</text>
+  <text class="t s" x="102" y="272">contract · filing</text>
+  <text class="t s" x="102" y="298">correspondence</text>
+
+  <!-- 02 structure-preserving chunk -->
+  <text class="num" x="380" y="176">02</text>
+  <rect class="acc" x="380" y="194" width="300" height="130"/>
+  <text class="t h" x="402" y="240" fill="#c8ff3d">Chunk by structure</text>
+  <text class="t s" x="402" y="272">section → clause → sub</text>
+  <text class="t s" x="402" y="298">each chunk keeps its ancestry</text>
+
+  <!-- 03 embed -->
+  <text class="num" x="750" y="176">03</text>
+  <rect class="box" x="750" y="194" width="230" height="130"/>
+  <text class="t h" x="772" y="240">Embed</text>
+  <text class="t s" x="772" y="272">OpenAI</text>
+  <text class="t s" x="772" y="298">vectors + metadata</text>
+
+  <!-- 04 store -->
+  <text class="num" x="1050" y="176">04</text>
+  <rect class="box" x="1050" y="194" width="300" height="130"/>
+  <text class="t h" x="1072" y="240">PostgreSQL</text>
+  <text class="t s" x="1072" y="272">vector store</text>
+  <text class="t s" x="1072" y="298">clause tree preserved</text>
+
+  <path class="fl" d="M310 259 H 380"/><polygon points="380,259 366,253 366,265" fill="#ffffff" fill-opacity="0.35"/>
+  <path class="fl" d="M680 259 H 750"/><polygon points="750,259 736,253 736,265" fill="#ffffff" fill-opacity="0.35"/>
+  <path class="fl" d="M980 259 H 1050"/><polygon points="1050,259 1036,253 1036,265" fill="#ffffff" fill-opacity="0.35"/>
+
+  <!-- retrieval down -->
+  <path class="fa" d="M1200 324 V 400 H 300 V 452"/>
+  <polygon points="300,452 294,438 306,438" fill="#c8ff3d" fill-opacity="0.9"/>
+  <text class="cap" x="700" y="388" fill="#c8ff3d">RETRIEVE — A CLAUSE ARRIVES WITH ITS PARENT CONTEXT</text>
+
+  <!-- 05 classifier -->
+  <text class="num" x="180" y="434">05</text>
+  <rect class="acc" x="180" y="452" width="250" height="130"/>
+  <text class="t h" x="202" y="498" fill="#c8ff3d">Classifier</text>
+  <text class="t s" x="202" y="530">routes by document</text>
+  <text class="t s" x="202" y="556">type, not by prompt</text>
+
+  <!-- three agents -->
+  <rect class="box" x="530" y="410" width="290" height="108"/>
+  <text class="t h" x="552" y="452">Contract agent</text>
+  <text class="t xs" x="552" y="482">own tools · own schema</text>
+
+  <rect class="box" x="530" y="536" width="290" height="108"/>
+  <text class="t h" x="552" y="578">Filing agent</text>
+  <text class="t xs" x="552" y="608">own tools · own schema</text>
+
+  <rect class="box" x="530" y="662" width="290" height="108"/>
+  <text class="t h" x="552" y="704">Correspondence agent</text>
+  <text class="t xs" x="552" y="734">own tools · own schema</text>
+
+  <path class="fl" d="M430 500 H 480 V 464 H 530"/><polygon points="530,464 516,458 516,470" fill="#ffffff" fill-opacity="0.35"/>
+  <path class="fl" d="M430 517 H 480 V 590 H 530"/><polygon points="530,590 516,584 516,596" fill="#ffffff" fill-opacity="0.35"/>
+  <path class="fl" d="M430 534 H 460 V 716 H 530"/><polygon points="530,716 516,710 516,722" fill="#ffffff" fill-opacity="0.35"/>
+
+  <!-- validation -->
+  <rect class="acc" x="900" y="536" width="260" height="130"/>
+  <text class="t h" x="922" y="582" fill="#c8ff3d">Validate</text>
+  <text class="t s" x="922" y="614">against the schema</text>
+  <text class="t s" x="922" y="640">for that type</text>
+
+  <path class="fl" d="M820 464 H 860 V 590 H 900"/><polygon points="900,590 886,584 886,596" fill="#ffffff" fill-opacity="0.35"/>
+  <path class="fl" d="M820 590 H 900"/><polygon points="900,590 886,584 886,596" fill="#ffffff" fill-opacity="0.35"/>
+  <path class="fl" d="M820 716 H 860 V 601 H 900"/><polygon points="900,601 886,595 886,607" fill="#ffffff" fill-opacity="0.35"/>
+
+  <!-- outputs -->
+  <rect class="box" x="1240" y="452" width="280" height="120"/>
+  <text class="t h" x="1262" y="496">Plate.js editor</text>
+  <text class="t xs" x="1262" y="526">values land in the document</text>
+
+  <rect class="box" x="1240" y="614" width="280" height="120"/>
+  <text class="t h" x="1262" y="658">React Flow</text>
+  <text class="t xs" x="1262" y="688">non-engineers wire the steps</text>
+
+  <path class="fa" d="M1160 580 H 1200 V 512 H 1240"/><polygon points="1240,512 1226,506 1226,518" fill="#c8ff3d" fill-opacity="0.9"/>
+  <path class="fl" d="M1160 620 H 1200 V 674 H 1240"/><polygon points="1240,674 1226,668 1226,680" fill="#ffffff" fill-opacity="0.35"/>
+
+  <!-- note -->
+  <rect class="box" x="180" y="820" width="940" height="110"/>
+  <text class="t s" x="204" y="860">The hallucinated citations were a retrieval problem, not a prompt problem:</text>
+  <text class="t s" x="204" y="892">a clause retrieved without its parent context can be quoted correctly and still mean nothing.</text>
+
+  <line x1="80" y1="952" x2="1520" y2="952" stroke="#ffffff" stroke-opacity="0.25"/>
+  <text class="lbl" x="80" y="986">95% EXTRACTION ACCURACY ON THE EVALUATED SET · 100+ FILES A MONTH · 50+ LEGAL PROFESSIONALS</text>
+</svg>

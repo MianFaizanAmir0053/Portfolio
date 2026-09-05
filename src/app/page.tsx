@@ -84,7 +84,7 @@ const HOME_FAQS = [
   },
   {
     q: "What has he actually shipped?",
-    a: "Six case studies, all live or in active development: a digital business card platform at 150+ users, an agentic RAG legal platform at 95% extraction accuracy, an AI image SaaS at 200+ users and $5,000+ revenue, a telehealth commerce platform with 94 API routes, a three-service e-commerce build, and a multi-role fintech front end.",
+    a: "Six case studies, all live or in active development: a live telehealth commerce platform at 250+ subscriptions and £31,000+ in subscription revenue, an AI mini-site builder at 150+ users across three metered subscription tiers, an agentic RAG legal platform at 95% extraction accuracy, an AI image SaaS at 200+ users and $5,000+ revenue, a three-service e-commerce build, and a multi-role fintech platform over Python microservices.",
   },
   {
     q: "Is he available to hire?",
@@ -385,9 +385,22 @@ function Experience() {
                   {e.dates} · {e.place}
                 </p>
               </div>
-              <p className="mt-6 text-sm leading-7 text-ink-muted [@media(max-height:680px)]:mt-4 [@media(max-height:680px)]:text-[13px] [@media(max-height:680px)]:leading-6">
-                {e.body}
-              </p>
+              {/* Broken at its own sentence boundaries rather than set as one
+                  block. Each entry is three claims and a run of numbers, and
+                  as a six-line paragraph in a 460px column that reads as a
+                  wall — three of them in a row on a rail you scroll past.
+                  Same words, one claim to a line, so it can be scanned at the
+                  speed the panel goes by. */}
+              <ul className="mt-6 [@media(max-height:680px)]:mt-4">
+                {e.body.split(/(?<=\.)\s+/).map((claim) => (
+                  <li
+                    key={claim}
+                    className="mt-3 text-sm leading-6 text-ink-muted first:mt-0 [@media(max-height:680px)]:mt-2 [@media(max-height:680px)]:text-[13px] [@media(max-height:680px)]:leading-[1.45]"
+                  >
+                    {claim}
+                  </li>
+                ))}
+              </ul>
             </div>
           </HPanel>
         ))}

@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" width="1600" height="1000" role="img" aria-label="Muterpe train and generate pipeline: uploads enqueue a per-user training job on Fal.ai while the interface stays responsive, and generation shapes prompts through OpenAI, streams results back, meters usage for billing and serves every asset from S3">
+  <style>
+    .t   { font-family: "Barlow Condensed", "Arial Narrow", sans-serif; fill: #ffffff; }
+    .lbl { font-family: "Barlow Condensed", "Arial Narrow", sans-serif; fill: #9f9fa7; font-size: 20px; letter-spacing: 2.4px; }
+    .box { fill: #16161a; stroke: #ffffff; stroke-opacity: 0.28; }
+    .acc { fill: #16161a; stroke: #c8ff3d; stroke-opacity: 0.85; }
+    .h   { font-size: 26px; font-weight: 600; }
+    .s   { font-size: 18px; fill: #9f9fa7; }
+    .fl  { stroke: #ffffff; stroke-opacity: 0.35; fill: none; stroke-width: 2; }
+    .fa  { stroke: #c8ff3d; stroke-opacity: 0.9; fill: none; stroke-width: 2; }
+    .cap { font-family: "Barlow Condensed", "Arial Narrow", sans-serif; font-size: 16px; fill: #9f9fa7; letter-spacing: 1.4px; }
+    .num { font-family: "Barlow Condensed", "Arial Narrow", sans-serif; font-size: 15px; fill: #c8ff3d; letter-spacing: 1.6px; }
+  </style>
+
+  <rect width="1600" height="1000" fill="#0b0b0d"/>
+  <g stroke="#e6e6e6" stroke-opacity="0.05" stroke-width="1">
+    <line x1="200" y1="0" x2="200" y2="1000"/><line x1="400" y1="0" x2="400" y2="1000"/>
+    <line x1="600" y1="0" x2="600" y2="1000"/><line x1="800" y1="0" x2="800" y2="1000"/>
+    <line x1="1000" y1="0" x2="1000" y2="1000"/><line x1="1200" y1="0" x2="1200" y2="1000"/>
+    <line x1="1400" y1="0" x2="1400" y2="1000"/>
+    <line x1="0" y1="250" x2="1600" y2="250"/><line x1="0" y1="500" x2="1600" y2="500"/>
+    <line x1="0" y1="750" x2="1600" y2="750"/>
+  </g>
+
+  <text class="lbl" x="80" y="86">MUTERPE — TRAINING IS SLOW, GENERATION MUST FEEL INSTANT</text>
+  <line x1="80" y1="110" x2="1520" y2="110" stroke="#ffffff" stroke-opacity="0.25"/>
+
+  <!-- row 1: training -->
+  <text class="num" x="80" y="176">01</text>
+  <rect class="box" x="80" y="194" width="250" height="126"/>
+  <text class="t h" x="102" y="240">Upload a set</text>
+  <text class="t s" x="102" y="272">the user's own images</text>
+
+  <text class="num" x="420" y="176">02</text>
+  <rect class="acc" x="420" y="194" width="280" height="126"/>
+  <text class="t h" x="442" y="240" fill="#c8ff3d">Job queue</text>
+  <text class="t s" x="442" y="272">async — nothing blocks</text>
+  <text class="t s" x="442" y="298">the interface</text>
+
+  <text class="num" x="790" y="176">03</text>
+  <rect class="box" x="790" y="194" width="280" height="126"/>
+  <text class="t h" x="812" y="240">Fal.ai</text>
+  <text class="t s" x="812" y="272">per-user model</text>
+  <text class="t s" x="812" y="298">training run</text>
+
+  <rect class="box" x="1160" y="194" width="290" height="126"/>
+  <text class="t h" x="1182" y="240">Progress</text>
+  <text class="t s" x="1182" y="272">streamed back while</text>
+  <text class="t s" x="1182" y="298">the model bakes</text>
+
+  <path class="fl" d="M330 257 H 420"/><polygon points="420,257 406,251 406,263" fill="#ffffff" fill-opacity="0.35"/>
+  <path class="fl" d="M700 257 H 790"/><polygon points="790,257 776,251 776,263" fill="#ffffff" fill-opacity="0.35"/>
+  <path class="fa" d="M1070 257 H 1160"/><polygon points="1160,257 1146,251 1146,263" fill="#c8ff3d" fill-opacity="0.9"/>
+
+  <path class="fa" d="M930 320 V 380 H 300 V 452"/>
+  <polygon points="300,452 294,438 306,438" fill="#c8ff3d" fill-opacity="0.9"/>
+  <text class="cap" x="520" y="368" fill="#c8ff3d">MODEL READY — NO SPINNER, NO BLOCKED UI</text>
+
+  <!-- row 2: generation -->
+  <text class="num" x="180" y="434">04</text>
+  <rect class="box" x="180" y="452" width="250" height="126"/>
+  <text class="t h" x="202" y="498">Prompt</text>
+  <text class="t s" x="202" y="530">shaped server-side</text>
+  <text class="t s" x="202" y="556">through OpenAI</text>
+
+  <text class="num" x="520" y="434">05</text>
+  <rect class="box" x="520" y="452" width="250" height="126"/>
+  <text class="t h" x="542" y="498">Generate</text>
+  <text class="t s" x="542" y="530">against that user's</text>
+  <text class="t s" x="542" y="556">own model</text>
+
+  <text class="num" x="860" y="434">06</text>
+  <rect class="acc" x="860" y="452" width="280" height="126"/>
+  <text class="t h" x="882" y="498" fill="#c8ff3d">Stream results</text>
+  <text class="t s" x="882" y="530">as they land, not</text>
+  <text class="t s" x="882" y="556">as a finished batch</text>
+
+  <path class="fl" d="M430 515 H 520"/><polygon points="520,515 506,509 506,521" fill="#ffffff" fill-opacity="0.35"/>
+  <path class="fl" d="M770 515 H 860"/><polygon points="860,515 846,509 846,521" fill="#ffffff" fill-opacity="0.35"/>
+
+  <!-- metering + storage -->
+  <text class="num" x="1230" y="434">07</text>
+  <rect class="acc" x="1230" y="452" width="240" height="126"/>
+  <text class="t h" x="1252" y="498" fill="#c8ff3d">Meter</text>
+  <text class="t s" x="1252" y="530">usage-based billing,</text>
+  <text class="t s" x="1252" y="556">in the flow itself</text>
+  <path class="fa" d="M1140 515 H 1230"/><polygon points="1230,515 1216,509 1216,521" fill="#c8ff3d" fill-opacity="0.9"/>
+
+  <rect class="box" x="620" y="700" width="360" height="150"/>
+  <text class="t h" x="642" y="748">S3</text>
+  <text class="t s" x="642" y="782">every asset stored and</text>
+  <text class="t s" x="642" y="810">delivered here, never</text>
+  <text class="t s" x="642" y="838">from the app server</text>
+
+  <path class="fl" d="M1000 578 V 640 H 800 V 700"/><polygon points="800,700 794,686 806,686" fill="#ffffff" fill-opacity="0.35"/>
+  <path class="fl" d="M620 775 H 140 V 320" stroke-dasharray="7 7"/><polygon points="140,320 134,334 146,334" fill="#ffffff" fill-opacity="0.35"/>
+  <text class="cap" x="124" y="660" transform="rotate(-90 124 660)">SERVED BACK</text>
+
+  <rect class="box" x="1080" y="700" width="390" height="150"/>
+  <text class="t s" x="1102" y="748">Perceived speed improved ~40%</text>
+  <text class="t s" x="1102" y="782">without changing the model —</text>
+  <text class="t s" x="1102" y="810">prompt shaping and streaming,</text>
+  <text class="t s" x="1102" y="838">not a faster generator.</text>
+
+  <line x1="80" y1="912" x2="1520" y2="912" stroke="#ffffff" stroke-opacity="0.25"/>
+  <text class="lbl" x="80" y="950">200+ USERS · $5K+ USAGE-BASED REVENUE · 99% UPTIME OVER A ROLLING TWELVE MONTHS</text>
+</svg>

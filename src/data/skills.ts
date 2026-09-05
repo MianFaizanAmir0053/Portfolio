@@ -26,7 +26,9 @@ export const SKILLS = [
   {
     n: "03",
     label: "Backend & APIs",
-    items: ["Node.js", "Express.js", "REST APIs", "GraphQL", "NextAuth"],
+    // Nest.js and Laravel both carry shipped work — Golegal's API and Carder's
+    // backend respectively — and were missing from the list the site shows.
+    items: ["Node.js", "Nest.js", "Express.js", "Laravel", "REST APIs", "GraphQL", "NextAuth"],
   },
   { n: "04", label: "AI / ML", items: ["LangChain", "Agentic RAG", "LLM Integration", "OpenAI"] },
   { n: "05", label: "Infrastructure", items: ["PostgreSQL", "AWS S3", "CI/CD"] },
