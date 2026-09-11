@@ -60,4 +60,4 @@ export const PERSON = {
  * freshness heavily and there is no CMS here to derive it from, so it is
  * declared once and updated when the content actually changes.
  */
-export const CONTENT_REVIEWED = "2026-09-01";
+export const CONTENT_REVIEWED = "2026-09-12";
