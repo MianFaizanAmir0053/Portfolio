@@ -61,3 +61,19 @@ export const PERSON = {
  * declared once and updated when the content actually changes.
  */
 export const CONTENT_REVIEWED = "2026-09-12";
+
+/**
+ * The share card, named explicitly.
+ *
+ * `app/opengraph-image.tsx` covers the homepage, and each case study has its
+ * own generated card. Every other page declares an `openGraph` block in its
+ * metadata — and a child `openGraph` replaces the parent's rather than merging
+ * into it, so those pages silently lost the image and shared as a bare text
+ * link. Spreading this into each one puts it back.
+ */
+export const OG_IMAGE = {
+  url: "/opengraph-image",
+  width: 1200,
+  height: 630,
+  alt: "Faizan Amir — Senior Software Engineer",
+} as const;

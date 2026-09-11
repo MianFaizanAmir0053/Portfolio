@@ -42,9 +42,9 @@ export const services: Service[] = [
   {
     slug: "ai-engineering",
     name: "AI engineering",
-    title: "AI engineering — RAG pipelines, agents and LLM integration",
+    title: "AI engineering — RAG, agents, LLM features",
     description:
-      "RAG pipelines, agentic workflows and LLM features built for production: retrieval that keeps document structure, evaluation before tuning, and humans in the loop.",
+      "RAG pipelines, agentic workflows and LLM features for production: retrieval that keeps document structure, evaluation before tuning, humans in the loop.",
     serviceType: "AI and LLM application development",
     headline: ["AI that survives", "contact with production"],
     accent: "production",
@@ -141,9 +141,9 @@ export const services: Service[] = [
   {
     slug: "nextjs-development",
     name: "Next.js development",
-    title: "Next.js and React development for products with real state",
+    title: "Next.js and React product development",
     description:
-      "Next.js and React front ends for products with roles, sessions and money in them. App Router, TypeScript, Redux Toolkit and RTK Query, built so a new screen is composition.",
+      "Next.js and React front ends for products with roles, sessions and money in them. App Router, TypeScript, Redux Toolkit and RTK Query.",
     serviceType: "Frontend web development",
     headline: ["Front ends that hold", "their own state"],
     accent: "state",
@@ -237,9 +237,9 @@ export const services: Service[] = [
   {
     slug: "api-and-backend-development",
     name: "API & backend development",
-    title: "API and backend development in Node.js, Express and PostgreSQL",
+    title: "API and backend development in Node.js",
     description:
-      "REST and GraphQL APIs, data models and integrations built to be operated: explicit lifecycles, reconciled payments, signed media delivery and migrations without downtime.",
+      "REST and GraphQL APIs, data models and integrations built to be operated: explicit lifecycles, reconciled payments, migrations without downtime.",
     serviceType: "Backend and API development",
     headline: ["Backends built to be", "operated, not just shipped"],
     accent: "operated",
@@ -340,9 +340,9 @@ export const services: Service[] = [
   {
     slug: "saas-mvp-development",
     name: "SaaS MVP development",
-    title: "SaaS MVP development — from first commit to paying users",
+    title: "SaaS MVP development, end to end",
     description:
-      "Full-stack SaaS builds taken from empty repository to paying users: auth, data model, billing, media, deployment and the instrumentation to know whether any of it worked.",
+      "Full-stack SaaS builds from empty repository to paying users: auth, data model, billing, media, deployment and the instrumentation to prove it worked.",
     serviceType: "SaaS product development",
     headline: ["From empty repo", "to paying users"],
     accent: "paying",
@@ -442,9 +442,9 @@ export const services: Service[] = [
   {
     slug: "ecommerce-development",
     name: "E-commerce engineering",
-    title: "E-commerce and payments engineering that survives its edge cases",
+    title: "E-commerce and payments engineering",
     description:
-      "Storefronts, checkout and settlement built for the cases that lose money: duplicate webhooks, out-of-order events, refunds, subscriptions and catalogue scope per market.",
+      "Storefronts, checkout and settlement built for the cases that lose money: duplicate webhooks, out-of-order events, refunds and subscriptions.",
     serviceType: "E-commerce development",
     headline: ["Checkout that survives", "its own edge cases"],
     accent: "edge cases",

@@ -5,12 +5,12 @@ import { UtilityBar } from "@/components/site/UtilityBar";
 import { Footer } from "@/components/site/Footer";
 import { Tag } from "@/components/site/primitives";
 import { JsonLd } from "@/components/site/JsonLd";
-import { PERSON } from "@/lib/site";
+import { PERSON, OG_IMAGE } from "@/lib/site";
 import { breadcrumbSchema, graph, itemListSchema, webPageSchema } from "@/lib/schema";
 
 const TITLE = "Services — full-stack, AI and backend engineering";
 const DESCRIPTION =
-  "Five ways to work with a senior software engineer: AI and RAG systems, Next.js front ends, APIs and backends, SaaS MVPs, and e-commerce payments engineering.";
+  "Five ways to work with a senior software engineer: AI and RAG systems, Next.js front ends, APIs and backends, SaaS MVPs, e-commerce payments.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -21,6 +21,7 @@ export const metadata: Metadata = {
     description: DESCRIPTION,
     type: "website",
     url: "/services",
+    images: [OG_IMAGE],
   },
   twitter: { card: "summary_large_image", title: `${TITLE} · Faizan Amir`, description: DESCRIPTION },
 };

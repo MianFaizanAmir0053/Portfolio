@@ -9,10 +9,10 @@ import { UtilityBar } from "@/components/site/UtilityBar";
 import { Footer } from "@/components/site/Footer";
 import { Tag } from "@/components/site/primitives";
 import { JsonLd } from "@/components/site/JsonLd";
-import { PERSON, CONTENT_REVIEWED } from "@/lib/site";
+import { PERSON, CONTENT_REVIEWED, OG_IMAGE } from "@/lib/site";
 import { breadcrumbSchema, faqSchema, graph, webPageSchema } from "@/lib/schema";
 
-const TITLE = "About Faizan Amir — senior software engineer in Lahore";
+const TITLE = "About — senior software engineer in Lahore";
 const DESCRIPTION =
   "Four years, three teams, three continents: how Faizan Amir works, the stack he works in, where he has shipped, and what he is honest about not knowing yet.";
 
@@ -25,6 +25,7 @@ export const metadata: Metadata = {
     description: DESCRIPTION,
     type: "profile",
     url: "/about",
+    images: [OG_IMAGE],
   },
   twitter: { card: "summary_large_image", title: `${TITLE} · Faizan Amir`, description: DESCRIPTION },
 };

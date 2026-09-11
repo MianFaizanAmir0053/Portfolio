@@ -6,10 +6,11 @@ import { Footer } from "@/components/site/Footer";
 import { CutFrame, Tag } from "@/components/site/primitives";
 import { JsonLd } from "@/components/site/JsonLd";
 import { breadcrumbSchema, graph, itemListSchema, webPageSchema } from "@/lib/schema";
+import { OG_IMAGE } from "@/lib/site";
 
 const TITLE = "Work — 6 full-stack and AI engineering case studies";
 const DESCRIPTION =
-  "Six shipped projects, written up end to end: the problem, the architecture decision behind it, and what the numbers did afterwards. AI, fintech, telehealth and commerce.";
+  "Six shipped projects written up end to end: the problem, the architecture decision behind it, and what happened after. AI, fintech, telehealth, commerce.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -20,6 +21,7 @@ export const metadata: Metadata = {
     description: DESCRIPTION,
     type: "website",
     url: "/work",
+    images: [OG_IMAGE],
   },
   twitter: {
     card: "summary_large_image",

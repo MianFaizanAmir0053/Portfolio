@@ -7,12 +7,12 @@ import { Footer } from "@/components/site/Footer";
 import { ContactForm } from "@/components/site/ContactForm";
 import { Tag } from "@/components/site/primitives";
 import { JsonLd } from "@/components/site/JsonLd";
-import { PERSON } from "@/lib/site";
+import { PERSON, OG_IMAGE } from "@/lib/site";
 import { breadcrumbSchema, faqSchema, graph, webPageSchema } from "@/lib/schema";
 
 const TITLE = "Contact — hire a senior full-stack and AI engineer";
 const DESCRIPTION =
-  "Email, WhatsApp or the form. Faizan Amir takes scoped builds and embedded contract work in React, Next.js, Node.js, Python and applied AI, from Lahore across US, UK and EU hours.";
+  "Email, WhatsApp or the form. Scoped builds and embedded contract work in React, Next.js, Node.js, Python and applied AI — across US, UK and EU hours.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -23,6 +23,7 @@ export const metadata: Metadata = {
     description: DESCRIPTION,
     type: "website",
     url: "/contact",
+    images: [OG_IMAGE],
   },
   twitter: { card: "summary_large_image", title: `${TITLE} · Faizan Amir`, description: DESCRIPTION },
 };

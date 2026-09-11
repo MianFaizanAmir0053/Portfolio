@@ -7,7 +7,7 @@ import { UtilityBar } from "@/components/site/UtilityBar";
 import { Footer } from "@/components/site/Footer";
 import { Tag } from "@/components/site/primitives";
 import { JsonLd } from "@/components/site/JsonLd";
-import { PERSON } from "@/lib/site";
+import { PERSON, OG_IMAGE } from "@/lib/site";
 import {
   breadcrumbSchema,
   faqSchema,
@@ -40,6 +40,7 @@ export async function generateMetadata({
       description: service.description,
       type: "website",
       url: path,
+      images: [OG_IMAGE],
     },
     twitter: {
       card: "summary_large_image",
