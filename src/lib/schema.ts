@@ -15,6 +15,16 @@ import { SITE_URL, SITE_NAME, PERSON, CONTENT_REVIEWED, absoluteUrl } from "@/li
 import { SOCIAL } from "@/data/social";
 import type { Project } from "@/data/projects";
 
+/**
+ * The review date as an ISO 8601 datetime.
+ *
+ * `CONTENT_REVIEWED` is a bare date because that is what a reader should see
+ * in a byline and what `<time datetime>` wants. Google validates
+ * `dateModified` as a datetime and rejects the short form — "Invalid datetime
+ * value" — so the JSON-LD gets the full stamp and the page keeps the date.
+ */
+const REVIEWED_ISO = new Date(`${CONTENT_REVIEWED}T00:00:00Z`).toISOString();
+
 export const ID = {
   person: `${SITE_URL}/#person`,
   website: `${SITE_URL}/#website`,
@@ -84,8 +94,15 @@ export function webPageSchema({
     description,
     isPartOf: { "@id": ID.website },
     about: { "@id": ID.person },
+    /*
+     * `mainEntity` is required on ProfilePage and meaningless on the rest.
+     * `about` above says the page concerns this person; `mainEntity` says the
+     * page *is* their profile, and Google treats the absence of it as a
+     * critical error that disqualifies the page from profile enhancements.
+     */
+    ...(type === "ProfilePage" ? { mainEntity: { "@id": ID.person } } : {}),
     inLanguage: "en",
-    dateModified: CONTENT_REVIEWED,
+    dateModified: REVIEWED_ISO,
     ...(breadcrumb ? { breadcrumb: { "@id": `${absoluteUrl(path)}#breadcrumb` } } : {}),
   };
 }
