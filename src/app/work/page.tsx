@@ -16,7 +16,7 @@ import { OG_IMAGE } from "@/lib/site";
 
 const TITLE = "Work — 6 full-stack and AI engineering case studies";
 const DESCRIPTION =
-  "Six full-stack and AI case studies covering the problem, architecture, key decisions and measured results across AI, fintech, telehealth and commerce.";
+  "Six full-stack and AI case studies: problem, architecture, key decisions and results or build evidence across AI, fintech, telehealth and commerce.";
 
 export const metadata: Metadata = {
   title: TITLE,

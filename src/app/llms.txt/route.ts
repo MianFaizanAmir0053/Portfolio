@@ -81,7 +81,7 @@ ${otherWork.filter((work) => work.external).map((work) => `- ${work.name} — ${
 
 ## Usage
 
-Content on this site may be quoted and cited with attribution to ${PERSON.name} and a link to ${SITE_URL}. Figures quoted in case studies are the author's own measurements from the projects described; where a number is a target rather than a reading, the case study says so.
+Content on this site may be quoted and cited with attribution to ${PERSON.name} and a link to ${SITE_URL}. Figures quoted in case studies come from platform records, user reports or build counts, as each case study's method note states; where a number is a target rather than a reading, the case study says so.
 `;
 }
 

@@ -28,6 +28,15 @@ export function generateStaticParams() {
 
 export const dynamicParams = false;
 
+/**
+ * A service name set mid-sentence: an ordinary leading word loses its capital
+ * ("E-commerce" → "e-commerce"), while acronyms and brands keep theirs
+ * ("AI", "API", "SaaS", "Next.js").
+ */
+function inSentence(name: string) {
+  return name.replace(/^([A-Z])([a-z-]+)(?=\s)/, (_, first: string, rest: string) => first.toLowerCase() + rest);
+}
+
 export async function generateMetadata({
   params,
 }: PageProps<"/services/[slug]">): Promise<Metadata> {
@@ -250,7 +259,7 @@ export default async function ServicePage({ params }: PageProps<"/services/[slug
             them, and mirrored into FAQPage structured data above. */}
         <section className="wrap rule-t py-16 md:py-24">
           <Tag className="mb-3 block">[04] QUESTIONS</Tag>
-          <h2 className="display mb-8 text-2xl md:text-4xl">Questions about {service.name.toLowerCase()}</h2>
+          <h2 className="display mb-8 text-2xl md:text-4xl">Questions about {inSentence(service.name)}</h2>
           <Accordion type="multiple" className="max-w-3xl rule-t">
             {service.faqs.map((faq, index) => (
               <AccordionItem key={faq.q} value={`faq-${index}`}>

@@ -26,7 +26,7 @@ export const EXPERIENCE: Role[] = [
     start: "2026-02",
     dates: "Feb 2026 – Present",
     place: "United Kingdom",
-    body: "Leading a team building full-stack and AI SaaS, including medical platforms used across the UK and Europe. I ship RAG pipelines, agent workflows and microservices, mentor engineers, and have delivered 30+ REST and GraphQL APIs on PostgreSQL and AWS at 99% uptime.",
+    body: "Leading a team building full-stack and AI SaaS, including medical platforms used across the UK and Europe. Shipping RAG pipelines, agent workflows and microservices, mentoring engineers, and delivering REST and GraphQL APIs on PostgreSQL and AWS at 99% uptime.",
   },
   {
     n: "02",
@@ -39,7 +39,7 @@ export const EXPERIENCE: Role[] = [
     // but it ran Feb to Aug 2026, and it has ended.
     dates: "Jul 2024 – Aug 2026",
     place: "Lahore",
-    body: "Led full-stack delivery across 8+ client projects in React, Next.js, Node.js and Python. Shipped 10+ production apps and 30+ REST APIs and closed 50+ issues, cutting delivery time by 20%, response times by 18% and incidents by 25%.",
+    body: "Led full-stack development across 8+ client projects in React, Next.js, Node.js and Python, turning requirements into shipped products 20% faster. Built 30+ REST APIs and data pipelines, cutting response times by 18%. Shipped 10+ production apps and closed 50+ issues, cutting incidents by 25%.",
   },
   {
     n: "03",
@@ -51,7 +51,7 @@ export const EXPERIENCE: Role[] = [
     end: "2026-02",
     dates: "Nov 2022 – Feb 2026",
     place: "US (California)",
-    body: "Worked with 10+ clients and a small engineering team, shipping 15+ full-stack features across interfaces, APIs and data systems. Delivered 5+ production RAG and agentic AI solutions and reduced bugs by 25% across 20+ shipped features.",
+    body: "Worked with 10+ clients and a small engineering team, shipping 15+ full-stack features across interfaces, APIs and data systems. Delivered 5+ production RAG and agentic AI solutions and reduced bugs by 25% across the team's 20+ shipped features.",
   },
 ];
 
@@ -77,6 +77,6 @@ export const BEYOND_CODE = [
 export const BIO = [
   "I’m a Senior Software Engineer building full-stack and AI products with React, Next.js, Python and Node.js.",
   "My focus is production RAG, agent workflows and LLM integration, built into systems people actually use.",
-  "I’ve led 8+ projects, built 30+ REST and GraphQL APIs and shipped AI features used by hundreds of real users.",
+  "I’ve led development across 8+ projects, built 30+ REST and GraphQL APIs and shipped AI features used by hundreds of real users.",
   "I solve the actual problem, not just the ticket.",
 ];

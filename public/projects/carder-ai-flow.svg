@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" width="1600" height="1000" role="img" aria-label="Carder AI flow: the owner's prompt, uploads and custom instructions pass a quota check, uploads are indexed and retrieved as context, the pre-trained model drafts the site, and the draft opens in the builder to edit and publish">
+  <style>
+    .t  { font-family: "Barlow Condensed", "Arial Narrow", sans-serif; fill: #ffffff; }
+    .lbl{ font-family: "Barlow Condensed", "Arial Narrow", sans-serif; fill: #9f9fa7; font-size: 20px; letter-spacing: 2.4px; text-transform: uppercase; }
+    .box{ fill: #16161a; stroke: #ffffff; stroke-opacity: 0.28; }
+    .acc{ fill: #16161a; stroke: #c8ff3d; stroke-opacity: 0.85; }
+    .dim{ fill: #16161a; stroke: #9f9fa7; stroke-opacity: 0.5; stroke-dasharray: 7 7; }
+    .h  { font-size: 30px; font-weight: 600; }
+    .s  { font-size: 20px; fill: #9f9fa7; }
+    .fl { stroke: #ffffff; stroke-opacity: 0.35; fill: none; }
+    .fa { stroke: #c8ff3d; stroke-opacity: 0.9; fill: none; }
+    .cap{ font-family: "Barlow Condensed", "Arial Narrow", sans-serif; font-size: 17px; fill: #9f9fa7; letter-spacing: 1.4px; }
+  </style>
+
+  <rect width="1600" height="1000" fill="#0b0b0d"/>
+
+  <g stroke="#e6e6e6" stroke-opacity="0.05" stroke-width="1">
+    <line x1="200" y1="0" x2="200" y2="1000"/><line x1="400" y1="0" x2="400" y2="1000"/>
+    <line x1="600" y1="0" x2="600" y2="1000"/><line x1="800" y1="0" x2="800" y2="1000"/>
+    <line x1="1000" y1="0" x2="1000" y2="1000"/><line x1="1200" y1="0" x2="1200" y2="1000"/>
+    <line x1="1400" y1="0" x2="1400" y2="1000"/>
+    <line x1="0" y1="200" x2="1600" y2="200"/><line x1="0" y1="400" x2="1600" y2="400"/>
+    <line x1="0" y1="600" x2="1600" y2="600"/><line x1="0" y1="800" x2="1600" y2="800"/>
+  </g>
+
+  <text class="lbl" x="80" y="86">CARDER — ONE SENTENCE TO A FINISHED SITE</text>
+  <line x1="80" y1="110" x2="1520" y2="110" stroke="#ffffff" stroke-opacity="0.25"/>
+
+  <!-- inputs -->
+  <rect class="box" x="80" y="170" width="280" height="110"/>
+  <text class="t h" x="104" y="218">Prompt</text>
+  <text class="t s" x="104" y="252">one sentence</text>
+
+  <rect class="box" x="80" y="320" width="280" height="110"/>
+  <text class="t h" x="104" y="368">Uploads</text>
+  <text class="t s" x="104" y="402">the business's own material</text>
+
+  <rect class="box" x="80" y="470" width="280" height="110"/>
+  <text class="t h" x="104" y="518">Instructions</text>
+  <text class="t s" x="104" y="552">fully customised per user</text>
+
+  <!-- quota gate -->
+  <rect class="acc" x="460" y="170" width="280" height="130"/>
+  <text class="t h" x="488" y="218" fill="#c8ff3d">Quota check</text>
+  <text class="t s" x="488" y="254">5 first month · 10 · 30</text>
+  <text class="t s" x="488" y="280">failed runs don't count</text>
+
+  <!-- rag -->
+  <rect class="acc" x="460" y="340" width="280" height="240"/>
+  <text class="t h" x="488" y="390" fill="#c8ff3d">RAG</text>
+  <text class="t s" x="488" y="428">index the uploads</text>
+  <text class="t s" x="488" y="456">retrieve what the</text>
+  <text class="t s" x="488" y="484">prompt is about</text>
+  <line x1="488" y1="510" x2="712" y2="510" stroke="#ffffff" stroke-opacity="0.18"/>
+  <text class="t s" x="488" y="544">grounded in their facts</text>
+
+  <!-- model -->
+  <rect class="dim" x="860" y="250" width="300" height="250"/>
+  <text class="t h" x="888" y="300">Pre-trained</text>
+  <text class="t h" x="888" y="334">model</text>
+  <text class="t s" x="888" y="374">prompt + retrieved context</text>
+  <text class="t s" x="888" y="402">+ user instructions</text>
+  <text class="cap" x="888" y="470">MODEL NOT MINE · FLOW MINE</text>
+
+  <!-- draft -->
+  <rect class="box" x="1260" y="250" width="260" height="250"/>
+  <text class="t h" x="1284" y="300">Draft site</text>
+  <text class="t s" x="1284" y="338">pages · sections</text>
+  <text class="t s" x="1284" y="366">copy · layout</text>
+  <text class="t s" x="1284" y="420">≈ 30 seconds</text>
+
+  <!-- builder -->
+  <rect class="acc" x="860" y="660" width="660" height="170"/>
+  <text class="t h" x="888" y="710" fill="#c8ff3d">Builder</text>
+  <text class="t s" x="888" y="748">the draft opens in the user dashboard</text>
+  <text class="t s" x="888" y="776">edit by hand · then publish the customer site</text>
+
+  <!-- flows -->
+  <path class="fl" d="M360 225 H 460"/>
+  <polygon points="460,225 446,219 446,231" fill="#ffffff" fill-opacity="0.35"/>
+
+  <path class="fl" d="M360 375 H 460"/>
+  <polygon points="460,375 446,369 446,381" fill="#ffffff" fill-opacity="0.35"/>
+
+  <path class="fl" d="M360 525 H 410 V 620 H 800 V 450 H 860"/>
+  <polygon points="860,450 846,444 846,456" fill="#ffffff" fill-opacity="0.35"/>
+  <text class="cap" x="420" y="646">INSTRUCTIONS STEER THE MODEL</text>
+
+  <path class="fa" d="M740 235 H 800 V 300 H 860"/>
+  <polygon points="860,300 846,294 846,306" fill="#c8ff3d" fill-opacity="0.9"/>
+
+  <path class="fa" d="M740 400 H 860"/>
+  <polygon points="860,400 846,394 846,406" fill="#c8ff3d" fill-opacity="0.9"/>
+  <text class="cap" x="752" y="384">CONTEXT</text>
+
+  <path class="fa" d="M1160 375 H 1260"/>
+  <polygon points="1260,375 1246,369 1246,381" fill="#c8ff3d" fill-opacity="0.9"/>
+
+  <path class="fa" d="M1390 500 V 660" stroke-dasharray="7 7"/>
+  <polygon points="1390,660 1384,646 1396,646" fill="#c8ff3d" fill-opacity="0.9"/>
+
+  <line x1="80" y1="920" x2="1520" y2="920" stroke="#ffffff" stroke-opacity="0.25"/>
+  <text class="lbl" x="80" y="958">GROUNDED IN THE USER'S UPLOADS · STEERED BY THEIR INSTRUCTIONS · EDITABLE AFTER</text>
+</svg>

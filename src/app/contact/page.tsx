@@ -103,43 +103,49 @@ export default function Contact() {
               US, UK, Middle East and Europe. Replies usually arrive within one working day.
             </p>
 
-            <dl className="mt-10 space-y-5">
+            {/* Grouped by who is writing, each group leading with what that
+                reader needs: a brief channel for clients, the résumé for
+                hiring managers. */}
+            <dl className="mt-10 space-y-8">
               <div>
-                <dt className="label">[EMAIL]</dt>
-                <dd>
-                  <a href={`mailto:${PERSON.email}`} className="text-cobalt hover:underline">
+                <dt className="label">[PROJECTS]</dt>
+                <dd className="mt-2 space-y-2">
+                  <p className="text-sm leading-6 text-ink-muted">
+                    Send a short brief with the form, or message directly:
+                  </p>
+                  <a href={`mailto:${PERSON.email}`} className="block text-cobalt hover:underline">
                     {PERSON.email}
                   </a>
-                </dd>
-              </div>
-              <div>
-                <dt className="label">[WHATSAPP]</dt>
-                <dd>
                   <a
                     href={PERSON.whatsapp}
                     target="_blank"
                     rel="noopener"
-                    className="text-cobalt hover:underline"
+                    className="block text-cobalt hover:underline"
                   >
-                    {PERSON.telephoneDisplay}
+                    WhatsApp {PERSON.telephoneDisplay}
                   </a>
+                </dd>
+              </div>
+              <div>
+                <dt className="label">[HIRING]</dt>
+                <dd className="mt-2 space-y-2">
+                  <a href="/resume.pdf" className="block text-cobalt hover:underline">
+                    Download resume (PDF) ↓
+                  </a>
+                  <span className="flex gap-4 text-sm">
+                    <a href={SOCIAL.linkedin} target="_blank" rel="me noopener" className="hover:text-cobalt">
+                      LinkedIn ↗
+                    </a>
+                    <a href={SOCIAL.github} target="_blank" rel="me noopener" className="hover:text-cobalt">
+                      GitHub ↗
+                    </a>
+                  </span>
                 </dd>
               </div>
               <div>
                 <dt className="label">[BASED IN]</dt>
                 <dd className="text-sm">
                   {PERSON.locality}, {PERSON.countryName} — remote, UTC+5
-                </dd>
-              </div>
-              <div>
-                <dt className="label">[SOCIAL]</dt>
-                <dd className="flex gap-4 text-sm">
-                  <a href={SOCIAL.linkedin} target="_blank" rel="me noopener" className="hover:text-cobalt">
-                    LinkedIn ↗
-                  </a>
-                  <a href={SOCIAL.github} target="_blank" rel="me noopener" className="hover:text-cobalt">
-                    GitHub ↗
-                  </a>
                 </dd>
               </div>
             </dl>

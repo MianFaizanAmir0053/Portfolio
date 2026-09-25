@@ -144,6 +144,23 @@ export function ScrollFxRoot() {
     window.addEventListener("load", refresh);
     document.fonts?.ready.then(refresh).catch(() => {});
 
+    /*
+     * Opening or closing an accordion changes the page height after every
+     * trigger below it was measured, and ScrollTrigger only re-measures on
+     * load and resize. Left alone, the Contact headline's scrub range drifts
+     * by the panels' height and its words can stay at autoAlpha 0. A refresh
+     * resizes the pin spacers once and then settles, so this runs one pass.
+     */
+    const main = document.getElementById("main");
+    let lastHeight = main?.offsetHeight ?? 0;
+    const resized = new ResizeObserver(() => {
+      const height = main?.offsetHeight ?? 0;
+      if (Math.abs(height - lastHeight) < 2) return;
+      lastHeight = height;
+      refresh();
+    });
+    if (main) resized.observe(main);
+
     const page = ScrollTrigger.create({
       trigger: document.documentElement,
       start: "top top",
@@ -172,6 +189,7 @@ export function ScrollFxRoot() {
       window.clearTimeout(curtain);
       if (pending !== null) window.clearTimeout(pending);
       window.removeEventListener("load", refresh);
+      resized.disconnect();
       gsap.ticker.remove(decay);
       page.kill();
     };
@@ -1574,13 +1592,55 @@ export function CardStack({
   items,
   className,
   cardClassName,
+  bars = 1,
+  fit = false,
 }: {
   items: { key: string; content: ReactNode }[];
   className?: string;
   cardClassName?: string;
+  /**
+   * How many sticky `--bar-h` bars sit above the deck. A case study carries
+   * its breadcrumb bar under the utility bar, so its panels hold one bar
+   * lower or they would slide underneath it.
+   */
+  bars?: 1 | 2;
+  /**
+   * Stack whenever the tallest panel's content fits the screen, instead of
+   * behind the fixed DESKTOP height floor. That floor is sized for the
+   * homepage's tall project cards; a deck of shorter panels would otherwise
+   * sit as a plain column on any laptop under 640px of viewport.
+   */
+  fit?: boolean;
 }) {
-  const { pinned } = useFxMode();
+  const fx = useFxMode();
+  const wide = useMediaQuery("(min-width: 768px)");
+  const [fits, setFits] = useState(false);
+  const pinned = fit ? fx.motion && wide && fits : fx.pinned;
   const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!fit) return;
+    const root = rootRef.current;
+    if (!root) return;
+    const contents = Array.from(root.querySelectorAll<HTMLElement>("[data-card] > *"));
+
+    const check = () => {
+      const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+      const barH = parseFloat(getComputedStyle(root).getPropertyValue("--bar-h")) * rem || 44;
+      // offsetHeight, not getBoundingClientRect: the depth scale shrinks the box.
+      const tallest = Math.max(0, ...contents.map((el) => el.offsetHeight));
+      setFits(tallest <= window.innerHeight - bars * barH);
+    };
+
+    check();
+    const ro = new ResizeObserver(check);
+    contents.forEach((el) => ro.observe(el));
+    window.addEventListener("resize", check);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", check);
+    };
+  }, [fit, bars]);
 
   useEffect(() => {
     if (!pinned) return;
@@ -1682,7 +1742,10 @@ export function CardStack({
           className={cn(
             // Stacking is desktop-only: a card that fills a phone screen cannot
             // hold a project's full write-up, and `overflow-hidden` would clip it.
-            pinned && "sticky top-[var(--bar-h)] h-[calc(100svh-var(--bar-h))]",
+            pinned &&
+              (bars === 2
+                ? "sticky top-[calc(var(--bar-h)*2)] h-[calc(100svh-var(--bar-h)*2)]"
+                : "sticky top-[var(--bar-h)] h-[calc(100svh-var(--bar-h))]"),
           )}
           // Later panels have to paint over earlier ones, not under them.
           style={{ zIndex: i + 1 }}

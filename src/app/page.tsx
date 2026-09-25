@@ -130,15 +130,17 @@ export default function Index() {
       <main id="main">
         <Hero />
         <Marquee
-          text="WARD WEB SOLUTIONS + WANILE TECHNOLOGIES + NAZADV + VOLUMIZE + WISDOMUP + CARDER.APP + GOLEGAL.WANILE.DEV + MUTERPE + ALFA + "
+          text="WARD WEB SOLUTIONS + WANILE TECHNOLOGIES + NAZADV + VOLUMIZE + WISDOMUP + CARDER.APP + GO-LEGAL.AI + MUTERPE + ALFA + "
           speed={42}
           className="rule-t rule-b"
         />
+        {/* Proof first: the case studies right after the hero, then the
+            career for hiring managers, then the longer About and Stack. */}
+        <FeaturedWork />
+        <Experience />
         <About />
         <Skills />
-        <Experience />
         <Reach />
-        <FeaturedWork />
         <Faq />
         <Contact />
       </main>
@@ -202,6 +204,25 @@ function Hero() {
             Four years shipping React, Next.js, Python and Node.js applications for teams in the
             US, UK, Middle East and Europe.
           </p>
+        </FadeIn>
+
+        {/* Two doors, one per reader: a client with a project, and a hiring
+            manager who wants the résumé. */}
+        <FadeIn delay={0.35}>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link
+              href="/contact"
+              className="bg-cobalt px-6 py-3 text-sm font-medium text-paper transition-colors hover:bg-cobalt-deep"
+            >
+              Have a project? Start here →
+            </Link>
+            <a
+              href="/resume.pdf"
+              className="border border-ink px-6 py-3 text-sm font-medium text-ink transition-colors hover:bg-ink hover:text-paper"
+            >
+              Hiring? Get my resume ↓
+            </a>
+          </div>
         </FadeIn>
 
         <div className="mt-10 flex items-center gap-3">
@@ -301,7 +322,7 @@ function About() {
         textClassName="mt-7 gap-4 text-[clamp(1.05rem,1.7vw,1.45rem)] leading-[1.5] text-ink [@media(max-height:760px)]:mt-5 [@media(max-height:760px)]:gap-3 [@media(max-height:760px)]:text-[clamp(0.95rem,1.4vw,1.15rem)]"
         lead={
           <>
-            <Tag className="block">[02] ABOUT</Tag>
+            <Tag className="block">[03] ABOUT</Tag>
             {/* CurtainText, not KineticHeadline: a scroll-scrubbed headline
                 inside a pinned section freezes the moment the pin engages, and
                 would sit here half-scattered. This one runs on its own clock
@@ -334,7 +355,7 @@ function Experience() {
 
   return (
     <section id="experience" className="rule-t" aria-label="Experience">
-      <HorizontalScroll label="[04] EXPERIENCE" steps={steps}>
+      <HorizontalScroll label="[02] EXPERIENCE" steps={steps}>
         <HPanel width="w-[84vw] sm:w-[58vw] md:w-[38vw] lg:w-[30vw]">
           <div className="flex flex-col justify-center md:min-h-[58vh]">
             <CurtainText
@@ -422,10 +443,13 @@ function Experience() {
               ))}
             </dl>
             <MagneticSurface className="mt-8 w-fit" strength={0.3} radius={70} lift={0}>
-              <Link href="/#work" className="label group relative inline-block text-cobalt">
-                SEE WHAT CAME OUT OF IT →
+              {/* The case studies now sit above this rail, so its closing
+                  link points forward, at the one thing a hiring manager
+                  wants next. */}
+              <a href="/resume.pdf" className="label group relative inline-block text-cobalt">
+                DOWNLOAD RESUME ↓
                 <span className="absolute -bottom-1 left-0 h-px w-0 bg-cobalt transition-all duration-300 group-hover:w-full" />
-              </Link>
+              </a>
             </MagneticSurface>
           </div>
         </HPanel>
@@ -467,6 +491,7 @@ function FeaturedWork() {
        * together while only they are clickable.
        */}
       <CardStack
+        fit
         items={featuredProjects.map((p, i) => ({
           key: p.slug,
           content: (
@@ -522,7 +547,7 @@ function ProjectAside({ project: p, href }: { project: Project; href?: string })
   return (
     <div className={href ? "group" : undefined}>
       {href && (
-        <p className="display text-[18vw] leading-[0.8] text-transparent [-webkit-text-stroke:1px_var(--ink)] transition-colors duration-300 group-hover:text-cobalt group-hover:[-webkit-text-stroke:1px_var(--cobalt)] md:text-[7vw]">
+        <p className="display text-[18vw] leading-[0.8] text-transparent [-webkit-text-stroke:1px_var(--ink)] transition-colors duration-300 group-hover:text-cobalt group-hover:[-webkit-text-stroke:1px_var(--cobalt)] md:text-[7vw] [@media(min-width:768px)_and_(max-height:700px)]:text-[4.5vw]">
           [{p.index}]
         </p>
       )}
@@ -531,7 +556,7 @@ function ProjectAside({ project: p, href }: { project: Project; href?: string })
           entrance for the same kind of text. */}
       <CurtainText
         as="h3"
-        className="display mt-4 text-3xl md:text-5xl"
+        className="display mt-4 text-3xl md:text-5xl [@media(min-width:768px)_and_(max-height:700px)]:mt-2 [@media(min-width:768px)_and_(max-height:700px)]:text-4xl"
         delay={0.15}
         lines={[
           <Fragment key={p.slug}>
@@ -544,7 +569,9 @@ function ProjectAside({ project: p, href }: { project: Project; href?: string })
           [IN DEVELOPMENT]
         </span>
       )}
-      <p className="mt-4 max-w-lg text-sm leading-7 text-ink-muted">{p.summary}</p>
+      <p className="mt-4 max-w-lg text-sm leading-7 text-ink-muted [@media(max-height:700px)]:mt-3 [@media(max-height:700px)]:leading-6">
+        {p.summary}
+      </p>
 
       <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2">
         {p.indexMetrics.map((m) => (
@@ -585,7 +612,7 @@ function ProjectAside({ project: p, href }: { project: Project; href?: string })
       </div>
 
       <MagneticSurface
-        className="mt-8 w-fit [@media(max-height:760px)]:mt-5"
+        className="mt-8 w-fit [@media(max-height:760px)]:mt-5 [@media(max-height:700px)]:mt-3"
         strength={0.3}
         radius={70}
         lift={0}
@@ -676,37 +703,42 @@ function Contact() {
             accent={["real."]}
             scatter={1.4}
           />
-          <dl className="mt-10 space-y-5">
+          {/* Grouped by who is writing: a client with a project, or a hiring
+              manager. Each group leads with the thing that reader needs. */}
+          <dl className="mt-10 space-y-8">
             <div>
-              <dt className="label">[EMAIL]</dt>
-              <dd>
-                <a href="mailto:faizanamir0053@gmail.com" className="text-cobalt hover:underline">
+              <dt className="label">[PROJECTS]</dt>
+              <dd className="mt-2 space-y-2">
+                <p className="text-sm leading-6 text-ink-muted">
+                  Send a short brief with the form, or message directly:
+                </p>
+                <a href="mailto:faizanamir0053@gmail.com" className="block text-cobalt hover:underline">
                   faizanamir0053@gmail.com
                 </a>
-              </dd>
-            </div>
-            <div>
-              <dt className="label">[WHATSAPP]</dt>
-              <dd>
                 <a
                   href="https://wa.me/923030649009"
                   target="_blank"
                   rel="noopener"
-                  className="text-cobalt hover:underline"
+                  className="block text-cobalt hover:underline"
                 >
-                  0303 0649009
+                  WhatsApp +92 303 0649009
                 </a>
               </dd>
             </div>
             <div>
-              <dt className="label">[SOCIAL]</dt>
-              <dd className="flex gap-4 text-sm">
-                <a href={SOCIAL.linkedin} target="_blank" rel="noopener" className="hover:text-cobalt">
-                  LinkedIn ↗
+              <dt className="label">[HIRING]</dt>
+              <dd className="mt-2 space-y-2">
+                <a href="/resume.pdf" className="block text-cobalt hover:underline">
+                  Download resume (PDF) ↓
                 </a>
-                <a href={SOCIAL.github} target="_blank" rel="noopener" className="hover:text-cobalt">
-                  GitHub ↗
-                </a>
+                <span className="flex gap-4 text-sm">
+                  <a href={SOCIAL.linkedin} target="_blank" rel="noopener" className="hover:text-cobalt">
+                    LinkedIn ↗
+                  </a>
+                  <a href={SOCIAL.github} target="_blank" rel="noopener" className="hover:text-cobalt">
+                    GitHub ↗
+                  </a>
+                </span>
               </dd>
             </div>
           </dl>

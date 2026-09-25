@@ -42,7 +42,7 @@ function AccordionTrigger({
       <AccordionPrimitive.Trigger
         data-slot="accordion-trigger"
         className={cn(
-          "group/accordion-trigger relative flex flex-1 items-start justify-between rounded-lg border border-transparent py-2.5 text-left text-sm font-medium transition-all outline-none hover:underline focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:after:border-ring disabled:pointer-events-none disabled:opacity-50 **:data-[slot=accordion-trigger-icon]:ml-auto **:data-[slot=accordion-trigger-icon]:size-4 **:data-[slot=accordion-trigger-icon]:text-muted-foreground",
+          "group/accordion-trigger relative flex flex-1 items-start justify-between rounded-lg border border-transparent py-2.5 text-left text-sm font-medium transition-colors outline-none hover:underline focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:after:border-ring disabled:pointer-events-none disabled:opacity-50 **:data-[slot=accordion-trigger-icon]:ml-auto **:data-[slot=accordion-trigger-icon]:size-4 **:data-[slot=accordion-trigger-icon]:text-muted-foreground",
           className
         )}
         {...props}
@@ -65,6 +65,10 @@ function AccordionTrigger({
  * The inner wrapper has no fixed height. Pinning it to the measured
  * `--radix-accordion-content-height` froze an open panel at the size it had
  * when opened, so narrowing the viewport afterwards clipped the answer.
+ *
+ * Opening fades the panel in with a 4px drop instead of animating height:
+ * forceMount means Radix never measures the panel, so a height keyframe ran
+ * 0 → auto and snapped. Reduced motion keeps the fade and drops the movement.
  */
 function AccordionContent({
   className,
@@ -75,7 +79,7 @@ function AccordionContent({
     <AccordionPrimitive.Content
       data-slot="accordion-content"
       forceMount
-      className="overflow-hidden text-sm data-open:animate-accordion-down data-closed:hidden motion-reduce:animate-none"
+      className="overflow-hidden text-sm data-closed:hidden data-open:animate-in data-open:fade-in-0 motion-safe:data-open:slide-in-from-top-1 ease-[cubic-bezier(0.23,1,0.32,1)]"
       {...props}
     >
       <div

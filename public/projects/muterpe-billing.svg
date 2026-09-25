@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" width="1600" height="1000" role="img" aria-label="Muterpe billing: each generation request is metered as one unit and billed per generation rather than per seat; the job runs through an async queue on Fal.ai against the user&#x27;s own model, results stream back as they land, and retries, partial failures and cancellations follow explicit metering rules">
+  <style>
+    .t  { font-family: "Barlow Condensed", "Arial Narrow", sans-serif; fill: #ffffff; }
+    .lbl{ font-family: "Barlow Condensed", "Arial Narrow", sans-serif; fill: #9f9fa7; font-size: 20px; letter-spacing: 2.4px; text-transform: uppercase; }
+    .box{ fill: #16161a; stroke: #ffffff; stroke-opacity: 0.28; }
+    .acc{ fill: #16161a; stroke: #c8ff3d; stroke-opacity: 0.85; }
+    .dim{ fill: #16161a; stroke: #9f9fa7; stroke-opacity: 0.5; stroke-dasharray: 7 7; }
+    .h  { font-size: 30px; font-weight: 600; }
+    .s  { font-size: 20px; fill: #9f9fa7; }
+    .fl { stroke: #ffffff; stroke-opacity: 0.35; fill: none; }
+    .fa { stroke: #c8ff3d; stroke-opacity: 0.9; fill: none; }
+    .cap{ font-family: "Barlow Condensed", "Arial Narrow", sans-serif; font-size: 17px; fill: #9f9fa7; letter-spacing: 1.4px; }
+  </style>
+
+  <rect width="1600" height="1000" fill="#0b0b0d"/>
+  <g stroke="#e6e6e6" stroke-opacity="0.05" stroke-width="1">
+    <line x1="200" y1="0" x2="200" y2="1000"/><line x1="400" y1="0" x2="400" y2="1000"/>
+    <line x1="600" y1="0" x2="600" y2="1000"/><line x1="800" y1="0" x2="800" y2="1000"/>
+    <line x1="1000" y1="0" x2="1000" y2="1000"/><line x1="1200" y1="0" x2="1200" y2="1000"/>
+    <line x1="1400" y1="0" x2="1400" y2="1000"/>
+    <line x1="0" y1="200" x2="1600" y2="200"/><line x1="0" y1="400" x2="1600" y2="400"/>
+    <line x1="0" y1="600" x2="1600" y2="600"/><line x1="0" y1="800" x2="1600" y2="800"/>
+  </g>
+  <text class="lbl" x="80" y="86">MUTERPE — BILLED BY THE GENERATION</text>
+  <line x1="80" y1="110" x2="1520" y2="110" stroke="#ffffff" stroke-opacity="0.25"/>
+  <rect class="box" x="80" y="380" width="240" height="130"/>
+  <text class="t h" x="108" y="430">User</text>
+  <text class="t s" x="108" y="468">pays per generation</text>
+  <text class="t s" x="108" y="496">no seat licence</text>
+  <rect class="box" x="400" y="380" width="240" height="130"/>
+  <text class="t h" x="428" y="430">Request</text>
+  <text class="t s" x="428" y="468">prompt against</text>
+  <text class="t s" x="428" y="496">their own model</text>
+  <rect class="acc" x="730" y="170" width="300" height="170"/>
+  <text class="t h" x="758" y="220" fill="#c8ff3d">Usage meter</text>
+  <text class="t s" x="758" y="258">one generation,</text>
+  <text class="t s" x="758" y="286">one unit</text>
+  <rect class="acc" x="1120" y="170" width="300" height="170"/>
+  <text class="t h" x="1148" y="220" fill="#c8ff3d">Billing</text>
+  <text class="t s" x="1148" y="258">charged per</text>
+  <text class="t s" x="1148" y="286">generation</text>
+  <rect class="box" x="730" y="420" width="300" height="150"/>
+  <text class="t h" x="758" y="470">Job queue</text>
+  <text class="t s" x="758" y="508">async · never</text>
+  <text class="t s" x="758" y="536">blocks the UI</text>
+  <rect class="dim" x="1120" y="420" width="300" height="150"/>
+  <text class="t h" x="1148" y="470">Fal.ai</text>
+  <text class="t s" x="1148" y="508">the user&#x27;s model</text>
+  <text class="cap" x="1148" y="548">NOT MINE</text>
+  <rect class="box" x="1120" y="670" width="300" height="150"/>
+  <text class="t h" x="1148" y="720">Results stream</text>
+  <text class="t s" x="1148" y="758">each image as</text>
+  <text class="t s" x="1148" y="786">it lands</text>
+  <rect class="dim" x="400" y="640" width="280" height="190"/>
+  <text class="t h" x="428" y="690">Edge cases</text>
+  <text class="t s" x="428" y="728">retries</text>
+  <text class="t s" x="428" y="756">partial failures</text>
+  <text class="t s" x="428" y="784">cancellations</text>
+  <text class="cap" x="428" y="808">EXPLICIT METERING RULES</text>
+  <path class="fl" d="M320 445 L400 445"/>
+  <polygon points="400,445 386,439 386,451" fill="#ffffff" fill-opacity="0.35"/>
+  <path class="fa" d="M640 410 L670 410 L670 255 L730 255"/>
+  <polygon points="730,255 716,249 716,261" fill="#c8ff3d" fill-opacity="0.9"/>
+  <path class="fl" d="M640 480 L730 480"/>
+  <polygon points="730,480 716,474 716,486" fill="#ffffff" fill-opacity="0.35"/>
+  <path class="fa" d="M1030 255 L1120 255"/>
+  <polygon points="1120,255 1106,249 1106,261" fill="#c8ff3d" fill-opacity="0.9"/>
+  <path class="fl" d="M1030 495 L1120 495"/>
+  <polygon points="1120,495 1106,489 1106,501" fill="#ffffff" fill-opacity="0.35"/>
+  <path class="fl" d="M1270 570 L1270 670"/>
+  <polygon points="1270,670 1264,656 1276,656" fill="#ffffff" fill-opacity="0.35"/>
+  <path class="fl" d="M1270 820 L1270 880 L200 880 L200 510" stroke-dasharray="7 7"/>
+  <polygon points="200,510 194,524 206,524" fill="#ffffff" fill-opacity="0.35"/>
+  <text class="cap" x="560" y="868">STREAMED BACK</text>
+  <path class="fl" d="M680 700 L700 700 L700 300 L730 300" stroke-dasharray="7 7"/>
+  <polygon points="730,300 716,294 716,306" fill="#ffffff" fill-opacity="0.35"/>
+  <line x1="80" y1="920" x2="1520" y2="920" stroke="#ffffff" stroke-opacity="0.25"/>
+  <text class="lbl" x="80" y="958">ONE GENERATION, ONE UNIT · ASYNC QUEUE · STREAMED RESULTS · MODELS RUN ON FAL.AI</text>
+</svg>

@@ -85,7 +85,7 @@ export default async function OpengraphImage() {
           }}
         >
           <div style={{ display: "flex" }}>React · Next.js · Node.js · Python · RAG · Agentic AI</div>
-          <div style={{ display: "flex", color: COBALT }}>4+ yrs · 8+ shipped</div>
+          <div style={{ display: "flex", color: COBALT }}>4+ yrs · 8+ projects led</div>
         </div>
       </div>
     ),

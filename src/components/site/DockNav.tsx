@@ -15,7 +15,7 @@ const iconClass = "h-full w-full";
 const num = (n: string) => <span className="display leading-none">{n}</span>;
 
 /** Section anchors the dock can highlight, in document order. */
-const SECTION_IDS = ["about", "skills", "experience", "reach", "work", "contact"];
+const SECTION_IDS = ["work", "experience", "about", "skills", "reach", "contact"];
 
 /*
  * Pure wayfinding now — Resume, GitHub, and LinkedIn dropped. All three are
@@ -24,18 +24,17 @@ const SECTION_IDS = ["about", "skills", "experience", "reach", "work", "contact"
  * is most of why it read as heavy.
  *
  * Order matches the page's own reading order — [01] hero through [06]
- * contact, Work slotted in where it actually sits in the DOM (between Reach
- * and Contact) rather than tacked on at the end. Featured work carries no
- * numeral on the page, so it gets the briefcase glyph instead of a number the
- * page never uses.
+ * contact, with Work right after the hero, where the case studies now sit.
+ * Featured work carries no numeral on the page, so it gets the briefcase
+ * glyph instead of a number the page never uses.
  */
 const links: DockItem[] = [
   { title: "Index", icon: num("01") },
-  { title: "About", icon: num("02") },
-  { title: "Stack", icon: num("03") },
-  { title: "Experience", icon: num("04") },
-  { title: "Reach", icon: num("05") },
   { title: "Work", icon: <Briefcase className={iconClass} strokeWidth={1.75} /> },
+  { title: "Experience", icon: num("02") },
+  { title: "About", icon: num("03") },
+  { title: "Stack", icon: num("04") },
+  { title: "Reach", icon: num("05") },
   { title: "Contact", icon: num("06") },
 ].map((item, i) => ({
   ...item,

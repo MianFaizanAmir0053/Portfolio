@@ -6,6 +6,7 @@ import { projects, getProject, projectNeighbours } from "@/data/projects";
 import { UtilityBar } from "@/components/site/UtilityBar";
 import { Footer } from "@/components/site/Footer";
 import { CurtainText, CutFrame, FadeIn, Scramble, Tag } from "@/components/site/primitives";
+import { CardStack, LineDraw } from "@/components/site/scroll-fx";
 import {
   Accordion,
   AccordionContent,
@@ -89,6 +90,7 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
 
   const { prev, next, position } = projectNeighbours(project.slug);
   const path = `/work/${project.slug}`;
+  const coverIsDiagram = project.diagram?.src === project.image;
 
   /*
    * The running order, declared once.
@@ -255,22 +257,40 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
           </dl>
         </section>
 
-        {/* 4. hero image */}
+        {/* 4. hero image — for a project with no screenshot yet the cover is
+            its architecture diagram, captioned here and not repeated below */}
         <section className="wrap py-12 md:py-16">
-          <CutFrame src={project.image} alt={project.alt} cut="cut-bl" ratio="aspect-[16/9]" eager sizes="(min-width: 1024px) 1100px, 100vw" />
+          <figure>
+            <CutFrame src={project.image} alt={project.alt} cut="cut-bl" ratio="aspect-[16/9]" eager sizes="(min-width: 1024px) 1100px, 100vw" />
+            {coverIsDiagram && <figcaption className="label mt-3">{project.diagram?.caption}</figcaption>}
+          </figure>
         </section>
 
         {/* 4b. context — who was on it, at what scale, owning what */}
         {project.context && (
           <section className="wrap pb-4" aria-label="Engagement context">
-            <dl className="grid gap-x-10 gap-y-5 sm:grid-cols-2">
-              {project.context.map((c) => (
-                <div key={c.k}>
-                  <dt className="label mb-1 text-cobalt">{c.k}</dt>
-                  <dd className="text-sm leading-6 text-ink-muted">{c.v}</dd>
-                </div>
+            {/*
+             * Two independent columns rather than one row-flow grid: with an
+             * odd count the row grid leaves an empty cell bottom-right. The
+             * right column centres vertically against the taller left one.
+             */}
+            <div className="grid gap-x-10 gap-y-5 sm:grid-cols-2">
+              {[0, 1].map((col) => (
+                <dl
+                  key={col}
+                  className="flex flex-col gap-y-5 sm:justify-center"
+                >
+                  {project.context!
+                    .filter((_, i) => i % 2 === col)
+                    .map((c) => (
+                      <div key={c.k}>
+                        <dt className="label mb-1 text-cobalt">{c.k}</dt>
+                        <dd className="text-sm leading-6 text-ink-muted">{c.v}</dd>
+                      </div>
+                    ))}
+                </dl>
               ))}
-            </dl>
+            </div>
           </section>
         )}
 
@@ -315,7 +335,7 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
               </li>
             ))}
           </ol>
-          {project.diagram && (
+          {project.diagram && !coverIsDiagram && (
             <figure className="mt-12">
               <CutFrame src={project.diagram.src} alt={project.diagram.alt} cut="cut-tr" />
               <figcaption className="label mt-3">{project.diagram.caption}</figcaption>
@@ -366,41 +386,57 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
         )}
 
         {/* 7. build */}
-        <section className="wrap py-16 md:py-24" aria-labelledby="build-heading">
-          <Tag className="mb-4 block">[{n("build")}] THE BUILD</Tag>
-          {/* The h3s below used to hang off the previous section's h2, which
-              left a hole in the outline exactly where the substance is. */}
-          <h2 id="build-heading" className="display mb-10 text-2xl md:text-4xl">
-            {project.headlines?.build ?? `What ${project.name} is made of`}
-          </h2>
-          <div className="space-y-16">
-            {project.build.map((b, i) => {
-              /*
-               * A block with nothing to show reads across the full measure
-               * rather than leaving half the row empty. It keeps the rule above
-               * it, so it still reads as one of the set.
-               */
-              if (!b.image) {
-                return (
-                  <FadeIn key={b.title} className="rule-t pt-8">
-                    <h3 className="display text-2xl md:text-3xl">{b.title}</h3>
-                    <p className="mt-4 max-w-3xl text-sm leading-7 text-ink-muted">{b.body}</p>
-                  </FadeIn>
-                );
-              }
-              return (
-                <div key={b.title} className="grid items-center gap-8 md:grid-cols-2">
-                  <div className={i % 2 === 1 ? "md:order-2" : ""}>
-                    <CutFrame src={b.image} alt={b.alt ?? ""} cut={i % 2 === 0 ? "cut-tr" : "cut-bl"} />
-                  </div>
-                  <FadeIn className={i % 2 === 1 ? "md:order-1" : ""}>
-                    <h3 className="display text-2xl md:text-3xl">{b.title}</h3>
-                    <p className="mt-4 text-sm leading-7 text-ink-muted">{b.body}</p>
-                  </FadeIn>
-                </div>
-              );
-            })}
+        <section className="py-16 md:py-24" aria-labelledby="build-heading">
+          <div className="wrap">
+            <Tag className="mb-4 block">[{n("build")}] THE BUILD</Tag>
+            {/* The h3s below used to hang off the previous section's h2, which
+                left a hole in the outline exactly where the substance is. */}
+            <h2 id="build-heading" className="display mb-10 text-2xl md:text-4xl">
+              {project.headlines?.build ?? `What ${project.name} is made of`}
+            </h2>
           </div>
+          {/*
+           * The same deck as the homepage's featured work: each block holds the
+           * screen while the next climbs over it. Desktop with motion only —
+           * elsewhere CardStack leaves a plain column of rows.
+           */}
+          <CardStack
+            bars={2}
+            fit
+            items={project.build.map((b, i) => ({
+              key: b.title,
+              content: (
+                <div>
+                  <LineDraw delay={0.05} />
+                  {/*
+                   * A block with nothing to show reads across the full measure
+                   * rather than leaving half the row empty.
+                   */}
+                  {b.image ? (
+                    <div className="wrap grid items-center gap-8 py-12 md:grid-cols-2 md:gap-14">
+                      <div className={i % 2 === 1 ? "md:order-2" : ""}>
+                        <CutFrame
+                          src={b.image}
+                          alt={b.alt ?? ""}
+                          cut={i % 2 === 0 ? "cut-tr" : "cut-bl"}
+                          parallax={false}
+                        />
+                      </div>
+                      <FadeIn className={i % 2 === 1 ? "md:order-1" : ""}>
+                        <h3 className="display text-2xl md:text-3xl">{b.title}</h3>
+                        <p className="mt-4 text-sm leading-7 text-ink-muted">{b.body}</p>
+                      </FadeIn>
+                    </div>
+                  ) : (
+                    <FadeIn className="wrap py-12">
+                      <h3 className="display text-2xl md:text-3xl">{b.title}</h3>
+                      <p className="mt-4 max-w-3xl text-sm leading-7 text-ink-muted">{b.body}</p>
+                    </FadeIn>
+                  )}
+                </div>
+              ),
+            }))}
+          />
         </section>
 
         {/*
@@ -491,6 +527,30 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
           </p>
         </section>
 
+        {/* 9b. the ask — the reader who got this far is the one most likely
+            to act, so both doors are here before the next case study. */}
+        <section className="rule-t bg-paper-deep">
+          <div className="wrap flex flex-wrap items-center justify-between gap-6 py-14">
+            <p className="display text-2xl md:text-4xl">
+              Need something like this <span className="accent-word">built</span>?
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href="/contact"
+                className="bg-cobalt px-6 py-3 text-sm font-medium text-paper transition-colors hover:bg-cobalt-deep"
+              >
+                Start a project →
+              </Link>
+              <a
+                href="/resume.pdf"
+                className="border border-ink px-6 py-3 text-sm font-medium text-ink transition-colors hover:bg-ink hover:text-paper"
+              >
+                Download resume (PDF) ↓
+              </a>
+            </div>
+          </div>
+        </section>
+
         {/* 10. next project */}
         {next && (
           <Link href={`/work/${next.slug}`} className="on-ink group block bg-ink py-20 md:py-28">
@@ -521,7 +581,12 @@ function Block({
 }) {
   return (
     <section className="wrap grid gap-8 rule-t py-16 md:grid-cols-[0.8fr_1.2fr] md:py-24">
-      <div>
+      {/*
+       * The headline pins below the utility and breadcrumb bars (2 × h-11)
+       * while the longer right column scrolls past it. `self-start` stops
+       * the grid stretching this cell, which would leave it nowhere to stick.
+       */}
+      <div className="md:sticky md:top-28 md:self-start">
         <Tag className="mb-4 block">{label}</Tag>
         <CurtainText
           className="display text-2xl md:text-4xl"

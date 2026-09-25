@@ -26,7 +26,8 @@ export const PERSON = {
   email: "faizanamir0053@gmail.com",
   /** E.164 — schema.org and tel: links both want the international form. */
   telephone: "+923030649009",
-  telephoneDisplay: "0303 0649009",
+  /** International form: most readers dial from outside Pakistan. */
+  telephoneDisplay: "+92 303 0649009",
   whatsapp: "https://wa.me/923030649009",
   locality: "Lahore",
   region: "Punjab",

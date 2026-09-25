@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" width="1600" height="1000" role="img" aria-label="Alfa client and services: four route groups share one set of Zod schemas and one RTK Query API across seven domains, which calls 10+ GraphQL APIs in front of six FastAPI capabilities; identity documents go through Next.js route handlers to a private bucket so no credential reaches the browser">
+  <style>
+    .t  { font-family: "Barlow Condensed", "Arial Narrow", sans-serif; fill: #ffffff; }
+    .lbl{ font-family: "Barlow Condensed", "Arial Narrow", sans-serif; fill: #9f9fa7; font-size: 20px; letter-spacing: 2.4px; text-transform: uppercase; }
+    .box{ fill: #16161a; stroke: #ffffff; stroke-opacity: 0.28; }
+    .acc{ fill: #16161a; stroke: #c8ff3d; stroke-opacity: 0.85; }
+    .dim{ fill: #16161a; stroke: #9f9fa7; stroke-opacity: 0.5; stroke-dasharray: 7 7; }
+    .h  { font-size: 30px; font-weight: 600; }
+    .s  { font-size: 20px; fill: #9f9fa7; }
+    .fl { stroke: #ffffff; stroke-opacity: 0.35; fill: none; }
+    .fa { stroke: #c8ff3d; stroke-opacity: 0.9; fill: none; }
+    .cap{ font-family: "Barlow Condensed", "Arial Narrow", sans-serif; font-size: 17px; fill: #9f9fa7; letter-spacing: 1.4px; }
+  </style>
+
+  <rect width="1600" height="1000" fill="#0b0b0d"/>
+  <g stroke="#e6e6e6" stroke-opacity="0.05" stroke-width="1">
+    <line x1="200" y1="0" x2="200" y2="1000"/><line x1="400" y1="0" x2="400" y2="1000"/>
+    <line x1="600" y1="0" x2="600" y2="1000"/><line x1="800" y1="0" x2="800" y2="1000"/>
+    <line x1="1000" y1="0" x2="1000" y2="1000"/><line x1="1200" y1="0" x2="1200" y2="1000"/>
+    <line x1="1400" y1="0" x2="1400" y2="1000"/>
+    <line x1="0" y1="200" x2="1600" y2="200"/><line x1="0" y1="400" x2="1600" y2="400"/>
+    <line x1="0" y1="600" x2="1600" y2="600"/><line x1="0" y1="800" x2="1600" y2="800"/>
+  </g>
+  <text class="lbl" x="80" y="86">ALFA — ONE CLIENT API, SEVEN DOMAINS, SIX SERVICES</text>
+  <line x1="80" y1="110" x2="1520" y2="110" stroke="#ffffff" stroke-opacity="0.25"/>
+  <rect class="box" x="80" y="170" width="250" height="440"/>
+  <text class="t h" x="108" y="220">Route groups</text>
+  <text class="t s" x="108" y="258">auth</text>
+  <text class="t s" x="108" y="286">onboarding</text>
+  <text class="t s" x="108" y="314">dashboard</text>
+  <text class="t s" x="108" y="342">admin</text>
+  <line x1="108" y1="356" x2="302" y2="356" stroke="#ffffff" stroke-opacity="0.18"/>
+  <text class="t s" x="108" y="388">one set of</text>
+  <text class="t s" x="108" y="416">Zod schemas</text>
+  <rect class="acc" x="420" y="170" width="320" height="440"/>
+  <text class="t h" x="448" y="220" fill="#c8ff3d">RTK Query API</text>
+  <text class="t s" x="448" y="258">one base API</text>
+  <line x1="448" y1="272" x2="712" y2="272" stroke="#ffffff" stroke-opacity="0.18"/>
+  <text class="t s" x="448" y="304">auth · business</text>
+  <text class="t s" x="448" y="332">cards · transactions</text>
+  <text class="t s" x="448" y="360">schedules · wallet</text>
+  <text class="t s" x="448" y="388">admin</text>
+  <line x1="448" y1="402" x2="712" y2="402" stroke="#ffffff" stroke-opacity="0.18"/>
+  <text class="t s" x="448" y="434">shared cache</text>
+  <text class="t s" x="448" y="462">and invalidation</text>
+  <rect class="box" x="830" y="250" width="260" height="280"/>
+  <text class="t h" x="858" y="300">GraphQL</text>
+  <text class="t s" x="858" y="338">10+ APIs</text>
+  <text class="t s" x="858" y="366">one contract</text>
+  <text class="t s" x="858" y="394">for the client</text>
+  <rect class="acc" x="1180" y="170" width="340" height="440"/>
+  <text class="t h" x="1208" y="220" fill="#c8ff3d">FastAPI services</text>
+  <text class="t s" x="1208" y="258">six capabilities</text>
+  <text class="t s" x="1208" y="286">one service each</text>
+  <line x1="1208" y1="300" x2="1492" y2="300" stroke="#ffffff" stroke-opacity="0.18"/>
+  <text class="t s" x="1208" y="332">transfers</text>
+  <text class="t s" x="1208" y="360">bill splitting · top-ups</text>
+  <text class="t s" x="1208" y="388">currency conversion</text>
+  <text class="t s" x="1208" y="416">recurring payments</text>
+  <line x1="1208" y1="430" x2="1492" y2="430" stroke="#ffffff" stroke-opacity="0.18"/>
+  <text class="t s" x="1208" y="462">row-level rules</text>
+  <rect class="box" x="420" y="690" width="320" height="150"/>
+  <text class="t h" x="448" y="740">Route handlers</text>
+  <text class="t s" x="448" y="778">identity documents</text>
+  <text class="t s" x="448" y="806">via the AWS SDK</text>
+  <rect class="dim" x="830" y="690" width="260" height="150"/>
+  <text class="t h" x="858" y="740">Private bucket</text>
+  <text class="t s" x="858" y="778">no browser-held</text>
+  <text class="t s" x="858" y="806">credential</text>
+  <path class="fa" d="M330 390 L420 390"/>
+  <polygon points="420,390 406,384 406,396" fill="#c8ff3d" fill-opacity="0.9"/>
+  <path class="fa" d="M740 390 L830 390"/>
+  <polygon points="830,390 816,384 816,396" fill="#c8ff3d" fill-opacity="0.9"/>
+  <path class="fa" d="M1090 390 L1180 390"/>
+  <polygon points="1180,390 1166,384 1166,396" fill="#c8ff3d" fill-opacity="0.9"/>
+  <path class="fl" d="M205 610 L205 765 L420 765"/>
+  <polygon points="420,765 406,759 406,771" fill="#ffffff" fill-opacity="0.35"/>
+  <text class="cap" x="220" y="748">ONBOARDING UPLOADS</text>
+  <path class="fl" d="M740 765 L830 765"/>
+  <polygon points="830,765 816,759 816,771" fill="#ffffff" fill-opacity="0.35"/>
+  <line x1="80" y1="920" x2="1520" y2="920" stroke="#ffffff" stroke-opacity="0.25"/>
+  <text class="lbl" x="80" y="958">ROUTE GROUPS · ONE CLIENT API · GRAPHQL · ONE SERVICE PER CAPABILITY</text>
+</svg>

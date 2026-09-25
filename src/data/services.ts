@@ -49,7 +49,7 @@ export const services: Service[] = [
     headline: ["AI that survives", "contact with production"],
     accent: "production",
     answer:
-      "Faizan Amir builds production RAG pipelines, agent workflows and LLM features with evaluation, observability and human approval where risk demands it. Five or more systems have reached production, including legal-document extraction measured at 95% accuracy on its evaluated set.",
+      "Faizan Amir builds production RAG pipelines, agent workflows and LLM features with evaluation, observability and human approval where risk demands it. Five or more RAG and agentic systems have reached production, including legal-document extraction measured at 95% accuracy on its evaluated set.",
     includes: [
       {
         title: "Retrieval that preserves structure",
@@ -61,7 +61,7 @@ export const services: Service[] = [
       },
       {
         title: "Evaluation before tuning",
-        body: "A scored regression set makes pipeline changes measurable. Mailagent reached 92.9% exact-match extraction on 14 labelled fixtures and 100% retrieval hit@5 across 29 queries.",
+        body: "A scored regression set makes pipeline changes measurable. On mailagent, still in build, the harness reached 92.9% exact-match extraction on 14 hand-labelled fixtures and 100% retrieval hit@5 across 29 queries.",
       },
       {
         title: "Human-in-the-loop gates",
@@ -105,7 +105,7 @@ export const services: Service[] = [
         slug: "muterpe",
         project: "Muterpe",
         claim:
-          "Per-user model training and queued generation on Fal.ai, billed by usage and running at 99% uptime over twelve months.",
+          "Per-user model training and queued generation on Fal.ai, billed by usage and running at 99% uptime over a rolling twelve months.",
       },
     ],
     stack: [
@@ -129,7 +129,7 @@ export const services: Service[] = [
       },
       {
         q: "Can you add AI to an existing product rather than starting fresh?",
-        a: "Yes. Most engagements add a focused pipeline and API surface to an existing backend rather than rewriting the product. Golegal, Muterpe and medical platforms at Ward Web Solutions followed this approach.",
+        a: "Yes. Most engagements add a focused pipeline and API surface to an existing backend rather than rewriting the product. Golegal and medical platforms at Ward Web Solutions followed this approach.",
       },
       {
         q: "How long does a first production RAG pipeline take?",
@@ -198,13 +198,13 @@ export const services: Service[] = [
         slug: "alfa",
         project: "Alfa",
         claim:
-          "Multi-role fintech platform with 6+ FastAPI services behind 10+ GraphQL APIs, protected by an edge token gate and a single client-side identity guard.",
+          "Multi-role fintech platform with 6+ FastAPI services behind 10+ GraphQL APIs, with authorisation enforced at both route and row level.",
       },
       {
         slug: "carder",
         project: "Carder",
         claim:
-          "AI mini-site builder for 150+ users, with 40% adoption growth after relaunch and three Stripe-backed metered tiers.",
+          "AI mini-site builder for 150+ users, with 40% adoption growth from its first tracked month to February 2026 and three Stripe-backed metered tiers.",
       },
     ],
     stack: [
@@ -244,7 +244,7 @@ export const services: Service[] = [
     headline: ["Backends built to be", "operated, not just shipped"],
     accent: "operated",
     answer:
-      "Faizan Amir builds operable Node.js, Express, PostgreSQL and MongoDB backends. Across 30+ REST and GraphQL APIs, the work includes a live telehealth platform that reduced approval turnaround by 45% and despatch time by 85%, with payments reconciled against Stripe.",
+      "Faizan Amir builds operable Node.js, Express, PostgreSQL and MongoDB backends and has built 30+ REST and GraphQL APIs across client products, including a live telehealth platform that reduced approval turnaround by 45% and despatch time by 85%, with payments reconciled against Stripe.",
     includes: [
       {
         title: "Explicit lifecycles",
@@ -300,7 +300,7 @@ export const services: Service[] = [
         slug: "wisdomup",
         project: "WisdomUp",
         claim:
-          "Eight payment guard layers, from signature verification to monotonic order state, covered by 14 settlement tests.",
+          "Eight payment guard layers, from signature verification to monotonic order state, plus 14 tests on settlement confirmation.",
       },
       {
         slug: "carder",
@@ -328,7 +328,7 @@ export const services: Service[] = [
       },
       {
         q: "How do you handle Stripe webhooks arriving twice or out of order?",
-        a: "Verify signatures, ownership and amounts; deduplicate transactions; and reject events that would move an order backward. Immediate confirmation plus webhook reconciliation prevents a closed browser from losing a paid order.",
+        a: "Verify signatures, ownership and amounts; deduplicate transactions; and reject events that would move an order backwards. Immediate confirmation plus webhook reconciliation prevents a closed browser from losing a paid order.",
       },
       {
         q: "Can you work with an existing database you did not design?",
@@ -397,7 +397,7 @@ export const services: Service[] = [
         slug: "muterpe",
         project: "Muterpe",
         claim:
-          "AI training and image-generation SaaS with 200+ users, $5,000+ usage-based revenue, 99% uptime and ~40% faster perceived generation.",
+          "AI training and image-generation SaaS with 200+ users, $5,000+ usage-based revenue, 99% uptime, and generation that feels ~40% faster than at first release with the model unchanged.",
       },
       {
         slug: "volumize",

@@ -110,13 +110,17 @@ ${faqs}`;
       const measured = project.metricsNote
         ? `\n\n**How these were measured**: ${project.metricsNote}`
         : "";
+      // Team, ownership and what was not his: the limits every claim sits inside.
+      const context = project.context?.length
+        ? `\n${project.context.map((c) => `${c.k.charAt(0)}${c.k.slice(1).toLowerCase()}: ${c.v}`).join("\n")}`
+        : "";
       return `### ${project.name} — ${project.tagline}
 
 URL: ${absoluteUrl(`/work/${project.slug}`)}
 Role: ${project.role}
 Timeline: ${project.timeline}
 Status: ${project.status}${project.liveUrl ? `\nLive: ${project.liveUrl}` : ""}
-Stack: ${project.stack.join(", ")}
+Stack: ${project.stack.join(", ")}${context}
 
 **Summary**: ${project.summary}
 
@@ -170,7 +174,7 @@ ${comingSoon.broke.map((b) => `- **${b.title}**: ${b.body}`).join("\n")}`);
 
   parts.push(`## Usage
 
-Content may be quoted and cited with attribution to ${PERSON.name} and a link to ${SITE_URL}. Figures are the author's own measurements from the projects described; where a number is a target rather than a reading, the case study says so.`);
+Content may be quoted and cited with attribution to ${PERSON.name} and a link to ${SITE_URL}. Figures come from platform records, user reports or build counts, as each case study's method note states; where a number is a target rather than a reading, the case study says so.`);
 
   return parts.join("\n\n");
 }

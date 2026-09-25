@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" width="1600" height="1000" role="img" aria-label="Carder builder: the owner edits pages in the user dashboard, the admin manages every account in the admin dashboard, both write to the Laravel core, which publishes the customer-facing site visitors see">
+  <style>
+    .t  { font-family: "Barlow Condensed", "Arial Narrow", sans-serif; fill: #ffffff; }
+    .lbl{ font-family: "Barlow Condensed", "Arial Narrow", sans-serif; fill: #9f9fa7; font-size: 20px; letter-spacing: 2.4px; text-transform: uppercase; }
+    .box{ fill: #16161a; stroke: #ffffff; stroke-opacity: 0.28; }
+    .acc{ fill: #16161a; stroke: #c8ff3d; stroke-opacity: 0.85; }
+    .h  { font-size: 30px; font-weight: 600; }
+    .s  { font-size: 20px; fill: #9f9fa7; }
+    .fl { stroke: #ffffff; stroke-opacity: 0.35; fill: none; }
+    .fa { stroke: #c8ff3d; stroke-opacity: 0.9; fill: none; }
+    .cap{ font-family: "Barlow Condensed", "Arial Narrow", sans-serif; font-size: 17px; fill: #9f9fa7; letter-spacing: 1.4px; }
+  </style>
+
+  <rect width="1600" height="1000" fill="#0b0b0d"/>
+
+  <g stroke="#e6e6e6" stroke-opacity="0.05" stroke-width="1">
+    <line x1="200" y1="0" x2="200" y2="1000"/><line x1="400" y1="0" x2="400" y2="1000"/>
+    <line x1="600" y1="0" x2="600" y2="1000"/><line x1="800" y1="0" x2="800" y2="1000"/>
+    <line x1="1000" y1="0" x2="1000" y2="1000"/><line x1="1200" y1="0" x2="1200" y2="1000"/>
+    <line x1="1400" y1="0" x2="1400" y2="1000"/>
+    <line x1="0" y1="200" x2="1600" y2="200"/><line x1="0" y1="400" x2="1600" y2="400"/>
+    <line x1="0" y1="600" x2="1600" y2="600"/><line x1="0" y1="800" x2="1600" y2="800"/>
+  </g>
+
+  <text class="lbl" x="80" y="86">CARDER — THREE SURFACES, ONE BUILDER</text>
+  <line x1="80" y1="110" x2="1520" y2="110" stroke="#ffffff" stroke-opacity="0.25"/>
+
+  <!-- people -->
+  <rect class="box" x="80" y="200" width="230" height="110"/>
+  <text class="t h" x="104" y="248">Owner</text>
+  <text class="t s" x="104" y="282">builds the site</text>
+
+  <rect class="box" x="80" y="620" width="230" height="110"/>
+  <text class="t h" x="104" y="668">Admin</text>
+  <text class="t s" x="104" y="702">runs the platform</text>
+
+  <!-- user dashboard -->
+  <rect class="acc" x="440" y="160" width="400" height="230"/>
+  <text class="t h" x="468" y="210" fill="#c8ff3d">User dashboard</text>
+  <text class="t s" x="468" y="248">pages · sections · themes</text>
+  <text class="t s" x="468" y="276">forms · media · QR code</text>
+  <line x1="468" y1="302" x2="812" y2="302" stroke="#ffffff" stroke-opacity="0.18"/>
+  <text class="t s" x="468" y="336">edit by hand, then publish</text>
+
+  <!-- admin dashboard -->
+  <rect class="acc" x="440" y="580" width="400" height="190"/>
+  <text class="t h" x="468" y="630" fill="#c8ff3d">Admin dashboard</text>
+  <text class="t s" x="468" y="668">accounts · sites · companies</text>
+  <text class="t s" x="468" y="696">plans · subscriptions</text>
+  <text class="t s" x="468" y="740">no production SQL needed</text>
+
+  <!-- laravel core -->
+  <rect class="box" x="960" y="330" width="260" height="280"/>
+  <text class="t h" x="988" y="380">Laravel core</text>
+  <text class="t s" x="988" y="418">sites · pages</text>
+  <text class="t s" x="988" y="446">tenancy · plans</text>
+  <line x1="988" y1="472" x2="1192" y2="472" stroke="#ffffff" stroke-opacity="0.18"/>
+  <text class="t s" x="988" y="506">stores every page</text>
+  <text class="t s" x="988" y="534">renders on publish</text>
+
+  <!-- published site -->
+  <rect class="acc" x="1300" y="330" width="220" height="280"/>
+  <text class="t h" x="1324" y="380" fill="#c8ff3d">Published</text>
+  <text class="t h" x="1324" y="414" fill="#c8ff3d">site</text>
+  <text class="t s" x="1324" y="456">what visitors</text>
+  <text class="t s" x="1324" y="484">see and use</text>
+  <text class="t s" x="1324" y="528">carder.app/you</text>
+
+  <!-- visitor -->
+  <rect class="box" x="1300" y="720" width="220" height="110"/>
+  <text class="t h" x="1324" y="768">Visitor</text>
+  <text class="t s" x="1324" y="802">phone · QR · link</text>
+
+  <!-- flows -->
+  <path class="fl" d="M310 255 H 440"/>
+  <polygon points="440,255 426,249 426,261" fill="#ffffff" fill-opacity="0.35"/>
+
+  <path class="fl" d="M310 675 H 440"/>
+  <polygon points="440,675 426,669 426,681" fill="#ffffff" fill-opacity="0.35"/>
+
+  <path class="fa" d="M840 275 H 900 V 420 H 960"/>
+  <polygon points="960,420 946,414 946,426" fill="#c8ff3d" fill-opacity="0.9"/>
+  <text class="cap" x="850" y="258">SAVE · PUBLISH</text>
+
+  <path class="fa" d="M840 675 H 900 V 540 H 960"/>
+  <polygon points="960,540 946,534 946,546" fill="#c8ff3d" fill-opacity="0.9"/>
+  <text class="cap" x="850" y="700">MANAGE</text>
+
+  <path class="fa" d="M1220 470 H 1300"/>
+  <polygon points="1300,470 1286,464 1286,476" fill="#c8ff3d" fill-opacity="0.9"/>
+  <text class="cap" x="1226" y="452">RENDER</text>
+
+  <path class="fl" d="M1410 720 V 610" stroke-dasharray="7 7"/>
+  <polygon points="1410,610 1404,624 1416,624" fill="#ffffff" fill-opacity="0.35"/>
+
+  <line x1="80" y1="920" x2="1520" y2="920" stroke="#ffffff" stroke-opacity="0.25"/>
+  <text class="lbl" x="80" y="958">BUILT END TO END · USER DASHBOARD · ADMIN DASHBOARD · CUSTOMER SITE</text>
+</svg>

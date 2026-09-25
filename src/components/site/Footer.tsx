@@ -32,7 +32,7 @@ export function Footer() {
             </a>
             <br />
             <a href="tel:+923030649009" className="text-sm text-link hover:underline">
-              0303 0649009
+              +92 303 0649009
             </a>
           </address>
 
@@ -134,12 +134,12 @@ export function Footer() {
               </li>
               <li>
                 <a
-                  href="https://golegal.wanile.dev"
+                  href="https://go-legal.ai"
                   target="_blank"
                   rel="noopener"
                   className="hover:text-link"
                 >
-                  * golegal.wanile.dev
+                  * go-legal.ai
                 </a>
               </li>
             </ul>

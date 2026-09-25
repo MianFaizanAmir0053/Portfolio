@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" width="1600" height="1000" role="img" aria-label="WisdomUp catalogue: host and market decide the catalogue scope for a local or global storefront, the storefront hands checkout to the Express API which enforces scope again and validates promotions server-side, and merchandisers manage eleven CMS collections, navigation, settings and CSV imports in Payload over the same MongoDB">
+  <style>
+    .t  { font-family: "Barlow Condensed", "Arial Narrow", sans-serif; fill: #ffffff; }
+    .lbl{ font-family: "Barlow Condensed", "Arial Narrow", sans-serif; fill: #9f9fa7; font-size: 20px; letter-spacing: 2.4px; text-transform: uppercase; }
+    .box{ fill: #16161a; stroke: #ffffff; stroke-opacity: 0.28; }
+    .acc{ fill: #16161a; stroke: #c8ff3d; stroke-opacity: 0.85; }
+    .dim{ fill: #16161a; stroke: #9f9fa7; stroke-opacity: 0.5; stroke-dasharray: 7 7; }
+    .h  { font-size: 30px; font-weight: 600; }
+    .s  { font-size: 20px; fill: #9f9fa7; }
+    .fl { stroke: #ffffff; stroke-opacity: 0.35; fill: none; }
+    .fa { stroke: #c8ff3d; stroke-opacity: 0.9; fill: none; }
+    .cap{ font-family: "Barlow Condensed", "Arial Narrow", sans-serif; font-size: 17px; fill: #9f9fa7; letter-spacing: 1.4px; }
+  </style>
+
+  <rect width="1600" height="1000" fill="#0b0b0d"/>
+  <g stroke="#e6e6e6" stroke-opacity="0.05" stroke-width="1">
+    <line x1="200" y1="0" x2="200" y2="1000"/><line x1="400" y1="0" x2="400" y2="1000"/>
+    <line x1="600" y1="0" x2="600" y2="1000"/><line x1="800" y1="0" x2="800" y2="1000"/>
+    <line x1="1000" y1="0" x2="1000" y2="1000"/><line x1="1200" y1="0" x2="1200" y2="1000"/>
+    <line x1="1400" y1="0" x2="1400" y2="1000"/>
+    <line x1="0" y1="200" x2="1600" y2="200"/><line x1="0" y1="400" x2="1600" y2="400"/>
+    <line x1="0" y1="600" x2="1600" y2="600"/><line x1="0" y1="800" x2="1600" y2="800"/>
+  </g>
+  <text class="lbl" x="80" y="86">WISDOMUP — ONE CODEBASE, LOCAL AND GLOBAL STOREFRONTS</text>
+  <line x1="80" y1="110" x2="1520" y2="110" stroke="#ffffff" stroke-opacity="0.25"/>
+  <rect class="box" x="80" y="170" width="240" height="130"/>
+  <text class="t h" x="108" y="220">Host + market</text>
+  <text class="t s" x="108" y="258">local or global</text>
+  <rect class="acc" x="400" y="170" width="300" height="150"/>
+  <text class="t h" x="428" y="220" fill="#c8ff3d">Catalogue scope</text>
+  <text class="t s" x="428" y="258">derived per request</text>
+  <rect class="box" x="790" y="150" width="340" height="300"/>
+  <text class="t h" x="818" y="200">Storefront</text>
+  <text class="t s" x="818" y="238">search · filters</text>
+  <text class="t s" x="818" y="266">cart · wishlist</text>
+  <text class="t s" x="818" y="294">moderated reviews</text>
+  <line x1="818" y1="308" x2="1102" y2="308" stroke="#ffffff" stroke-opacity="0.18"/>
+  <text class="t s" x="818" y="340">resumable</text>
+  <text class="t s" x="818" y="368">guest checkout</text>
+  <rect class="acc" x="1210" y="150" width="310" height="300"/>
+  <text class="t h" x="1238" y="200" fill="#c8ff3d">Express API</text>
+  <text class="t s" x="1238" y="238">scope enforced again</text>
+  <text class="t s" x="1238" y="266">promotions validated</text>
+  <text class="t s" x="1238" y="294">server-side</text>
+  <line x1="1238" y1="308" x2="1492" y2="308" stroke="#ffffff" stroke-opacity="0.18"/>
+  <text class="t s" x="1238" y="340">idempotent writes</text>
+  <rect class="box" x="80" y="620" width="240" height="130"/>
+  <text class="t h" x="108" y="670">Merchandiser</text>
+  <text class="t s" x="108" y="708">no deploy needed</text>
+  <rect class="box" x="400" y="580" width="300" height="260"/>
+  <text class="t h" x="428" y="630">Payload CMS</text>
+  <text class="t s" x="428" y="668">11 collections</text>
+  <text class="t s" x="428" y="696">navigation · settings</text>
+  <line x1="428" y1="710" x2="672" y2="710" stroke="#ffffff" stroke-opacity="0.18"/>
+  <text class="t s" x="428" y="742">CSV bulk import</text>
+  <rect class="box" x="790" y="620" width="340" height="180"/>
+  <text class="t h" x="818" y="670">MongoDB</text>
+  <text class="t s" x="818" y="708">one database</text>
+  <text class="t s" x="818" y="736">three services</text>
+  <path class="fl" d="M320 235 L400 235"/>
+  <polygon points="400,235 386,229 386,241" fill="#ffffff" fill-opacity="0.35"/>
+  <path class="fa" d="M700 245 L790 245"/>
+  <polygon points="790,245 776,239 776,251" fill="#c8ff3d" fill-opacity="0.9"/>
+  <path class="fa" d="M1130 300 L1210 300"/>
+  <polygon points="1210,300 1196,294 1196,306" fill="#c8ff3d" fill-opacity="0.9"/>
+  <text class="cap" x="1140" y="478">CHECKOUT</text>
+  <path class="fl" d="M320 685 L400 685"/>
+  <polygon points="400,685 386,679 386,691" fill="#ffffff" fill-opacity="0.35"/>
+  <path class="fl" d="M700 710 L790 710"/>
+  <polygon points="790,710 776,704 776,716" fill="#ffffff" fill-opacity="0.35"/>
+  <path class="fl" d="M960 450 L960 620" stroke-dasharray="7 7"/>
+  <polygon points="960,620 954,606 966,606" fill="#ffffff" fill-opacity="0.35"/>
+  <path class="fl" d="M1365 450 L1365 710 L1130 710"/>
+  <polygon points="1130,710 1144,704 1144,716" fill="#ffffff" fill-opacity="0.35"/>
+  <line x1="80" y1="920" x2="1520" y2="920" stroke="#ffffff" stroke-opacity="0.25"/>
+  <text class="lbl" x="80" y="958">SCOPE FROM HOST AND MARKET · ENFORCED AGAIN AT CHECKOUT · CONTENT OWNED BY THE CMS</text>
+</svg>

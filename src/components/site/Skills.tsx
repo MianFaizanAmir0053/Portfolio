@@ -12,7 +12,7 @@ export function Skills() {
     <section id="skills" className="rule-t bg-paper-deep">
       <div className="wrap grid gap-12 py-20 md:grid-cols-[1.1fr_0.9fr] md:py-28">
         <div>
-          <Tag className="mb-6 block">[03] STACK</Tag>
+          <Tag className="mb-6 block">[04] STACK</Tag>
           <CurtainText
             className="display mb-10 text-[11vw] md:text-[clamp(2.5rem,4.6vw,4rem)]"
             lines={[

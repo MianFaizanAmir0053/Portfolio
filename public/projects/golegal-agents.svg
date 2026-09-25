@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" width="1600" height="1000" role="img" aria-label="Golegal: a classifier routes each document to a dedicated agent for contracts, filings or correspondence; each agent has its own tools and validation schema and draws on clause-aware retrieval; validated fields feed the editor and review, and signed documents feed obligations into the calendar; every AI action is metered in credits">
+  <style>
+    .t  { font-family: "Barlow Condensed", "Arial Narrow", sans-serif; fill: #ffffff; }
+    .lbl{ font-family: "Barlow Condensed", "Arial Narrow", sans-serif; fill: #9f9fa7; font-size: 20px; letter-spacing: 2.4px; text-transform: uppercase; }
+    .box{ fill: #16161a; stroke: #ffffff; stroke-opacity: 0.28; }
+    .acc{ fill: #16161a; stroke: #c8ff3d; stroke-opacity: 0.85; }
+    .dim{ fill: #16161a; stroke: #9f9fa7; stroke-opacity: 0.5; stroke-dasharray: 7 7; }
+    .h  { font-size: 30px; font-weight: 600; }
+    .s  { font-size: 20px; fill: #9f9fa7; }
+    .fl { stroke: #ffffff; stroke-opacity: 0.35; fill: none; }
+    .fa { stroke: #c8ff3d; stroke-opacity: 0.9; fill: none; }
+    .cap{ font-family: "Barlow Condensed", "Arial Narrow", sans-serif; font-size: 17px; fill: #9f9fa7; letter-spacing: 1.4px; }
+  </style>
+
+  <rect width="1600" height="1000" fill="#0b0b0d"/>
+  <g stroke="#e6e6e6" stroke-opacity="0.05" stroke-width="1">
+    <line x1="200" y1="0" x2="200" y2="1000"/><line x1="400" y1="0" x2="400" y2="1000"/>
+    <line x1="600" y1="0" x2="600" y2="1000"/><line x1="800" y1="0" x2="800" y2="1000"/>
+    <line x1="1000" y1="0" x2="1000" y2="1000"/><line x1="1200" y1="0" x2="1200" y2="1000"/>
+    <line x1="1400" y1="0" x2="1400" y2="1000"/>
+    <line x1="0" y1="200" x2="1600" y2="200"/><line x1="0" y1="400" x2="1600" y2="400"/>
+    <line x1="0" y1="600" x2="1600" y2="600"/><line x1="0" y1="800" x2="1600" y2="800"/>
+  </g>
+  <text class="lbl" x="80" y="86">GOLEGAL — ONE AGENT PER DOCUMENT TYPE</text>
+  <line x1="80" y1="110" x2="1520" y2="110" stroke="#ffffff" stroke-opacity="0.25"/>
+  <rect class="box" x="80" y="390" width="240" height="120"/>
+  <text class="t h" x="108" y="440">Document</text>
+  <text class="t s" x="108" y="478">uploaded or signed</text>
+  <rect class="dim" x="80" y="660" width="240" height="150"/>
+  <text class="t h" x="108" y="710">Credit meter</text>
+  <text class="t s" x="108" y="748">every AI action</text>
+  <text class="t s" x="108" y="776">priced in credits</text>
+  <rect class="acc" x="400" y="390" width="240" height="120"/>
+  <text class="t h" x="428" y="440" fill="#c8ff3d">Classifier</text>
+  <text class="t s" x="428" y="478">routes by type</text>
+  <rect class="box" x="400" y="610" width="240" height="200"/>
+  <text class="t h" x="428" y="660">Retrieval</text>
+  <text class="t s" x="428" y="698">chunks keep ancestry</text>
+  <text class="t s" x="428" y="726">section › clause</text>
+  <text class="t s" x="428" y="754">› sub-clause</text>
+  <rect class="acc" x="730" y="150" width="280" height="170"/>
+  <text class="t h" x="758" y="200" fill="#c8ff3d">Contracts agent</text>
+  <text class="t s" x="758" y="238">own tools</text>
+  <text class="t s" x="758" y="266">own schema</text>
+  <rect class="acc" x="730" y="375" width="280" height="170"/>
+  <text class="t h" x="758" y="425" fill="#c8ff3d">Filings agent</text>
+  <text class="t s" x="758" y="463">own tools</text>
+  <text class="t s" x="758" y="491">own schema</text>
+  <rect class="acc" x="730" y="600" width="280" height="170"/>
+  <text class="t h" x="758" y="650" fill="#c8ff3d">Correspondence</text>
+  <text class="t s" x="758" y="688">agent · own tools</text>
+  <text class="t s" x="758" y="716">own schema</text>
+  <rect class="box" x="1090" y="330" width="230" height="260"/>
+  <text class="t h" x="1118" y="380">Validated</text>
+  <text class="t h" x="1118" y="414">fields</text>
+  <text class="t s" x="1118" y="452">checked against</text>
+  <text class="t s" x="1118" y="480">the type&#x27;s schema</text>
+  <rect class="box" x="1380" y="170" width="140" height="170"/>
+  <text class="t h" x="1408" y="220">Editor</text>
+  <text class="t s" x="1408" y="258">review</text>
+  <text class="t s" x="1408" y="286">&amp; redline</text>
+  <rect class="box" x="1380" y="560" width="140" height="250"/>
+  <text class="t h" x="1408" y="610">Calendar</text>
+  <text class="t s" x="1408" y="648">notices</text>
+  <text class="t s" x="1408" y="676">renewals</text>
+  <text class="t s" x="1408" y="704">payment</text>
+  <text class="t s" x="1408" y="732">deadlines</text>
+  <path class="fl" d="M320 450 L400 450"/>
+  <polygon points="400,450 386,444 386,456" fill="#ffffff" fill-opacity="0.35"/>
+  <path class="fa" d="M640 430 L690 430 L690 235 L730 235"/>
+  <polygon points="730,235 716,229 716,241" fill="#c8ff3d" fill-opacity="0.9"/>
+  <path class="fa" d="M640 460 L730 460"/>
+  <polygon points="730,460 716,454 716,466" fill="#c8ff3d" fill-opacity="0.9"/>
+  <path class="fa" d="M640 490 L690 490 L690 685 L730 685"/>
+  <polygon points="730,685 716,679 716,691" fill="#c8ff3d" fill-opacity="0.9"/>
+  <path class="fl" d="M640 790 L870 790 L870 770" stroke-dasharray="7 7"/>
+  <polygon points="870,770 864,784 876,784" fill="#ffffff" fill-opacity="0.35"/>
+  <text class="cap" x="700" y="822">CONTEXT</text>
+  <path class="fl" d="M1010 235 L1050 235 L1050 420 L1090 420"/>
+  <polygon points="1090,420 1076,414 1076,426" fill="#ffffff" fill-opacity="0.35"/>
+  <path class="fl" d="M1010 460 L1090 460"/>
+  <polygon points="1090,460 1076,454 1076,466" fill="#ffffff" fill-opacity="0.35"/>
+  <path class="fl" d="M1010 685 L1050 685 L1050 500 L1090 500"/>
+  <polygon points="1090,500 1076,494 1076,506" fill="#ffffff" fill-opacity="0.35"/>
+  <path class="fa" d="M1320 380 L1350 380 L1350 255 L1380 255"/>
+  <polygon points="1380,255 1366,249 1366,261" fill="#c8ff3d" fill-opacity="0.9"/>
+  <path class="fa" d="M1320 540 L1350 540 L1350 685 L1380 685"/>
+  <polygon points="1380,685 1366,679 1366,691" fill="#c8ff3d" fill-opacity="0.9"/>
+  <text class="cap" x="1232" y="612">SIGNED</text>
+  <path class="fl" d="M200 660 L200 510" stroke-dasharray="7 7"/>
+  <polygon points="200,510 194,524 206,524" fill="#ffffff" fill-opacity="0.35"/>
+  <line x1="80" y1="920" x2="1520" y2="920" stroke="#ffffff" stroke-opacity="0.25"/>
+  <text class="lbl" x="80" y="958">ROUTED BY TYPE · OWN TOOLS · OWN SCHEMA · CONTEXT THAT KEEPS ITS CLAUSE</text>
+</svg>

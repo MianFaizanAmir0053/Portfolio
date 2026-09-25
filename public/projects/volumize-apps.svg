@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" width="1600" height="1000" role="img" aria-label="Volumize: a customer app and a four-role operations back office, each with its own session, share auth, data and UI packages over one MongoDB domain; a RAG step compares intake answers with treatment criteria and gives the doctor a suggested plan">
+  <style>
+    .t  { font-family: "Barlow Condensed", "Arial Narrow", sans-serif; fill: #ffffff; }
+    .lbl{ font-family: "Barlow Condensed", "Arial Narrow", sans-serif; fill: #9f9fa7; font-size: 20px; letter-spacing: 2.4px; text-transform: uppercase; }
+    .box{ fill: #16161a; stroke: #ffffff; stroke-opacity: 0.28; }
+    .acc{ fill: #16161a; stroke: #c8ff3d; stroke-opacity: 0.85; }
+    .dim{ fill: #16161a; stroke: #9f9fa7; stroke-opacity: 0.5; stroke-dasharray: 7 7; }
+    .h  { font-size: 30px; font-weight: 600; }
+    .s  { font-size: 20px; fill: #9f9fa7; }
+    .fl { stroke: #ffffff; stroke-opacity: 0.35; fill: none; }
+    .fa { stroke: #c8ff3d; stroke-opacity: 0.9; fill: none; }
+    .cap{ font-family: "Barlow Condensed", "Arial Narrow", sans-serif; font-size: 17px; fill: #9f9fa7; letter-spacing: 1.4px; }
+  </style>
+
+  <rect width="1600" height="1000" fill="#0b0b0d"/>
+  <g stroke="#e6e6e6" stroke-opacity="0.05" stroke-width="1">
+    <line x1="200" y1="0" x2="200" y2="1000"/><line x1="400" y1="0" x2="400" y2="1000"/>
+    <line x1="600" y1="0" x2="600" y2="1000"/><line x1="800" y1="0" x2="800" y2="1000"/>
+    <line x1="1000" y1="0" x2="1000" y2="1000"/><line x1="1200" y1="0" x2="1200" y2="1000"/>
+    <line x1="1400" y1="0" x2="1400" y2="1000"/>
+    <line x1="0" y1="200" x2="1600" y2="200"/><line x1="0" y1="400" x2="1600" y2="400"/>
+    <line x1="0" y1="600" x2="1600" y2="600"/><line x1="0" y1="800" x2="1600" y2="800"/>
+  </g>
+  <text class="lbl" x="80" y="86">VOLUMIZE — TWO APPS, ONE DOMAIN LAYER</text>
+  <line x1="80" y1="110" x2="1520" y2="110" stroke="#ffffff" stroke-opacity="0.25"/>
+  <rect class="box" x="80" y="170" width="230" height="110"/>
+  <text class="t h" x="108" y="220">Customer</text>
+  <text class="t s" x="108" y="258">intake · checkout</text>
+  <rect class="box" x="80" y="620" width="230" height="130"/>
+  <text class="t h" x="108" y="670">Staff</text>
+  <text class="t s" x="108" y="708">admin · pharmacist</text>
+  <text class="t s" x="108" y="736">doctor · marketing</text>
+  <rect class="acc" x="400" y="150" width="380" height="230"/>
+  <text class="t h" x="428" y="200" fill="#c8ff3d">Customer app</text>
+  <text class="t s" x="428" y="238">intake · checkout</text>
+  <text class="t s" x="428" y="266">subscriptions · renewals</text>
+  <line x1="428" y1="280" x2="752" y2="280" stroke="#ffffff" stroke-opacity="0.18"/>
+  <text class="t s" x="428" y="312">customer session</text>
+  <rect class="acc" x="400" y="560" width="380" height="250"/>
+  <text class="t h" x="428" y="610" fill="#c8ff3d">Back office</text>
+  <text class="t s" x="428" y="648">four roles, one app</text>
+  <text class="t s" x="428" y="676">route permissions</text>
+  <text class="t s" x="428" y="704">enforced on the server</text>
+  <line x1="428" y1="718" x2="752" y2="718" stroke="#ffffff" stroke-opacity="0.18"/>
+  <text class="t s" x="428" y="750">staff session</text>
+  <rect class="box" x="880" y="300" width="300" height="300"/>
+  <text class="t h" x="908" y="350">Shared packages</text>
+  <text class="t s" x="908" y="388">auth</text>
+  <text class="t s" x="908" y="416">data · 15 Mongoose models</text>
+  <text class="t s" x="908" y="444">UI components</text>
+  <line x1="908" y1="458" x2="1152" y2="458" stroke="#ffffff" stroke-opacity="0.18"/>
+  <text class="t s" x="908" y="490">domain defined once</text>
+  <rect class="box" x="1260" y="360" width="260" height="180"/>
+  <text class="t h" x="1288" y="410">MongoDB</text>
+  <text class="t s" x="1288" y="448">one shared database</text>
+  <rect class="dim" x="1260" y="150" width="260" height="170"/>
+  <text class="t h" x="1288" y="200">RAG step</text>
+  <text class="t s" x="1288" y="238">intake vs indications</text>
+  <text class="t s" x="1288" y="266">suggests a plan</text>
+  <path class="fl" d="M310 225 L400 225"/>
+  <polygon points="400,225 386,219 386,231" fill="#ffffff" fill-opacity="0.35"/>
+  <path class="fl" d="M310 685 L400 685"/>
+  <polygon points="400,685 386,679 386,691" fill="#ffffff" fill-opacity="0.35"/>
+  <path class="fl" d="M400 470 L780 470" stroke-dasharray="4 8"/>
+  <text class="cap" x="400" y="500">SEPARATE SESSIONS · SEPARATE TRUST BOUNDARIES</text>
+  <path class="fl" d="M780 300 L830 300 L830 400 L880 400"/>
+  <polygon points="880,400 866,394 866,406" fill="#ffffff" fill-opacity="0.35"/>
+  <path class="fl" d="M780 660 L830 660 L830 520 L880 520"/>
+  <polygon points="880,520 866,514 866,526" fill="#ffffff" fill-opacity="0.35"/>
+  <path class="fl" d="M1180 450 L1260 450"/>
+  <polygon points="1260,450 1246,444 1246,456" fill="#ffffff" fill-opacity="0.35"/>
+  <path class="fa" d="M780 190 L1260 190"/>
+  <polygon points="1260,190 1246,184 1246,196" fill="#c8ff3d" fill-opacity="0.9"/>
+  <text class="cap" x="960" y="176">INTAKE ANSWERS</text>
+  <path class="fa" d="M1520 235 L1560 235 L1560 860 L590 860 L590 810" stroke-dasharray="7 7"/>
+  <polygon points="590,810 584,824 596,824" fill="#c8ff3d" fill-opacity="0.9"/>
+  <text class="cap" x="960" y="848">SUGGESTED PLAN · THE DOCTOR DECIDES</text>
+  <line x1="80" y1="920" x2="1520" y2="920" stroke="#ffffff" stroke-opacity="0.25"/>
+  <text class="lbl" x="80" y="958">CUSTOMER APP + BACK OFFICE · SHARED AUTH, DATA AND UI · SESSIONS KEPT APART</text>
+</svg>

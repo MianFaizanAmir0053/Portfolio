@@ -325,18 +325,27 @@ export function CutFrame({
            * SVGs. An .svg source is served untouched — Next skips optimisation
            * for it automatically.
            */}
-          <Image
-            src={src}
-            alt={alt}
-            fill
-            sizes={sizes}
-            loading={eager ? "eager" : "lazy"}
-            fetchPriority={eager ? "high" : "auto"}
-            className={cn(
-              "object-cover transition-[filter,transform] duration-500",
-              grayscale && "grayscale group-hover:grayscale-0 group-hover:scale-[1.03]",
-            )}
-          />
+          {/*
+           * The picture is fitted, not cropped: every case-study image is a
+           * screenshot or a diagram, and cutting off its edges cut off the
+           * thing it was showing. It sits in a safe area inset from the
+           * overscan layer, so neither the ±6% parallax travel nor the
+           * diagonal corner ever reaches it.
+           */}
+          <div className="absolute inset-x-[4%] top-[12%] bottom-[12%]">
+            <Image
+              src={src}
+              alt={alt}
+              fill
+              sizes={sizes}
+              loading={eager ? "eager" : "lazy"}
+              fetchPriority={eager ? "high" : "auto"}
+              className={cn(
+                "object-contain transition-[filter,transform] duration-500",
+                grayscale && "grayscale group-hover:grayscale-0 group-hover:scale-[1.03]",
+              )}
+            />
+          </div>
         </div>
       </div>
       {plus && (

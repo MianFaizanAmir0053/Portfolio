@@ -3,6 +3,10 @@
 @import "shadcn/tailwind.css";
 @import "lenis/dist/lenis.css";
 
+/* Agent skill docs are full of example class names; keep them out of the CSS. */
+@source not "../../.agents";
+@source not "../../.claude";
+
 /*
  * FAIZAN AMIR — editorial design system.
  * Palette is locked: paper / paper-deep / ink / ink-muted / cobalt / cobalt-deep.
