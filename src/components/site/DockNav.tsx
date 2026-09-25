@@ -15,7 +15,7 @@ const iconClass = "h-full w-full";
 const num = (n: string) => <span className="display leading-none">{n}</span>;
 
 /** Section anchors the dock can highlight, in document order. */
-const SECTION_IDS = ["about", "skills", "experience", "reach", "work", "beyond", "contact"];
+const SECTION_IDS = ["about", "skills", "experience", "reach", "work", "contact"];
 
 /*
  * Pure wayfinding now — Resume, GitHub, and LinkedIn dropped. All three are
@@ -23,9 +23,9 @@ const SECTION_IDS = ["about", "skills", "experience", "reach", "work", "beyond",
  * them here too was the dock repeating links the page already offers, which
  * is most of why it read as heavy.
  *
- * Order matches the page's own reading order — [01] hero through [07]
+ * Order matches the page's own reading order — [01] hero through [06]
  * contact, Work slotted in where it actually sits in the DOM (between Reach
- * and Beyond Code) rather than tacked on at the end. Featured work carries no
+ * and Contact) rather than tacked on at the end. Featured work carries no
  * numeral on the page, so it gets the briefcase glyph instead of a number the
  * page never uses.
  */
@@ -36,15 +36,14 @@ const links: DockItem[] = [
   { title: "Experience", icon: num("04") },
   { title: "Reach", icon: num("05") },
   { title: "Work", icon: <Briefcase className={iconClass} strokeWidth={1.75} /> },
-  { title: "Beyond Code", icon: num("06") },
-  { title: "Contact", icon: num("07") },
+  { title: "Contact", icon: num("06") },
 ].map((item, i) => ({
   ...item,
   href: i === 0 ? "/" : `/#${SECTION_IDS[i - 1]}`,
 }));
 
 /*
- * The site's real pages. The dock's eight items are all anchors on the index,
+ * The site's real pages. The dock's seven items are all anchors on the index,
  * and below `sm` the utility bar hides its own nav for want of room — so
  * without these the only way to /work, /services and /about on a phone is the
  * footer. Mobile sheet only; the desktop bar already shows them.

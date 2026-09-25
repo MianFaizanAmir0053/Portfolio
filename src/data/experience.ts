@@ -26,7 +26,7 @@ export const EXPERIENCE: Role[] = [
     start: "2026-02",
     dates: "Feb 2026 – Present",
     place: "United Kingdom",
-    body: "Leading a team building full-stack and AI-powered SaaS, including medical platforms used across the UK and Europe. Shipping RAG pipelines, agentic AI, and microservices, and mentoring engineers through code reviews and sprint planning. Built 30+ REST and GraphQL APIs on PostgreSQL and AWS at 99% uptime.",
+    body: "Leading a team building full-stack and AI SaaS, including medical platforms used across the UK and Europe. I ship RAG pipelines, agent workflows and microservices, mentor engineers, and have delivered 30+ REST and GraphQL APIs on PostgreSQL and AWS at 99% uptime.",
   },
   {
     n: "02",
@@ -39,7 +39,7 @@ export const EXPERIENCE: Role[] = [
     // but it ran Feb to Aug 2026, and it has ended.
     dates: "Jul 2024 – Aug 2026",
     place: "Lahore",
-    body: "Leading full-stack development across 8+ client projects in React, Next.js, Node.js, and Python, turning business requirements into shipped products 20% faster. Built 30+ REST APIs and data pipelines, cutting response times by 18%. Shipped 10+ production apps and closed 50+ issues, cutting incidents by 25%.",
+    body: "Led full-stack delivery across 8+ client projects in React, Next.js, Node.js and Python. Shipped 10+ production apps and 30+ REST APIs and closed 50+ issues, cutting delivery time by 20%, response times by 18% and incidents by 25%.",
   },
   {
     n: "03",
@@ -51,7 +51,7 @@ export const EXPERIENCE: Role[] = [
     end: "2026-02",
     dates: "Nov 2022 – Feb 2026",
     place: "US (California)",
-    body: "Worked directly with 10+ clients and a small engineering team over three years, shipping 15+ full-stack features across UI, APIs, databases, and data pipelines. Developed 5+ RAG and agentic AI solutions, integrating LLMs into production systems. Cut bugs by 25% across 20+ shipped features.",
+    body: "Worked with 10+ clients and a small engineering team, shipping 15+ full-stack features across interfaces, APIs and data systems. Delivered 5+ production RAG and agentic AI solutions and reduced bugs by 25% across 20+ shipped features.",
   },
 ];
 
@@ -61,13 +61,22 @@ export const EDUCATION = {
   place: "Islamabad, Pakistan",
 } as const;
 
+export const BEYOND_CODE = [
+  { title: "Strength training", detail: "4–5 sessions a week" },
+  { title: "Table tennis", detail: "Represented school and university at national level" },
+  { title: "Solo hiking", detail: "Summited Mushkpuri and Miranjani" },
+] as const;
+
 /**
  * The bio, broken at its own sentence boundaries. The homepage animates these
  * one at a time; the About page sets them as a paragraph. Same words either way.
+ *
+ * The homepage anchors margin notes to "Senior", "RAG" and "users", and sets
+ * "actually" and "problem" as accent words. Keep those words when editing.
  */
 export const BIO = [
-  "I’m a Senior Software Engineer with four years of experience building full-stack and AI-driven applications using React, Next.js, Python, and Node.js.",
-  "My focus is RAG architectures, agentic AI, and LLM integrations — turning business requirements into production systems people actually use.",
-  "I’ve led development across 8+ projects, built 30+ REST and GraphQL APIs, and shipped AI features used by hundreds of real users.",
-  "I care about clean architecture, fast iteration, and solving the actual problem, not just the ticket.",
+  "I’m a Senior Software Engineer building full-stack and AI products with React, Next.js, Python and Node.js.",
+  "My focus is production RAG, agent workflows and LLM integration, built into systems people actually use.",
+  "I’ve led 8+ projects, built 30+ REST and GraphQL APIs and shipped AI features used by hundreds of real users.",
+  "I solve the actual problem, not just the ticket.",
 ];

@@ -55,6 +55,17 @@ function AccordionTrigger({
   )
 }
 
+/*
+ * Closed panels stay mounted. Radix unmounts a closed panel's children by
+ * default, which left every collapsed answer out of the server HTML — present
+ * only in the RSC script payload, where crawlers and answer engines do not read
+ * it. `forceMount` keeps the text in the document; `data-closed:hidden` hides it
+ * visually and from assistive technology, the same approach Skills uses.
+ *
+ * The inner wrapper has no fixed height. Pinning it to the measured
+ * `--radix-accordion-content-height` froze an open panel at the size it had
+ * when opened, so narrowing the viewport afterwards clipped the answer.
+ */
 function AccordionContent({
   className,
   children,
@@ -63,12 +74,13 @@ function AccordionContent({
   return (
     <AccordionPrimitive.Content
       data-slot="accordion-content"
-      className="overflow-hidden text-sm data-open:animate-accordion-down data-closed:animate-accordion-up"
+      forceMount
+      className="overflow-hidden text-sm data-open:animate-accordion-down data-closed:hidden motion-reduce:animate-none"
       {...props}
     >
       <div
         className={cn(
-          "h-(--radix-accordion-content-height) pt-0 pb-2.5 [&_a]:underline [&_a]:underline-offset-3 [&_a]:hover:text-foreground [&_p:not(:last-child)]:mb-4",
+          "pt-0 pb-2.5 [&_a]:underline [&_a]:underline-offset-3 [&_a]:hover:text-foreground [&_p:not(:last-child)]:mb-4",
           className
         )}
       >

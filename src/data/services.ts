@@ -49,49 +49,49 @@ export const services: Service[] = [
     headline: ["AI that survives", "contact with production"],
     accent: "production",
     answer:
-      "AI engineering here means retrieval-augmented generation, agent workflows and LLM features built to run in production rather than demo well. Faizan Amir has shipped five or more RAG and agentic systems, including an agentic RAG pipeline for legal documents measured at 95% extraction accuracy on its evaluated set.",
+      "Faizan Amir builds production RAG pipelines, agent workflows and LLM features with evaluation, observability and human approval where risk demands it. Five or more systems have reached production, including legal-document extraction measured at 95% accuracy on its evaluated set.",
     includes: [
       {
         title: "Retrieval that preserves structure",
-        body: "Chunking follows the document’s own hierarchy — sections, clauses, sub-clauses — and every chunk carries its ancestry, so a retrieved passage arrives with the context that makes it mean something. This is what stopped the hallucinated citations on Golegal.",
+        body: "Chunks follow the document hierarchy and retain their ancestry, so retrieved passages arrive with enough context to interpret and cite correctly.",
       },
       {
         title: "Agent workflows with real routing",
-        body: "A classifier routes each input to a dedicated agent with its own tool set and validation schema, instead of one prompt trying to cover every document type. Contracts, filings and correspondence do not share an extraction path.",
+        body: "A classifier routes each input to a focused agent with its own tools and validation schema instead of forcing every document through one prompt.",
       },
       {
         title: "Evaluation before tuning",
-        body: "A scored regression set exists before the pipeline is tuned, so a chunking change is an argument with numbers rather than a coin flip. On mailagent the harness came first: 92.9% exact-match extraction across 14 hand-labelled fixtures, 100% retrieval hit@5 across 29 queries.",
+        body: "A scored regression set makes pipeline changes measurable. Mailagent reached 92.9% exact-match extraction on 14 labelled fixtures and 100% retrieval hit@5 across 29 queries.",
       },
       {
         title: "Human-in-the-loop gates",
-        body: "Anything that writes to a calendar, a document or a customer record stops for approval. The scheduling agent interrupts and waits for a human tap before it touches the calendar, and that interrupt is part of the graph, not a setting.",
+        body: "Actions that change calendars, documents or customer records pause for approval as an explicit step in the agent graph.",
       },
       {
         title: "Honest cost accounting",
-        body: "An unpriced model call is recorded as NULL, never as zero. Cost dashboards that quietly round missing data to nothing are how AI budgets get discovered late.",
+        body: "Model calls track tokens, latency and price. Unknown cost remains NULL rather than becoming a misleading zero.",
       },
     ],
     process: [
       {
         step: "Scope the failure mode",
-        body: "Start from what the generic model gets wrong on your data — not from the feature list. On legal text it was lost clause context and invented citations, which is a retrieval problem, not a prompt problem.",
+        body: "Identify what the model gets wrong on real data and whether the failure belongs to retrieval, routing, validation or prompting.",
       },
       {
         step: "Build the scoring harness",
-        body: "Hand-label a fixture set and score against it before the pipeline is worth tuning. Without it, every change feels like an improvement.",
+        body: "Create a labelled fixture set before tuning so every change can be compared against a stable baseline.",
       },
       {
         step: "Ship the pipeline",
-        body: "Ingest, chunk, embed, retrieve, route, act. Postgres with pgvector or the vector store already in your stack; LangGraph or a hand-rolled state machine depending on how much of the graph needs to be inspectable.",
+        body: "Build ingestion, chunking, retrieval, routing and actions with the simplest inspectable stack that fits the product.",
       },
       {
         step: "Put a human in the path",
-        body: "Approval interrupts on anything irreversible, with the agent’s own trace shown to whoever approves it.",
+        body: "Require approval for irreversible actions and show the relevant trace to the reviewer.",
       },
       {
         step: "Instrument, then iterate",
-        body: "Token cost, latency per node, retrieval hit rate and extraction accuracy tracked from the first deploy rather than retrofitted.",
+        body: "Track token cost, node latency, retrieval hit rate and task accuracy from the first deployment.",
       },
     ],
     evidence: [
@@ -99,13 +99,13 @@ export const services: Service[] = [
         slug: "golegal",
         project: "Golegal",
         claim:
-          "Agentic RAG over PostgreSQL for legal document automation: 95% extraction accuracy on the evaluated set, 100+ files processed monthly, 30% less manual document work reported by users.",
+          "Agentic RAG for legal documents: 95% extraction accuracy on the evaluated set, 100+ files processed monthly and 30% less manual work reported by users.",
       },
       {
         slug: "muterpe",
         project: "Muterpe",
         claim:
-          "Per-user model training and generation on Fal.ai with an async job queue, monetized usage-based, at 99% uptime over a rolling twelve months.",
+          "Per-user model training and queued generation on Fal.ai, billed by usage and running at 99% uptime over twelve months.",
       },
     ],
     stack: [
@@ -121,19 +121,19 @@ export const services: Service[] = [
     faqs: [
       {
         q: "What is RAG and when do I actually need it?",
-        a: "Retrieval-augmented generation puts your own documents in front of the model at query time instead of relying on what it memorised. You need it when answers must cite your data and be checkable — contracts, policies, internal knowledge. If the task is generic writing or classification, a well-prompted model without retrieval is cheaper and simpler.",
+        a: "Retrieval-augmented generation gives a model relevant source material at query time. Use it when answers must be grounded in private or changing data, such as contracts, policies or internal knowledge. Generic writing and classification often need only a well-designed prompt.",
       },
       {
         q: "How do you stop an LLM hallucinating over my documents?",
-        a: "Structure-preserving retrieval and evaluation. Chunks carry their position in the document so a clause arrives with its parent context, agents are routed per document type with validation schemas, and a scored fixture set catches regressions before they ship. On Golegal that combination took extraction accuracy to 95% on the evaluated set.",
+        a: "Preserve document structure during retrieval, route document types to validated extraction paths and test against labelled fixtures. This approach produced 95% extraction accuracy on Golegal’s evaluated set.",
       },
       {
         q: "Can you add AI to an existing product rather than starting fresh?",
-        a: "Yes, and that is the more common engagement. The work is usually a pipeline and a few endpoints alongside your current backend, not a rewrite. Golegal, Muterpe and the Ward Web Solutions medical platforms were all AI layers built into products that already had users.",
+        a: "Yes. Most engagements add a focused pipeline and API surface to an existing backend rather than rewriting the product. Golegal, Muterpe and medical platforms at Ward Web Solutions followed this approach.",
       },
       {
         q: "How long does a first production RAG pipeline take?",
-        a: "Plan on weeks, not months, for a scoped first version: evaluation set, ingest and chunking, retrieval, one routed extraction path, and instrumentation. The long pole is almost always the quality of the labelled fixtures, not the model integration.",
+        a: "A scoped first version usually takes weeks and includes evaluation data, ingestion, retrieval, one validated task path and instrumentation. Preparing reliable labelled fixtures often takes longer than connecting the model.",
       },
     ],
     related: ["saas-mvp-development", "api-and-backend-development"],
@@ -148,49 +148,49 @@ export const services: Service[] = [
     headline: ["Front ends that hold", "their own state"],
     accent: "state",
     answer:
-      "Next.js and React development for applications with genuine state: multiple roles, partial onboarding, sessions that have not been chosen yet, money moving. Faizan Amir builds these in the App Router with TypeScript, Redux Toolkit and RTK Query, most recently a fintech platform serving personal, business and admin journeys from one routing surface.",
+      "Faizan Amir builds Next.js and React products with complex state, including multiple roles, partial onboarding, account selection and payments. Recent work uses the App Router, TypeScript, Redux Toolkit and RTK Query across personal, business and admin journeys.",
     includes: [
       {
         title: "One guard, not fifteen",
-        body: "Role, session and onboarding rules resolve in a single guard against a bootstrapped user object. Middleware stays a cheap token-presence check at the edge. Pages stop guessing at auth state, which is where multi-role routing usually breaks.",
+        body: "One guard resolves role, session and onboarding state from a bootstrapped user. Middleware only checks for a token at the edge.",
       },
       {
         title: "One API layer, many domains",
-        body: "A single RTK Query base API with endpoints injected per feature, so seven domains share one reducer, one middleware and one cache. Adding an endpoint means touching one file and getting caching, tag invalidation and generated hooks with it.",
+        body: "Feature domains inject endpoints into one RTK Query base API, sharing a reducer, middleware, cache and invalidation model.",
       },
       {
         title: "Config-driven pages",
-        body: "Product and marketing pages defined as composition rather than layout, so a merchandising change is an edit rather than a rewrite. Typed contracts and defensive rendering mean a missing CMS field degrades instead of breaking the page.",
+        body: "Typed content models and defensive rendering turn merchandising changes into data edits without letting missing CMS fields break a page.",
       },
       {
         title: "Server components where they pay",
-        body: "Content rendered on the server so it is in the HTML for crawlers and answer engines, client components kept to the parts that genuinely need interaction. This site is built that way.",
+        body: "Content renders on the server for fast delivery and crawlability; client components are reserved for genuine interaction.",
       },
       {
         title: "Motion that does not cost vitals",
-        body: "GSAP and Framer Motion used deliberately, reduced-motion respected, and layout stability treated as a requirement rather than a nice-to-have.",
+        body: "Motion is deliberate, reduced-motion is respected and layout stability is treated as a requirement.",
       },
     ],
     process: [
       {
         step: "Map the states first",
-        body: "Every role, every partial state, every place the app can be resumed from. The routing falls out of that map instead of being patched onto it.",
+        body: "Map every role, partial state and resume point before defining routes.",
       },
       {
         step: "Set the data layer",
-        body: "One base API, typed endpoints, Zod schemas shared between the flows that submit and the flows that display.",
+        body: "Define one base API, typed endpoints and shared validation schemas.",
       },
       {
         step: "Build the shells",
-        body: "Layout shells and form primitives first, so screens two through twenty start from composition.",
+        body: "Build layout shells and form primitives so later screens are composed rather than duplicated.",
       },
       {
         step: "Wire the guards",
-        body: "Auth, onboarding completeness and role resolution in one place, with the redirects it implies.",
+        body: "Centralise authentication, onboarding and role resolution with explicit redirects.",
       },
       {
         step: "Harden and measure",
-        body: "Accessibility pass, Core Web Vitals, and a build that fails on type errors rather than shipping them.",
+        body: "Validate accessibility and Core Web Vitals, and block releases on type or build errors.",
       },
     ],
     evidence: [
@@ -198,13 +198,13 @@ export const services: Service[] = [
         slug: "alfa",
         project: "Alfa",
         claim:
-          "Multi-role fintech platform: 6+ independently deployable FastAPI services — transfers, bill splitting, top-ups, currency conversion and recurring payments — behind 10+ GraphQL APIs on Supabase, with the auth decision split between an edge token gate and a single client-side guard.",
+          "Multi-role fintech platform with 6+ FastAPI services behind 10+ GraphQL APIs, protected by an edge token gate and a single client-side identity guard.",
       },
       {
         slug: "carder",
         project: "Carder",
         claim:
-          "AI mini-site builder scaled to 150+ users across the Middle East and Europe, with 40% adoption growth after relaunch and three metered subscription tiers derived from Stripe.",
+          "AI mini-site builder for 150+ users, with 40% adoption growth after relaunch and three Stripe-backed metered tiers.",
       },
     ],
     stack: [
@@ -221,15 +221,15 @@ export const services: Service[] = [
     faqs: [
       {
         q: "Do you work in the App Router or the Pages Router?",
-        a: "App Router by default, including server components, route handlers and the metadata API. Pages Router work is fine for an existing codebase, but new builds start on App Router because server rendering is where the SEO and the data-fetching story both live.",
+        a: "App Router by default, including server components, route handlers and the metadata API. Existing Pages Router products can be maintained or migrated incrementally when the benefit justifies it.",
       },
       {
         q: "Can you take over a Next.js codebase someone else started?",
-        a: "Yes. The usual first pass is a state and routing map, a dependency and vulnerability audit, and a list of the places auth is being decided more than once. On Volumize that audit took a package graph from 34 findings to 1.",
+        a: "Yes. The first pass maps state, routing and authentication, then audits dependencies and vulnerabilities. On Volumize, that process took the package graph from 34 findings to 1.",
       },
       {
         q: "How do you handle SEO in a heavily animated React site?",
-        a: "Content renders on the server, animation attaches after. Text is in the initial HTML whether or not JavaScript runs, headings follow a real hierarchy, and structured data is emitted server-side. Animation then reveals content that is already there rather than creating it.",
+        a: "Render meaningful content, headings and structured data on the server, then attach animation after hydration. The page remains understandable and indexable without animation or client-side content creation.",
       },
     ],
     related: ["saas-mvp-development", "ecommerce-development"],
@@ -244,49 +244,49 @@ export const services: Service[] = [
     headline: ["Backends built to be", "operated, not just shipped"],
     accent: "operated",
     answer:
-      "Backend and API work in Node.js, Express, PostgreSQL and MongoDB, with an emphasis on systems somebody has to run after launch. Faizan Amir has built 30 or more REST and GraphQL APIs across client products, including a live telehealth platform that cut approval turnaround by 45% and despatch time by 85%, with a payments layer reconciled against Stripe rather than guessed at locally.",
+      "Faizan Amir builds operable Node.js, Express, PostgreSQL and MongoDB backends. Across 30+ REST and GraphQL APIs, the work includes a live telehealth platform that reduced approval turnaround by 45% and despatch time by 85%, with payments reconciled against Stripe.",
     includes: [
       {
         title: "Explicit lifecycles",
-        body: "Orders, prescriptions, subscriptions and refunds modelled as statuses and transitions rather than boolean flags. On Volumize that connected questionnaire, doctor review, prescription generation and fulfilment into one traceable pipeline.",
+        body: "Orders, prescriptions, subscriptions and refunds use explicit states and transitions. Volumize connects intake, clinical review and fulfilment in one traceable lifecycle.",
       },
       {
         title: "Payments that reconcile",
-        body: "Entitlement derived from the payment provider, not stored locally and hoped for. Webhook reconciliation, idempotency keys, unique transaction indexing and monotonic status so a late event cannot move an order backwards.",
+        body: "Provider-backed entitlement, webhook reconciliation, idempotency and monotonic status prevent duplicate or late events from corrupting orders.",
       },
       {
         title: "Media off the app server",
-        body: "Uploads go straight to S3 with signed URLs and are delivered from the edge, so image-heavy features never block the API.",
+        body: "Signed S3 uploads and edge delivery keep image-heavy workloads away from application request workers.",
       },
       {
         title: "Migrations without downtime",
-        body: "Expand and contract schema changes so the product can keep shipping while it is already in users’ hands.",
+        body: "Expand-and-contract migrations let schemas evolve while live products keep serving users.",
       },
       {
         title: "A dependency graph you can defend",
-        body: "Phased remediation — non-breaking fixes first, breaking upgrades second, routing and transport prioritised. On Volumize that cleared every high and moderate finding across 1,127 packages.",
+        body: "Phased dependency remediation cleared every high and moderate finding across Volumize’s 1,127-package graph.",
       },
     ],
     process: [
       {
         step: "Model the domain",
-        body: "One definition per entity, shared between every surface that touches it. Two apps over shared packages beats two apps with two ideas of what an order is.",
+        body: "Create one definition per entity and share it across every application that uses it.",
       },
       {
         step: "Draw the state machine",
-        body: "Statuses, allowed transitions, and what is irreversible. Refunds are a modelled branch, not an afterthought.",
+        body: "Define statuses, allowed transitions and irreversible actions, including refunds and cancellations.",
       },
       {
         step: "Build the endpoints",
-        body: "REST or GraphQL, validated at the boundary, with the auth check at the same layer as the data access.",
+        body: "Implement validated REST or GraphQL endpoints with authorisation next to data access.",
       },
       {
         step: "Guard the money",
-        body: "Signature verification, ownership and amount checks, idempotency, replay protection, and tests that specifically cover settlement.",
+        body: "Add signature, ownership and amount checks, idempotency, replay protection and settlement tests.",
       },
       {
         step: "Hand over something operable",
-        body: "CI/CD so releases stop being manual events, plus the logs and metrics needed to answer questions in production.",
+        body: "Ship CI/CD, logs and metrics so releases and production diagnosis are routine.",
       },
     ],
     evidence: [
@@ -294,19 +294,19 @@ export const services: Service[] = [
         slug: "volumize",
         project: "Volumize",
         claim:
-          "A live telehealth platform carrying 250+ subscriptions and £31,000+ in subscription revenue: approval turnaround down 45%, order despatch down 85%, and 15 admin hours a week returned, over 94 API routes and 15 shared data models.",
+          "Live telehealth commerce with 250+ subscriptions and £31,000+ revenue: approval turnaround down 45%, despatch time down 85%, and 15 admin hours a week returned.",
       },
       {
         slug: "wisdomup",
         project: "WisdomUp",
         claim:
-          "Eight layers of payment guard from signature verification to a monotonic order state machine, with 14 tests covering settlement confirmation specifically.",
+          "Eight payment guard layers, from signature verification to monotonic order state, covered by 14 settlement tests.",
       },
       {
         slug: "carder",
         project: "Carder",
         claim:
-          "Schema and migration strategy that allowed zero-downtime evolution, Stripe subscriptions reconciled by webhook, and all user media moved to signed S3 delivery.",
+          "Zero-downtime schema evolution, reconciled Stripe subscriptions and signed S3 media delivery for a live product.",
       },
     ],
     stack: [
@@ -324,15 +324,15 @@ export const services: Service[] = [
     faqs: [
       {
         q: "REST or GraphQL?",
-        a: "REST for most product APIs, GraphQL where clients genuinely need to shape their own queries across a wide graph. The choice matters less than validation at the boundary, one definition per entity, and auth checked where the data is accessed.",
+        a: "REST suits most product APIs. GraphQL is useful when clients need different views across a broad data graph. In either case, validate at the boundary and authorise where data is accessed.",
       },
       {
         q: "How do you handle Stripe webhooks arriving twice or out of order?",
-        a: "Verify the signature, check ownership and amount, deduplicate on a unique transaction index, and refuse any event that would regress a status the order has already passed. Settlement runs down two paths — immediate confirmation and the webhook fallback — so a dropped browser never loses an order.",
+        a: "Verify signatures, ownership and amounts; deduplicate transactions; and reject events that would move an order backward. Immediate confirmation plus webhook reconciliation prevents a closed browser from losing a paid order.",
       },
       {
         q: "Can you work with an existing database you did not design?",
-        a: "Yes. Expand-and-contract migrations mean the schema can move without a maintenance window, and the first deliverable is usually a written model of what the current tables actually mean.",
+        a: "Yes. The first step is a written model of the existing schema, followed by expand-and-contract migrations that avoid maintenance windows.",
       },
     ],
     related: ["ai-engineering", "ecommerce-development"],
@@ -347,49 +347,49 @@ export const services: Service[] = [
     headline: ["From empty repo", "to paying users"],
     accent: "paying",
     answer:
-      "SaaS MVP development means owning the whole path from an empty repository to a product with paying users: auth, data model, billing, file storage, deployment and instrumentation. Faizan Amir has done this as founding engineer on an AI image platform that reached 200+ users and $5,000+ in usage-based revenue at 99% uptime.",
+      "Faizan Amir builds SaaS MVPs from repository to paying users, including authentication, data, billing, storage, deployment and instrumentation. As founding engineer on an AI image platform, he helped reach 200+ users and $5,000+ in usage-based revenue at 99% uptime.",
     includes: [
       {
         title: "The whole lifecycle, not a screen",
-        body: "Signup, onboarding, the core loop, billing, and the operational surface someone needs to run it. A back office is part of the MVP, not a later project.",
+        body: "The MVP covers signup, onboarding, the core loop, billing and the operational tools required to run it.",
       },
       {
         title: "Billing wired in early",
-        body: "Metering first, pricing second. Retrofitting usage-based billing onto a running pipeline costs more than building it in, which is the lesson Muterpe paid for.",
+        body: "Meter usage before finalising pricing; retrofitting billing into a live pipeline is slower and riskier.",
       },
       {
         title: "Async by default",
-        body: "Long work goes on a job queue so the interface never waits on it. Model training, generation, imports and exports all stream progress back rather than blocking.",
+        body: "Long-running training, generation, imports and exports use queues and return progress without blocking the interface.",
       },
       {
         title: "One domain layer across apps",
-        body: "Customer app and admin app over shared auth, database and UI packages, so the two surfaces cannot drift apart as the product grows.",
+        body: "Customer and admin applications share auth, database and UI packages so their domain rules stay aligned.",
       },
       {
         title: "Deployment that is not a ceremony",
-        body: "CI/CD from the first week, environment parity, and a release that is a merge rather than an event.",
+        body: "CI/CD and environment parity make releases repeatable from the first week.",
       },
     ],
     process: [
       {
         step: "Cut the scope to the loop",
-        body: "Find the one loop that has to work for the product to be worth paying for, and build that end to end before anything else gets attention.",
+        body: "Identify the one loop that makes the product worth paying for and build it end to end first.",
       },
       {
         step: "Model and meter",
-        body: "Data model and usage metering together, so pricing has something real to attach to later.",
+        body: "Design the data model and usage metering together so pricing rests on real units.",
       },
       {
         step: "Build the core loop",
-        body: "The path a user takes from signup to the thing they came for, with the queue and storage it needs.",
+        body: "Build the path from signup to the core outcome, including its queue and storage needs.",
       },
       {
         step: "Add the operational surface",
-        body: "Admin views, status visibility, and the manual overrides that stop early support becoming database surgery.",
+        body: "Add admin views, status visibility and controlled overrides before support depends on database edits.",
       },
       {
         step: "Instrument before iterating",
-        body: "Funnel telemetry from launch. Adoption features shipped on intuition are how a 40% improvement stays invisible for months.",
+        body: "Instrument the funnel at launch so adoption and retention changes can be measured.",
       },
     ],
     evidence: [
@@ -397,19 +397,19 @@ export const services: Service[] = [
         slug: "muterpe",
         project: "Muterpe",
         claim:
-          "Founding engineer on an AI model-training and image-generation SaaS: 200+ self-serve users, $5,000+ usage-based revenue, 99% uptime, and generation that feels ~40% faster than at first release without changing the model.",
+          "AI training and image-generation SaaS with 200+ users, $5,000+ usage-based revenue, 99% uptime and ~40% faster perceived generation.",
       },
       {
         slug: "volumize",
         project: "Volumize",
         claim:
-          "Turborepo monorepo with a customer app and an operational back office over three shared packages, covering intake, doctor approval, prescriptions, payments, despatch and subscriptions — live, at 250+ subscriptions.",
+          "Customer and operations apps over shared packages, supporting intake, prescriptions, payments, despatch and 250+ live subscriptions.",
       },
       {
         slug: "carder",
         project: "Carder",
         claim:
-          "Backend and infrastructure lead on a product already in users’ hands, adding Stripe subscriptions, S3 media delivery and CI/CD without downtime.",
+          "Stripe subscriptions, S3 media delivery and CI/CD added to a live product without downtime.",
       },
     ],
     stack: [
@@ -426,15 +426,15 @@ export const services: Service[] = [
     faqs: [
       {
         q: "What does a realistic MVP scope look like?",
-        a: "One loop, end to end, with billing and an admin view. Everything that is not on the path from signup to the thing the user came for is a candidate for the second release. The failure mode is not building too little, it is building five half-loops.",
+        a: "One complete user loop with billing and an operational view. Anything outside the path from signup to the core outcome is a candidate for a later release.",
       },
       {
         q: "Do you work with founders who are not technical?",
-        a: "Yes. The working pattern is a written model of the product’s states and a weekly shipped increment you can use rather than a status report. Muterpe was built that way from the first commit.",
+        a: "Yes. Work starts with a plain-language model of product states, followed by usable weekly increments rather than status-only reporting.",
       },
       {
         q: "Who owns the code?",
-        a: "You do. Repository, infrastructure accounts and deployment pipeline are set up in your name from the start, not migrated at the end.",
+        a: "You do. The repository, infrastructure accounts and deployment pipeline are set up in your name from the start.",
       },
     ],
     related: ["nextjs-development", "ai-engineering"],
@@ -449,49 +449,49 @@ export const services: Service[] = [
     headline: ["Checkout that survives", "its own edge cases"],
     accent: "edge cases",
     answer:
-      "E-commerce engineering here focuses on the parts that lose money quietly: settlement, refunds, subscriptions and catalogue scope. Faizan Amir has built commerce platforms with an eight-layer payment guard, dual settlement paths so a dropped browser never loses an order, and Royal Mail despatch writing tracking straight back onto the order.",
+      "Faizan Amir builds e-commerce systems around settlement, refunds, subscriptions and catalogue integrity. The work includes an eight-layer payment guard, dual settlement paths that protect paid orders, and Royal Mail despatch with tracking written back to the order.",
     includes: [
       {
         title: "Dual-path settlement",
-        body: "The client confirms with the payment provider and the backend records it immediately; the webhook then arrives and reconciles. A closed tab or a dead connection does not cost you the order.",
+        body: "Immediate confirmation records the payment; a webhook then reconciles it. Either path can recover if the other is delayed.",
       },
       {
         title: "Eight layers of payment guard",
-        body: "Signature verification, ownership and amount checks, idempotency keys, unique transaction indexing, replay protection and a status machine that refuses to go backwards.",
+        body: "Signature, ownership and amount checks combine with idempotency, replay protection and monotonic order status.",
       },
       {
         title: "Merchandising without a deploy",
-        body: "Hero, banners, feature bars, FAQs and testimonials as CMS collections rather than components, with typed contracts so a missing field degrades instead of breaking the page.",
+        body: "CMS-managed merchandising uses typed contracts and defensive rendering, so campaigns change without a release.",
       },
       {
         title: "Market-scoped catalogue",
-        body: "Catalogue scope derived from host and market and enforced again at checkout, so local and global products cannot leak across storefronts.",
+        body: "Catalogue scope is derived from host and market, then enforced again at checkout.",
       },
       {
         title: "Fulfilment wired to the carrier",
-        body: "Despatch through the carrier’s API — labels generated, tracking written back onto the order — so approved goes to shipped without anybody creating labels by hand.",
+        body: "Carrier APIs generate labels and return tracking to the order, removing manual fulfilment steps.",
       },
     ],
     process: [
       {
         step: "Model the order",
-        body: "Statuses, transitions, and the branches for refund, cancellation and subscription renewal. Everything downstream is easier once the order has one definition.",
+        body: "Define order states and transitions for settlement, refund, cancellation and renewal.",
       },
       {
         step: "Assume events lie",
-        body: "Build settlement expecting duplicates, late arrivals and mismatched amounts, then test that specifically. On WisdomUp that is 14 dedicated settlement tests.",
+        body: "Design for duplicate, late and mismatched events, then test those cases directly.",
       },
       {
         step: "Separate the services",
-        body: "Storefront, transactional API and CMS admin deployable on their own with bounded ownership, so a content change cannot take down checkout.",
+        body: "Separate storefront, transactional API and CMS ownership so content changes cannot take down checkout.",
       },
       {
         step: "Connect fulfilment",
-        body: "Carrier integration, label generation and tracking sync, plus the operational views to see where an order actually is.",
+        body: "Connect labels, tracking and operational views to the order lifecycle.",
       },
       {
         step: "Watch the funnel",
-        body: "Checkout success rate, reconciliation accuracy and promo conversion instrumented, because reliability you cannot observe is a hypothesis.",
+        body: "Track checkout success, reconciliation accuracy and promotion conversion from launch.",
       },
     ],
     evidence: [
@@ -499,13 +499,13 @@ export const services: Service[] = [
         slug: "wisdomup",
         project: "WisdomUp",
         claim:
-          "Three deployable services, dual settlement paths, eight payment guard layers and 39 backend route handlers across ten route files.",
+          "Three deployable services with dual settlement, eight payment guard layers and 14 focused settlement tests.",
       },
       {
         slug: "volumize",
         project: "Volumize",
         claim:
-          "Telehealth commerce with medical intake, doctor approval, prescription generation, Stripe payments, Royal Mail despatch and subscription renewal in one lifecycle.",
+          "Telehealth commerce connecting intake, clinical approval, prescriptions, Stripe payments, Royal Mail despatch and renewals.",
       },
     ],
     stack: [
@@ -522,15 +522,15 @@ export const services: Service[] = [
     faqs: [
       {
         q: "Shopify or a custom build?",
-        a: "Shopify wins when the catalogue is standard and the checkout is standard. Custom wins when the order is not really an order — medical intake before purchase, clinical approval mid-flow, market-scoped catalogues, or subscription logic the platform will not model. Volumize and WisdomUp are both the second case.",
+        a: "Shopify fits standard catalogues and checkout. Custom engineering is justified when the order includes clinical approval, market-specific catalogues or subscription rules the platform cannot model cleanly.",
       },
       {
         q: "How do you stop duplicate charges and lost orders?",
-        a: "Idempotency keys and a unique transaction index stop duplicates; dual settlement stops losses. The client path records the payment immediately and the webhook reconciles it afterwards, with a monotonic status so the late event cannot regress an order that has already shipped.",
+        a: "Idempotency and a unique transaction index stop duplicates. Immediate confirmation plus webhook reconciliation prevents lost orders, while monotonic status rejects stale events.",
       },
       {
         q: "Can you integrate a carrier or a fulfilment partner?",
-        a: "Yes. The Volumize despatch flow generates labels through the Royal Mail API and writes tracking back onto the order, so fulfilment status lives in the same lifecycle as the payment rather than in somebody’s inbox.",
+        a: "Yes. Volumize generates Royal Mail labels and writes tracking back to the order, keeping fulfilment and payment in one lifecycle.",
       },
     ],
     related: ["api-and-backend-development", "saas-mvp-development"],

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { EXPERIENCE, EDUCATION, BIO } from "@/data/experience";
+import { EXPERIENCE, EDUCATION, BIO, BEYOND_CODE } from "@/data/experience";
 import { SKILLS } from "@/data/skills";
 import { projects } from "@/data/projects";
 import { services } from "@/data/services";
@@ -8,13 +8,19 @@ import { SOCIAL } from "@/data/social";
 import { UtilityBar } from "@/components/site/UtilityBar";
 import { Footer } from "@/components/site/Footer";
 import { Tag } from "@/components/site/primitives";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { JsonLd } from "@/components/site/JsonLd";
 import { PERSON, CONTENT_REVIEWED, OG_IMAGE } from "@/lib/site";
 import { breadcrumbSchema, faqSchema, graph, webPageSchema } from "@/lib/schema";
 
 const TITLE = "About — senior software engineer in Lahore";
 const DESCRIPTION =
-  "Four years, three teams, three continents: how Faizan Amir works, the stack he works in, where he has shipped, and what he is honest about not knowing yet.";
+  "Faizan Amir is a senior full-stack and AI engineer in Lahore, shipping Next.js, Node.js, Python, RAG and agentic systems for global teams.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -38,23 +44,23 @@ export const metadata: Metadata = {
 const FAQS = [
   {
     q: "Who is Faizan Amir?",
-    a: "Faizan Amir is a senior software engineer based in Lahore, Pakistan, with four years of experience building full-stack and AI-driven applications in React, Next.js, TypeScript, Node.js and Python. He currently leads engineering at Ward Web Solutions and has shipped products for teams in the United States, United Kingdom, Middle East and Europe.",
+    a: "Faizan Amir is a senior full-stack and AI engineer in Lahore, Pakistan. He builds production applications with React, Next.js, TypeScript, Node.js and Python for teams across the United States, United Kingdom, Middle East and Europe.",
   },
   {
     q: "What does Faizan Amir specialise in?",
-    a: "Retrieval-augmented generation, agentic AI and LLM integration on the AI side, and full product engineering on the rest: Next.js front ends with real state, REST and GraphQL APIs, PostgreSQL and MongoDB data models, and payment systems that reconcile. Five or more RAG and agentic systems have gone to production.",
+    a: "Applied AI and product engineering: production RAG, agent workflows and LLM integrations, plus Next.js applications, APIs, data models and payment systems. Five or more RAG and agentic systems have reached production.",
   },
   {
     q: "Is he available for freelance or contract work?",
-    a: "Yes. Engagements run from a scoped build with a fixed outcome to ongoing work embedded with an existing team. The fastest way to start is a description of the problem rather than a spec — the first deliverable is usually a written model of the states the system needs.",
+    a: "Yes. He takes scoped builds with defined outcomes and embedded contract roles with existing teams. A short description of the problem, users, current system and deadline is enough to start.",
   },
   {
     q: "What time zone does he work in, and does that matter?",
-    a: "Based in Lahore, Pakistan (UTC+5), working day to day with teams in the US, UK, Middle East and Europe. In practice that means a live overlap with European mornings and US mornings, and asynchronous handover the rest of the time — the three current and previous roles all run this way.",
+    a: "He works from Lahore at UTC+5, with live overlap for European and US mornings and asynchronous handover outside those hours. His current and previous roles have used this model across four regions.",
   },
   {
-    q: "What is he not?",
-    a: "Not a designer, and not a machine-learning researcher. The AI work is applied engineering — retrieval, agent orchestration, evaluation and integration — rather than model training from scratch. Where a project has needed a research-grade model, the right answer has been to use a hosted one and spend the effort on the pipeline around it.",
+    q: "What is outside his focus?",
+    a: "He is not a designer or an ML researcher. His AI work focuses on retrieval, agent orchestration, evaluation and product integration, using proven hosted models when training from scratch would add cost without product value.",
   },
 ];
 
@@ -212,18 +218,45 @@ export default function About() {
         <section className="wrap rule-t py-16 md:py-24">
           <Tag className="mb-3 block">[05] FAQ</Tag>
           <h2 className="display mb-8 text-2xl md:text-4xl">Questions people ask first</h2>
-          <dl className="max-w-3xl space-y-8">
+          <Accordion type="multiple" className="max-w-3xl rule-t">
             {/* The first answer is already set as this page's lead paragraph
                 above. The FAQPage graph still carries the whole array — a
                 definition belongs in the structured data either way — but
                 printing it twice on one screen made the list look padded. */}
-            {FAQS.slice(1).map((faq) => (
-              <div key={faq.q}>
-                <dt className="display text-xl md:text-2xl">{faq.q}</dt>
-                <dd className="mt-3 max-w-[64ch] text-sm leading-7 text-ink-muted">{faq.a}</dd>
-              </div>
+            {FAQS.slice(1).map((faq, index) => (
+              <AccordionItem key={faq.q} value={`about-faq-${index}`}>
+                <AccordionTrigger className="rounded-none py-5 hover:no-underline">
+                  <span className="display pr-4 text-left text-xl md:text-2xl">{faq.q}</span>
+                </AccordionTrigger>
+                <AccordionContent className="pb-6">
+                  <p className="max-w-[64ch] text-sm leading-7 text-ink-muted">{faq.a}</p>
+                </AccordionContent>
+              </AccordionItem>
             ))}
-          </dl>
+          </Accordion>
+        </section>
+
+        <section className="wrap rule-t py-12" aria-labelledby="beyond-code-heading">
+          <Tag className="mb-3 block">[06] BEYOND CODE</Tag>
+          <h2 id="beyond-code-heading" className="display mb-6 text-xl md:text-2xl">
+            Off the clock
+          </h2>
+          <ul className="grid gap-4 md:grid-cols-3">
+            {BEYOND_CODE.map((activity) => (
+              <li key={activity.title} className="rule-t pt-4">
+                <h3 className="display text-lg md:text-xl">{activity.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-ink-muted">{activity.detail}</p>
+              </li>
+            ))}
+          </ul>
+          <a
+            href={SOCIAL.instagram}
+            target="_blank"
+            rel="me noopener"
+            className="label mt-6 inline-block text-cobalt hover:underline"
+          >
+            Training and hiking clips on Instagram ↗
+          </a>
         </section>
 
         <section className="wrap rule-t py-12">

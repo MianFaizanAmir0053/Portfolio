@@ -2,7 +2,7 @@ import { Fragment } from "react";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 import { featuredProjects, projects, type Project } from "@/data/projects";
-import { EXPERIENCE, BIO, EDUCATION } from "@/data/experience";
+import { EXPERIENCE, BIO } from "@/data/experience";
 import { SOCIAL } from "@/data/social";
 import { services } from "@/data/services";
 import { JsonLd } from "@/components/site/JsonLd";
@@ -13,9 +13,12 @@ import { Footer } from "@/components/site/Footer";
 import { ContactForm } from "@/components/site/ContactForm";
 import { Skills } from "@/components/site/Skills";
 import { Reach } from "@/components/site/Reach";
-import { BeyondCode } from "@/components/site/BeyondCode";
-import { ComingSoon } from "@/components/site/ComingSoon";
-import { OtherWork } from "@/components/site/OtherWork";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { PixelatedCanvas } from "@/components/ui/pixelated-canvas";
 import {
   CurtainText,
@@ -80,23 +83,23 @@ const ABOUT_FACTS = [
 const HOME_FAQS = [
   {
     q: "What does Faizan Amir do?",
-    a: "Faizan Amir is a senior software engineer who builds full-stack and AI-driven applications in React, Next.js, TypeScript, Node.js and Python. His focus is retrieval-augmented generation, agentic AI and LLM integration, delivered as production systems rather than prototypes.",
+    a: "Faizan Amir is a senior full-stack and AI engineer building production applications with React, Next.js, TypeScript, Node.js and Python. He specialises in RAG, agent workflows and LLM integration.",
   },
   {
     q: "What has he actually shipped?",
-    a: "Six case studies, all live or in active development: a live telehealth commerce platform at 250+ subscriptions and £31,000+ in subscription revenue, an AI mini-site builder at 150+ users across three metered subscription tiers, an agentic RAG legal platform at 95% extraction accuracy, an AI image SaaS at 200+ users and $5,000+ revenue, a three-service e-commerce build, and a multi-role fintech platform over Python microservices.",
+    a: "Four live products and two builds in development: telehealth commerce with 250+ subscriptions and £31,000+ revenue, an AI site builder with 150+ users, legal RAG at 95% extraction accuracy on its evaluated set, an AI image SaaS with 200+ users and $5,000+ revenue, plus e-commerce and fintech platforms.",
   },
   {
     q: "Is he available to hire?",
-    a: "Yes, for scoped builds with a defined outcome and for embedded contract work alongside an existing team. Email faizanamir0053@gmail.com or use the contact form. Replies usually land within one working day.",
+    a: "Yes, for scoped builds and embedded contract work. Email faizanamir0053@gmail.com or use the contact form; replies usually arrive within one working day.",
   },
   {
     q: "Where is he based and who does he work with?",
-    a: "Lahore, Pakistan, at UTC+5, working day to day with teams in the United States, United Kingdom, Middle East and Europe across three current and previous roles.",
+    a: "He is based in Lahore, Pakistan (UTC+5) and works with teams in the United States, United Kingdom, Middle East and Europe.",
   },
   {
     q: "What is his strongest area?",
-    a: "Applied AI engineering on top of solid product fundamentals: retrieval that preserves document structure, agent workflows with real routing and human approval gates, and evaluation harnesses built before the pipeline is tuned. Five or more RAG and agentic systems have reached production.",
+    a: "Applied AI backed by product engineering: structure-aware retrieval, routed agents, human approval and evaluation. Five or more RAG and agentic systems have reached production.",
   },
 ];
 
@@ -136,10 +139,6 @@ export default function Index() {
         <Experience />
         <Reach />
         <FeaturedWork />
-        <ComingSoon />
-        <OtherWork />
-        <Education />
-        <BeyondCode />
         <Faq />
         <Contact />
       </main>
@@ -200,8 +199,8 @@ function Hero() {
         />
         <FadeIn delay={0.25}>
           <p className="mt-8 max-w-xl text-base leading-7 text-ink-muted">
-            4 years shipping React, Next.js, Python, and Node.js applications for teams and clients
-            across the US, Middle East, and Europe.
+            Four years shipping React, Next.js, Python and Node.js applications for teams in the
+            US, UK, Middle East and Europe.
           </p>
         </FadeIn>
 
@@ -605,36 +604,11 @@ function ProjectAside({ project: p, href }: { project: Project; href?: string })
 
 
 
-function Education() {
-  return (
-    <section id="education" className="rule-t" aria-labelledby="education-heading">
-      {/* The rule sits on the section and the wrap holds only the content, so
-          the divider runs edge to edge like every other one on the page. */}
-      <div className="wrap py-10 md:py-14">
-        <Tag className="mb-3 block">[EDUCATION]</Tag>
-        {/* The block had no heading and no id, so a degree sat unattached to any
-            titled section of the document. */}
-        <h2 id="education-heading" className="display mb-3 text-xl md:text-2xl">
-          Education
-        </h2>
-        <p className="text-sm">
-          {EDUCATION.degree} — {EDUCATION.institution}, {EDUCATION.place.split(",")[0]}
-        </p>
-      </div>
-    </section>
-  );
-}
-
 /* ---------------- FAQ — the questions that get typed ---------------- */
-/**
- * Plain <dl>, no scroll effect. This block exists to be read out of context —
- * by a visitor scanning, and by an answer engine lifting a single question and
- * its answer. Anything that hides it behind an interaction defeats the point.
- */
 function Faq() {
   return (
     <section id="faq" className="rule-t" aria-label="Frequently asked questions">
-      <div className="wrap grid gap-10 py-20 md:grid-cols-[0.7fr_1.3fr] md:py-28">
+      <div className="wrap grid gap-10 pt-20 pb-14 md:grid-cols-[0.7fr_1.3fr] md:pt-28 md:pb-16">
         {/* Travels with the answers rather than sitting at the top of a column
             the reader has already scrolled past — the same treatment Skills
             and the horizontal rail already use for a section header. */}
@@ -655,27 +629,35 @@ function Faq() {
             .
           </p>
         </div>
-        <dl className="space-y-8">
-          {HOME_FAQS.map((faq) => (
-            <div key={faq.q} className="rule-t pt-5">
-              <dt className="display text-xl md:text-2xl">{faq.q}</dt>
-              <dd className="mt-3 max-w-2xl text-sm leading-7 text-ink-muted">{faq.a}</dd>
-            </div>
+        <Accordion type="multiple" className="rule-t">
+          {HOME_FAQS.map((faq, index) => (
+            <AccordionItem key={faq.q} value={`home-faq-${index}`}>
+              <AccordionTrigger className="rounded-none py-5 hover:no-underline">
+                <span className="display pr-4 text-left text-xl md:text-2xl">{faq.q}</span>
+              </AccordionTrigger>
+              <AccordionContent className="pb-6">
+                <p className="max-w-2xl text-sm leading-7 text-ink-muted">{faq.a}</p>
+              </AccordionContent>
+            </AccordionItem>
           ))}
-        </dl>
+        </Accordion>
       </div>
 
-      <nav aria-label="Services" className="mt-14 rule-t pt-6">
-        <p className="label mb-4">[WHAT I DO]</p>
-        <ul className="flex flex-wrap gap-x-8 gap-y-3 text-sm">
-          {services.map((service) => (
-            <li key={service.slug}>
-              <Link href={`/services/${service.slug}`} className="text-cobalt hover:underline">
-                {service.name} →
-              </Link>
-            </li>
-          ))}
-        </ul>
+      {/* Inside the page gutter: set outside `.wrap`, this row ran flush to
+          the viewport edge and straight into the contact section below. */}
+      <nav aria-label="Services" className="wrap pb-20 md:pb-28">
+        <div className="rule-t pt-6">
+          <p className="label mb-4">[WHAT I DO]</p>
+          <ul className="flex flex-wrap gap-x-8 gap-y-3 text-sm">
+            {services.map((service) => (
+              <li key={service.slug}>
+                <Link href={`/services/${service.slug}`} className="text-cobalt hover:underline">
+                  {service.name} →
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
       </nav>
     </section>
   );
@@ -687,7 +669,7 @@ function Contact() {
     <section id="contact" className="rule-t bg-paper-deep" aria-label="Contact">
       <div className="wrap grid gap-12 py-20 md:grid-cols-2 md:py-28">
         <div>
-          <Tag className="mb-6 block">[07] CONTACT</Tag>
+          <Tag className="mb-6 block">[06] CONTACT</Tag>
           <KineticHeadline
             className="display text-[12vw] md:text-[clamp(2.5rem,5vw,4.5rem)]"
             lines={["Let’s build", "something real."]}

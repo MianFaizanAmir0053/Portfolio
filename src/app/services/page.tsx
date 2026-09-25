@@ -3,7 +3,6 @@ import Link from "next/link";
 import { services } from "@/data/services";
 import { UtilityBar } from "@/components/site/UtilityBar";
 import { Footer } from "@/components/site/Footer";
-import { Tag } from "@/components/site/primitives";
 import { JsonLd } from "@/components/site/JsonLd";
 import { PERSON, OG_IMAGE } from "@/lib/site";
 import { breadcrumbSchema, graph, itemListSchema, webPageSchema } from "@/lib/schema";
@@ -81,15 +80,14 @@ export default function ServicesIndex() {
 
       <main id="main">
         <section className="wrap py-16 md:py-24">
-          <Tag className="mb-6 block">[SERVICES]</Tag>
           <h1 className="display text-[13vw] leading-[0.9] md:text-[clamp(3.5rem,7vw,7rem)]">
-            Five ways to <span className="accent-word">put me</span> on it.
+            <span className="label mb-6 block">Full-stack and AI engineering services</span>{" "}
+            Five ways to <span className="accent-word">work together</span>.
           </h1>
           <p className="mt-8 max-w-2xl text-base leading-7 text-ink-muted">
-            {PERSON.name} is a senior software engineer with {PERSON.yearsExperience} years building
-            production systems for teams in the US, UK, Middle East and Europe. Each service below
-            is one of those systems described as work rather than a skill list, and each one links
-            to the case study that already made its claims in public.
+            {PERSON.name} is a senior full-stack and AI engineer building production systems for
+            teams in the US, UK, Middle East and Europe. Each service below is backed by at least
+            one detailed case study.
           </p>
         </section>
 

@@ -1,16 +1,22 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { projects, otherWork } from "@/data/projects";
+import { projects, otherWork, comingSoon } from "@/data/projects";
 import { UtilityBar } from "@/components/site/UtilityBar";
 import { Footer } from "@/components/site/Footer";
 import { CutFrame, Tag } from "@/components/site/primitives";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { JsonLd } from "@/components/site/JsonLd";
 import { breadcrumbSchema, graph, itemListSchema, webPageSchema } from "@/lib/schema";
 import { OG_IMAGE } from "@/lib/site";
 
 const TITLE = "Work — 6 full-stack and AI engineering case studies";
 const DESCRIPTION =
-  "Six shipped projects written up end to end: the problem, the architecture decision behind it, and what happened after. AI, fintech, telehealth, commerce.";
+  "Six full-stack and AI case studies covering the problem, architecture, key decisions and measured results across AI, fintech, telehealth and commerce.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -89,9 +95,9 @@ export default function WorkIndex() {
 
       <main id="main">
         <section className="wrap py-16 md:py-24">
-          <Tag className="mb-6 block">[CASE STUDIES]</Tag>
           <h1 className="display text-[13vw] leading-[0.9] md:text-[clamp(3.5rem,7vw,7rem)]">
-            Six projects, <span className="accent-word">written up</span> properly.
+            <span className="label mb-6 block">Full-stack and AI case studies</span>{" "}
+            Six projects, <span className="accent-word">problem to result</span>.
           </h1>
           {/*
            * A self-contained answer block. Someone — or something — arriving
@@ -100,11 +106,10 @@ export default function WorkIndex() {
            * surrounding page required.
            */}
           <p className="mt-8 max-w-2xl text-base leading-7 text-ink-muted">
-            Every project below is live or in active development. Each write-up follows the same shape: the
-            problem as the business had it, the architecture decision that answered it, what got
-            built, and the numbers afterwards — including the ones that are still targets rather
-            than readings. Domains run from agentic AI over legal documents to telehealth commerce,
-            multi-role fintech and per-user model training.
+            Each case study covers the problem, architecture, key decisions and results. Four
+            products are live; the two still in development report what is built and tested, not
+            business outcomes. The work spans legal RAG, telehealth commerce, multi-role fintech,
+            e-commerce and per-user AI model training.
           </p>
         </section>
 
@@ -185,7 +190,9 @@ export default function WorkIndex() {
               word is a marker that has stopped marking anything. */}
           <h2 className="display mb-6 text-2xl md:text-4xl">Also shipped</h2>
           <ul className="grid gap-8 md:grid-cols-3">
-            {otherWork.map((work) => (
+            {/* Case studies are already listed above; only work without a
+                write-up belongs here. */}
+            {otherWork.filter((work) => work.external).map((work) => (
               <li key={work.name} className="rule-t pt-5">
                 <h3 className="display text-xl md:text-2xl">{work.name}</h3>
                 <p className="label mt-1 text-cobalt">{work.tagline}</p>
@@ -207,6 +214,36 @@ export default function WorkIndex() {
               </li>
             ))}
           </ul>
+        </section>
+
+        <section className="wrap rule-t py-16 md:py-24" aria-labelledby="in-build-heading">
+          <Tag className="mb-3 block">[IN BUILD]</Tag>
+          <h2 id="in-build-heading" className="display text-2xl md:text-4xl">
+            {comingSoon.name} — <span className="accent-word">{comingSoon.tagline}</span>
+          </h2>
+          <p className="mt-4 max-w-2xl text-sm leading-7 text-ink-muted">{comingSoon.summary}</p>
+          <ul className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {comingSoon.evidence.map((item) => (
+              <li key={item.caption}>
+                <p className="display text-3xl text-cobalt md:text-4xl">{item.value}</p>
+                <p className="label mt-2 text-ink">{item.caption}</p>
+                <p className="label mt-1 text-ink-muted">{item.note}</p>
+              </li>
+            ))}
+          </ul>
+          <p className="label mt-10 text-cobalt">[BUGS FOUND AND FIXED IN BUILD]</p>
+          <Accordion type="multiple" className="mt-3 max-w-3xl rule-t">
+            {comingSoon.broke.map((item, index) => (
+              <AccordionItem key={item.title} value={`mailagent-failure-${index}`}>
+                <AccordionTrigger className="rounded-none py-5 hover:no-underline">
+                  <span className="display pr-4 text-left text-lg md:text-xl">{item.title}</span>
+                </AccordionTrigger>
+                <AccordionContent className="pb-6">
+                  <p className="text-sm leading-7 text-ink-muted">{item.body}</p>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
         </section>
 
         <section className="rule-t bg-paper-deep">

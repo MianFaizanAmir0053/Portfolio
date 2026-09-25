@@ -939,32 +939,37 @@ export function KineticHeadline({
 
   return (
     <As ref={ref as never} className={className}>
-      {lines.map((line) => {
+      {lines.map((line, li) => {
         const words = line.split(" ");
         return (
-          <span key={line} className="block">
-            {words.map((word, wi) => {
-              const marked = accentSet.has(clean(word));
-              /*
-               * The separating space has to be a sibling of the word, not the
-               * last thing inside it. Trailing whitespace at the end of an
-               * inline-block is stripped by white-space processing, which ran
-               * every word in the line together.
-               */
-              return (
-                <Fragment key={`${word}-${wi}`}>
-                  <span
-                    data-kinetic-word
-                    {...(marked ? { "data-kinetic-accent": "" } : {})}
-                    className={cn("inline-block will-change-transform", marked && "accent-word")}
-                  >
-                    {word}
-                  </span>
-                  {wi < words.length - 1 ? " " : null}
-                </Fragment>
-              );
-            })}
-          </span>
+          <Fragment key={line}>
+            {/* A real space between lines, as CurtainText has: each line is a
+                block, so without it `textContent` read "Selectedcase studies". */}
+            {li > 0 ? " " : null}
+            <span className="block">
+              {words.map((word, wi) => {
+                const marked = accentSet.has(clean(word));
+                /*
+                 * The separating space has to be a sibling of the word, not the
+                 * last thing inside it. Trailing whitespace at the end of an
+                 * inline-block is stripped by white-space processing, which ran
+                 * every word in the line together.
+                 */
+                return (
+                  <Fragment key={`${word}-${wi}`}>
+                    <span
+                      data-kinetic-word
+                      {...(marked ? { "data-kinetic-accent": "" } : {})}
+                      className={cn("inline-block will-change-transform", marked && "accent-word")}
+                    >
+                      {word}
+                    </span>
+                    {wi < words.length - 1 ? " " : null}
+                  </Fragment>
+                );
+              })}
+            </span>
+          </Fragment>
         );
       })}
     </As>

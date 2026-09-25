@@ -94,6 +94,22 @@ ${faqs}`;
       const metrics = project.metrics
         .map((m) => `- ${m.value} — ${m.caption}${m.note ? ` (${m.note.replace(/^\*\s*/, "")})` : ""}`)
         .join("\n");
+      // The sections the page collapses, and the caveats behind every figure —
+      // without these the "full" corpus quoted numbers stripped of their method.
+      const constraints = project.constraints
+        ? `\n\n**Constraints**\n\n${project.constraints.map((c) => `- **${c.title}**: ${c.body}`).join("\n")}`
+        : "";
+      const tradeoffs = project.tradeoffs
+        ? `\n\n**Trade-offs**\n\n${project.tradeoffs
+            .map((t) => `- **${t.decision}**, instead of: ${t.instead}. Cost: ${t.cost} Benefit: ${t.bought}`)
+            .join("\n")}`
+        : "";
+      const broke = project.broke
+        ? `\n\n**What broke**\n\n${project.broke.map((b) => `- **${b.title}**: ${b.body}`).join("\n")}`
+        : "";
+      const measured = project.metricsNote
+        ? `\n\n**How these were measured**: ${project.metricsNote}`
+        : "";
       return `### ${project.name} — ${project.tagline}
 
 URL: ${absoluteUrl(`/work/${project.slug}`)}
@@ -106,21 +122,21 @@ Stack: ${project.stack.join(", ")}
 
 **The problem — ${project.problemHeadline}**
 
-${project.problem}
+${project.problem}${constraints}
 
 **The approach**
 
 ${project.approach}
 
-${decisions}
+${decisions}${tradeoffs}
 
 **The build**
 
-${build}
+${build}${broke}
 
 **The result**
 
-${metrics}
+${metrics}${measured}
 
 **What I would do differently**
 
@@ -129,6 +145,7 @@ ${project.reflection}`;
     .join("\n\n")}`);
 
   parts.push(`## Also shipped\n\n${otherWork
+    .filter((work) => work.external)
     .map(
       (work) =>
         `### ${work.name} — ${work.tagline}\n\nStatus: ${work.status}\nLink: ${work.href.startsWith("http") ? work.href : absoluteUrl(work.href)}\nStack: ${work.stack.join(", ")}\n\n${work.note}`,

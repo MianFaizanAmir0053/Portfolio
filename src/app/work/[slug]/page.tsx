@@ -6,6 +6,12 @@ import { projects, getProject, projectNeighbours } from "@/data/projects";
 import { UtilityBar } from "@/components/site/UtilityBar";
 import { Footer } from "@/components/site/Footer";
 import { CurtainText, CutFrame, FadeIn, Scramble, Tag } from "@/components/site/primitives";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { JsonLd } from "@/components/site/JsonLd";
 import { PERSON, CONTENT_REVIEWED } from "@/lib/site";
 import { breadcrumbSchema, caseStudySchema, graph, webPageSchema } from "@/lib/schema";
@@ -279,14 +285,20 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
             label={`[${n("constraints")}] THE CONSTRAINTS`}
             headline={project.headlines?.constraints ?? "What the job ruled out"}
           >
-            <ul className="space-y-6">
-              {project.constraints.map((c) => (
-                <li key={c.title}>
-                  <h3 className="display text-lg md:text-xl">{c.title}</h3>
-                  <p className="mt-2 text-sm leading-7 text-ink-muted">{c.body}</p>
-                </li>
+            <Accordion type="multiple" className="rule-t">
+              {project.constraints.map((constraint, index) => (
+                <AccordionItem key={constraint.title} value={`constraint-${index}`}>
+                  <AccordionTrigger className="rounded-none py-5 hover:no-underline">
+                    <span className="display pr-4 text-left text-lg md:text-xl">
+                      {constraint.title}
+                    </span>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-6">
+                    <p className="text-sm leading-7 text-ink-muted">{constraint.body}</p>
+                  </AccordionContent>
+                </AccordionItem>
               ))}
-            </ul>
+            </Accordion>
           </Block>
         )}
 
@@ -321,26 +333,35 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
             label={`[${n("tradeoffs")}] THE TRADE-OFFS`}
             headline={project.headlines?.tradeoffs ?? "What each choice cost"}
           >
-            <ul className="space-y-10">
-              {project.tradeoffs.map((t) => (
-                <li key={t.decision} className="rule-t pt-6">
-                  <h3 className="display text-lg md:text-xl">{t.decision}</h3>
-                  <p className="label mt-2 text-ink-muted">
-                    <span className="text-cobalt">INSTEAD OF</span> {t.instead}
-                  </p>
-                  <dl className="mt-4 grid gap-x-8 gap-y-4 sm:grid-cols-2">
-                    <div>
-                      <dt className="label mb-1">[COST]</dt>
-                      <dd className="text-sm leading-7 text-ink-muted">{t.cost}</dd>
-                    </div>
-                    <div>
-                      <dt className="label mb-1 text-cobalt">[BOUGHT]</dt>
-                      <dd className="text-sm leading-7 text-ink-muted">{t.bought}</dd>
-                    </div>
-                  </dl>
-                </li>
+            <Accordion type="multiple" className="rule-t">
+              {project.tradeoffs.map((tradeoff, index) => (
+                <AccordionItem key={tradeoff.decision} value={`tradeoff-${index}`}>
+                  <AccordionTrigger className="rounded-none py-5 hover:no-underline">
+                    <span className="display pr-4 text-left text-lg md:text-xl">
+                      {tradeoff.decision}
+                    </span>
+                  </AccordionTrigger>
+                  {/* The rejected option sits in the panel, not the heading:
+                      inside the trigger it doubled every collapsed row. */}
+                  <AccordionContent className="pb-6">
+                    <dl className="grid gap-x-8 gap-y-4 sm:grid-cols-2">
+                      <div className="sm:col-span-2">
+                        <dt className="label mb-1 text-cobalt">[INSTEAD OF]</dt>
+                        <dd className="text-sm leading-7 text-ink-muted">{tradeoff.instead}</dd>
+                      </div>
+                      <div>
+                        <dt className="label mb-1">[COST]</dt>
+                        <dd className="text-sm leading-7 text-ink-muted">{tradeoff.cost}</dd>
+                      </div>
+                      <div>
+                        <dt className="label mb-1 text-cobalt">[BENEFIT]</dt>
+                        <dd className="text-sm leading-7 text-ink-muted">{tradeoff.bought}</dd>
+                      </div>
+                    </dl>
+                  </AccordionContent>
+                </AccordionItem>
               ))}
-            </ul>
+            </Accordion>
           </Block>
         )}
 
@@ -389,17 +410,23 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
          */}
         {project.broke && (
           <Block label={`[${n("broke")}] WHAT BROKE`} headline="And what fixed it">
-            <ol className="space-y-8">
+            <Accordion type="multiple" className="rule-t">
               {project.broke.map((item, i) => (
-                <li key={item.title} className="flex gap-4">
-                  <span className="label shrink-0 pt-1 text-cobalt">!{String(i + 1).padStart(2, "0")}</span>
-                  <div>
-                    <h3 className="display text-lg md:text-xl">{item.title}</h3>
-                    <p className="mt-2 text-sm leading-7 text-ink-muted">{item.body}</p>
-                  </div>
-                </li>
+                <AccordionItem key={item.title} value={`failure-${i}`}>
+                  <AccordionTrigger className="rounded-none py-5 hover:no-underline">
+                    <span className="flex gap-4 pr-4 text-left">
+                      <span aria-hidden className="label shrink-0 pt-1 text-cobalt">
+                        !{String(i + 1).padStart(2, "0")}
+                      </span>
+                      <span className="display text-lg md:text-xl">{item.title}</span>
+                    </span>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-6 pl-10">
+                    <p className="text-sm leading-7 text-ink-muted">{item.body}</p>
+                  </AccordionContent>
+                </AccordionItem>
               ))}
-            </ol>
+            </Accordion>
           </Block>
         )}
 

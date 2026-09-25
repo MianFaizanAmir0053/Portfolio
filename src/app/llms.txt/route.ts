@@ -59,7 +59,7 @@ ${EXPERIENCE.map((role) => `- ${role.role}, ${role.company} (${role.dates}, ${ro
 
 ## Also shipped
 
-${otherWork.map((work) => `- ${work.name} — ${work.tagline} (${work.status}): ${work.note} ${work.href.startsWith("http") ? work.href : absoluteUrl(work.href)}`).join("\n")}
+${otherWork.filter((work) => work.external).map((work) => `- ${work.name} — ${work.tagline} (${work.status}): ${work.note} ${work.href}`).join("\n")}
 
 ## In build
 

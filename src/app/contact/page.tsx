@@ -6,6 +6,12 @@ import { UtilityBar } from "@/components/site/UtilityBar";
 import { Footer } from "@/components/site/Footer";
 import { ContactForm } from "@/components/site/ContactForm";
 import { Tag } from "@/components/site/primitives";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { JsonLd } from "@/components/site/JsonLd";
 import { PERSON, OG_IMAGE } from "@/lib/site";
 import { breadcrumbSchema, faqSchema, graph, webPageSchema } from "@/lib/schema";
@@ -31,15 +37,15 @@ export const metadata: Metadata = {
 const FAQS = [
   {
     q: "What is the fastest way to get a reply?",
-    a: "Email to faizanamir0053@gmail.com or a WhatsApp message. Replies usually land within one working day. The form on this page goes to the same inbox and adds a captcha step, so email is marginally faster if you already have a description ready.",
+    a: "Email or WhatsApp is fastest, and replies usually arrive within one working day. The form reaches the same inbox if you prefer to send a structured brief.",
   },
   {
     q: "What information helps in a first message?",
-    a: "What the system has to do, who uses it, what already exists, and what the deadline is driven by. A rough description beats a polished spec — the first deliverable is usually a written model of the states the system needs, and that is easier to write from the real problem.",
+    a: "Share what the system must do, who uses it, what already exists and what drives the deadline. A rough problem description is more useful than a polished specification.",
   },
   {
     q: "What kinds of engagement are available?",
-    a: "Scoped builds with a defined outcome, embedded contract work alongside an existing team, and shorter technical audits — dependency and vulnerability passes, architecture reviews, or a routing and auth map for a codebase that has grown past its structure.",
+    a: "Scoped builds, embedded contract work and focused technical audits. Audits can cover architecture, dependencies, vulnerabilities, routing or authentication in an existing codebase.",
   },
 ];
 
@@ -92,10 +98,9 @@ export default function Contact() {
               Let&rsquo;s build <span className="accent-word">something real</span>.
             </h1>
             <p className="mt-8 max-w-xl text-base leading-7 text-ink-muted">
-              {PERSON.name} is available for scoped builds and embedded contract work in React,
-              Next.js, Node.js, Python and applied AI. Based in {PERSON.locality} (UTC+5), working
-              day to day with teams in {PERSON.markets.join(", ")}. Replies usually land within one
-              working day.
+              Available for scoped builds and embedded contract work in React, Next.js, Node.js,
+              Python and applied AI. Based in {PERSON.locality} (UTC+5), working with teams in the
+              US, UK, Middle East and Europe. Replies usually arrive within one working day.
             </p>
 
             <dl className="mt-10 space-y-5">
@@ -148,14 +153,18 @@ export default function Contact() {
         <section className="wrap rule-t py-16 md:py-24">
           <Tag className="mb-3 block">[FAQ]</Tag>
           <h2 className="display mb-8 text-2xl md:text-4xl">Before you write</h2>
-          <dl className="max-w-3xl space-y-8">
-            {FAQS.map((faq) => (
-              <div key={faq.q}>
-                <dt className="display text-xl md:text-2xl">{faq.q}</dt>
-                <dd className="mt-3 max-w-[64ch] text-sm leading-7 text-ink-muted">{faq.a}</dd>
-              </div>
+          <Accordion type="multiple" className="max-w-3xl rule-t">
+            {FAQS.map((faq, index) => (
+              <AccordionItem key={faq.q} value={`contact-faq-${index}`}>
+                <AccordionTrigger className="rounded-none py-5 hover:no-underline">
+                  <span className="display pr-4 text-left text-xl md:text-2xl">{faq.q}</span>
+                </AccordionTrigger>
+                <AccordionContent className="pb-6">
+                  <p className="max-w-[64ch] text-sm leading-7 text-ink-muted">{faq.a}</p>
+                </AccordionContent>
+              </AccordionItem>
             ))}
-          </dl>
+          </Accordion>
         </section>
 
         <section className="wrap rule-t py-12">

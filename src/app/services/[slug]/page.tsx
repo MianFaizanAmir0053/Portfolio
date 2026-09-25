@@ -6,6 +6,12 @@ import { getProject } from "@/data/projects";
 import { UtilityBar } from "@/components/site/UtilityBar";
 import { Footer } from "@/components/site/Footer";
 import { Tag } from "@/components/site/primitives";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { JsonLd } from "@/components/site/JsonLd";
 import { PERSON, OG_IMAGE } from "@/lib/site";
 import {
@@ -122,9 +128,11 @@ export default async function ServicePage({ params }: PageProps<"/services/[slug
       <main id="main">
         {/* Headline + the extractable answer block. */}
         <section className="wrap py-16 md:py-24">
-          <Tag className="mb-6 block">[{service.serviceType.toUpperCase()}]</Tag>
           <h1 className="display text-[12vw] leading-[0.9] md:text-[clamp(3rem,6.4vw,6.5rem)]">
-            {service.headline[0]}
+            {/* The service leads the h1, as the homepage's name and role do: the
+                headline alone never named what the page offers. */}
+            <span className="label mb-6 block">{service.name} services</span>{" "}
+            {service.headline[0]}{" "}
             <br />
             {service.headline[1].split(service.accent)[0]}
             <span className="accent-word">{service.accent}</span>
@@ -155,14 +163,22 @@ export default async function ServicePage({ params }: PageProps<"/services/[slug
               are the same words. */}
           <Tag className="mb-3 block">[01] SCOPE</Tag>
           <h2 className="display mb-8 text-2xl md:text-4xl">What this includes</h2>
-          <ul className="grid gap-x-12 gap-y-10 md:grid-cols-2">
-            {service.includes.map((item) => (
-              <li key={item.title}>
-                <h3 className="display text-xl md:text-2xl">{item.title}</h3>
-                <p className="mt-3 text-sm leading-7 text-ink-muted">{item.body}</p>
-              </li>
+          <Accordion type="multiple" className="grid gap-x-12 rule-b md:grid-cols-2">
+            {service.includes.map((item, index) => (
+              <AccordionItem
+                key={item.title}
+                value={`include-${index}`}
+                className="rule-t not-last:border-b-0"
+              >
+                <AccordionTrigger className="rounded-none py-5 hover:no-underline">
+                  <span className="display pr-4 text-left text-xl md:text-2xl">{item.title}</span>
+                </AccordionTrigger>
+                <AccordionContent className="pb-6">
+                  <p className="text-sm leading-7 text-ink-muted">{item.body}</p>
+                </AccordionContent>
+              </AccordionItem>
             ))}
-          </ul>
+          </Accordion>
         </section>
 
         {/* Process, ordered — a list an answer engine can lift as steps. */}
@@ -235,14 +251,18 @@ export default async function ServicePage({ params }: PageProps<"/services/[slug
         <section className="wrap rule-t py-16 md:py-24">
           <Tag className="mb-3 block">[04] QUESTIONS</Tag>
           <h2 className="display mb-8 text-2xl md:text-4xl">Questions about {service.name.toLowerCase()}</h2>
-          <dl className="max-w-3xl space-y-8">
-            {service.faqs.map((faq) => (
-              <div key={faq.q}>
-                <dt className="display text-xl md:text-2xl">{faq.q}</dt>
-                <dd className="mt-3 max-w-[64ch] text-sm leading-7 text-ink-muted">{faq.a}</dd>
-              </div>
+          <Accordion type="multiple" className="max-w-3xl rule-t">
+            {service.faqs.map((faq, index) => (
+              <AccordionItem key={faq.q} value={`faq-${index}`}>
+                <AccordionTrigger className="rounded-none py-5 hover:no-underline">
+                  <span className="display pr-4 text-left text-xl md:text-2xl">{faq.q}</span>
+                </AccordionTrigger>
+                <AccordionContent className="pb-6">
+                  <p className="max-w-[64ch] text-sm leading-7 text-ink-muted">{faq.a}</p>
+                </AccordionContent>
+              </AccordionItem>
             ))}
-          </dl>
+          </Accordion>
         </section>
 
         <section className="wrap rule-t py-12">
