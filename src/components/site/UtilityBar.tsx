@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { GithubIcon, LinkedinIcon } from "./BrandIcons";
-import { Tag } from "./primitives";
 import { SOCIAL } from "@/data/social";
 import { cn } from "@/lib/utils";
 
@@ -54,11 +53,21 @@ export function UtilityBar() {
            * at `sm`, and "Case studies" is three times the width of the "Work"
            * it replaced, so the row is at capacity from 640px up; the long pill
            * only fits once the email address has its own room at `lg`.
+           *
+           * It is also the résumé link. Most visitors are hiring, and this bar
+           * is the one thing on screen for the whole visit — but it has no
+           * room for another link at 320px or at 640px. The status is exactly
+           * what a recruiter acts on, so it becomes the door itself, marked
+           * with the arrow every download on the site carries.
            */}
-          <Tag className="whitespace-nowrap text-cobalt">
-            <span className="lg:hidden">[OPEN TO WORK]</span>
-            <span className="hidden lg:inline">[STATUS: OPEN TO WORK]</span>
-          </Tag>
+          <a
+            href="/resume.pdf"
+            aria-label="Open to work: download résumé (PDF)"
+            className="label whitespace-nowrap text-cobalt hover:underline"
+          >
+            <span className="lg:hidden">[OPEN TO WORK] ↓</span>
+            <span className="hidden lg:inline">[STATUS: OPEN TO WORK] ↓</span>
+          </a>
         </div>
 
         {/*

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useSyncExternalStore } from "react";
+import { isLite } from "@/lib/lite";
 
 /**
  * Reads a media query as an external store rather than syncing it into state
@@ -33,4 +34,13 @@ export function useIsClient() {
     () => true,
     () => false,
   );
+}
+
+/**
+ * Lite mode (see `@/lib/lite`). Fixed for the life of the document, so there
+ * is nothing to subscribe to; `false` on the server and during hydration, like
+ * the media queries above, and the real value on the first client render.
+ */
+export function useLite() {
+  return useSyncExternalStore(noopSubscribe, isLite, () => false);
 }

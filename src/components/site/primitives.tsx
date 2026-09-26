@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { motion, useReducedMotion } from "framer-motion";
 import {
   Fragment,
   useEffect,
@@ -14,10 +13,8 @@ import {
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { cn } from "@/lib/utils";
-import { useMediaQuery } from "@/hooks/use-media-query";
+import { useLite, useMediaQuery } from "@/hooks/use-media-query";
 import { scrollSignal } from "@/lib/scroll-signal";
-
-const EASE = [0.16, 1, 0.3, 1] as const;
 
 /**
  * `useLayoutEffect` on the client, `useEffect` on the server.
@@ -138,6 +135,14 @@ export function CurtainText({
   );
 }
 
+/**
+ * Rises and fades in as it scrolls into view.
+ *
+ * An observer and a CSS transition, not a motion library: this is the only
+ * reveal the pages use that was not already built this way, and it was the
+ * one thing keeping a second animation runtime — on top of GSAP — in the
+ * bundle every route downloads and parses before it can respond.
+ */
 export function FadeIn({
   children,
   className,
@@ -149,101 +154,57 @@ export function FadeIn({
   delay?: number;
   y?: number;
 }) {
-  const reduce = useReducedMotion();
   const ref = useRef<HTMLDivElement>(null);
   /*
    * Same rule as CurtainText: the server ships the content visible and the
-   * client hides it, rather than the other way round. `initial={{ opacity: 0 }}`
-   * puts that zero in the HTML, so without JavaScript the paragraph is in the
-   * document and invisible on the page. Arming in a layout effect lands the
+   * client hides it, rather than the other way round, so without JavaScript
+   * the paragraph is still on the page. Arming in a layout effect lands the
    * hide before the first paint, and anything already on screen is left alone
    * so it cannot flash.
    */
   const [armed, setArmed] = useState(false);
+  const [shown, setShown] = useState(false);
 
   useIsomorphicLayoutEffect(() => {
-    if (reduce) return;
     const el = ref.current;
-    if (!el || el.getBoundingClientRect().top < window.innerHeight) return;
+    if (!el) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (el.getBoundingClientRect().top < window.innerHeight) return;
+
     setArmed(true);
-  }, [reduce]);
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (!entries[0]?.isIntersecting) return;
+        setShown(true);
+        io.disconnect();
+      },
+      { rootMargin: "-8%" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  const hidden = armed && !shown;
+  const ease = "cubic-bezier(0.16,1,0.3,1)";
 
   return (
-    <motion.div
+    <div
       ref={ref}
       className={className}
-      initial={armed ? { opacity: 0, y } : false}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-8%" }}
-      transition={reduce || !armed ? { duration: 0 } : { duration: 0.7, ease: EASE, delay }}
+      style={
+        armed
+          ? {
+              opacity: hidden ? 0 : 1,
+              transform: hidden ? `translate3d(0, ${y}px, 0)` : "none",
+              transition: `opacity 0.7s ${ease} ${delay}s, transform 0.7s ${ease} ${delay}s`,
+              // Promoted only while it is waiting to move.
+              willChange: hidden ? "opacity, transform" : "auto",
+            }
+          : undefined
+      }
     >
       {children}
-    </motion.div>
-  );
-}
-
-/* ---------- staggered children reveal ---------- */
-export function Stagger({
-  children,
-  className,
-  step = 0.09,
-  delay = 0,
-  y = 20,
-  as: As = "div",
-}: {
-  children: ReactNode;
-  className?: string;
-  step?: number;
-  delay?: number;
-  y?: number;
-  as?: "div" | "ul" | "ol" | "dl" | "section";
-}) {
-  const reduce = useReducedMotion();
-  const MotionTag = motion[As] as typeof motion.div;
-  return (
-    <MotionTag
-      className={className}
-      initial="hidden"
-      whileInView="show"
-      viewport={{ once: true, margin: "-8%" }}
-      variants={{
-        hidden: {},
-        show: { transition: reduce ? {} : { staggerChildren: step, delayChildren: delay } },
-      }}
-      custom={{ y, reduce }}
-    >
-      {children}
-    </MotionTag>
-  );
-}
-
-export function StaggerItem({
-  children,
-  className,
-  y = 20,
-  as: As = "div",
-}: {
-  children: ReactNode;
-  className?: string;
-  y?: number;
-  as?: "div" | "li" | "figure" | "p";
-}) {
-  const reduce = useReducedMotion();
-  const MotionTag = motion[As] as typeof motion.div;
-  return (
-    <MotionTag
-      className={className}
-      variants={{
-        hidden: reduce ? { opacity: 1 } : { opacity: 0, y },
-        show: {
-          opacity: 1,
-          y: 0,
-          transition: reduce ? { duration: 0 } : { duration: 0.65, ease: EASE },
-        },
-      }}
-    >
-      {children}
-    </MotionTag>
+    </div>
   );
 }
 
@@ -384,9 +345,13 @@ export function Marquee({
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const reduce = useMediaQuery("(prefers-reduced-motion: reduce)");
+  const lite = useLite();
+  // A per-frame loop for decoration is the first thing a constrained device
+  // should be spared; the band still reads as a band when it stands still.
+  const still = reduce || lite;
 
   useEffect(() => {
-    if (reduce) return;
+    if (still) return;
     const track = trackRef.current;
     if (!track) return;
 
@@ -451,7 +416,7 @@ export function Marquee({
       stop();
       gsap.set(track, { x: 0, skewX: 0 });
     };
-  }, [reduce, speed]);
+  }, [still, speed]);
 
   /*
    * Two repeats per half, not four. The band still has to be wider than any

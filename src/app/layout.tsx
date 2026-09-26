@@ -12,6 +12,7 @@ import { DockNav } from "@/components/site/DockNav";
 import { SmoothScroll } from "@/components/site/SmoothScroll";
 import { JsonLd } from "@/components/site/JsonLd";
 import { SITE_URL, SITE_NAME, PERSON } from "@/lib/site";
+import { LITE_SCRIPT } from "@/lib/lite";
 import { graph, personSchema, websiteSchema } from "@/lib/schema";
 import {
   GoogleAnalytics,
@@ -137,7 +138,16 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       className={`${bebasNeue.variable} ${barlow.variable} ${instrumentSerif.variable} ${geistMono.variable}`}
+      // The lite-mode script below writes `data-lite` onto this element before
+      // React hydrates it. Expected, and only this element's own attributes.
+      suppressHydrationWarning
     >
+      <head>
+        {/* Inline and synchronous on purpose: it has to decide lite mode
+            before the first paint, or the load curtain and the blur it turns
+            off would already be on screen. A few hundred bytes, no request. */}
+        <script dangerouslySetInnerHTML={{ __html: LITE_SCRIPT }} />
+      </head>
       <body>
         {/* First focusable thing in the document. Every page here opens with a
             sticky bar and a breadcrumb, so a keyboard or screen-reader visitor

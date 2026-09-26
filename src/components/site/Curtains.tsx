@@ -1,10 +1,7 @@
 "use client";
 
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-
-const EASE = [0.16, 1, 0.3, 1] as const;
 
 /**
  * Page-load curtain: ink panel wipes upward off-screen.
@@ -32,9 +29,13 @@ export function LoadCurtain() {
  * at roughly 900ms a navigation. Now the panel mounts already covering the
  * screen and leaves immediately: same wipe, half the time, and it reads as a
  * reveal instead of an interruption.
+ *
+ * A keyframe in the stylesheet runs it, so it needs no animation library. The
+ * panel holds for a beat before it moves (the animation's own delay — long
+ * enough to paint once) and removes itself when the wipe ends. Reduced motion
+ * is handled in the stylesheet too — see `.route-curtain` in globals.css.
  */
 export function RouteCurtain() {
-  const reduce = useReducedMotion();
   const pathname = usePathname();
   const [key, setKey] = useState<string | null>(null);
   const first = useRef(true);
@@ -45,27 +46,16 @@ export function RouteCurtain() {
       return;
     }
     setKey(pathname + Date.now());
-    // Just long enough for the panel to paint one frame before AnimatePresence
-    // starts its exit.
-    const t = window.setTimeout(() => setKey(null), 120);
-    return () => window.clearTimeout(t);
   }, [pathname]);
 
-  if (reduce) return null;
+  if (!key) return null;
 
   return (
-    <AnimatePresence>
-      {key && (
-        <motion.div
-          key={key}
-          aria-hidden
-          className="pointer-events-none fixed inset-0 z-[80] bg-cobalt"
-          initial={{ x: "0%" }}
-          animate={{ x: "0%" }}
-          exit={{ x: "100%" }}
-          transition={{ duration: 0.45, ease: EASE }}
-        />
-      )}
-    </AnimatePresence>
+    <div
+      key={key}
+      aria-hidden
+      className="route-curtain pointer-events-none fixed inset-0 z-80 bg-cobalt"
+      onAnimationEnd={() => setKey(null)}
+    />
   );
 }

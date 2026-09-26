@@ -1,9 +1,8 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
-import { useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { cn } from "@/lib/utils";
-import { useMediaQuery } from "@/hooks/use-media-query";
+import { useLite, useMediaQuery } from "@/hooks/use-media-query";
 
 export type MapRegion = {
   lat: { min: number; max: number };
@@ -25,7 +24,10 @@ export type Arc = { start: MapPoint; end: MapPoint };
 
 /**
  * Adapted from the original for this project:
- *  - `motion/react` -> `framer-motion`
+ *  - no motion library: the arcs draw with a CSS transition on
+ *    `stroke-dashoffset`, and the tooltip enters on the stylesheet's
+ *    `fade-up` keyframe
+ *  - the marker pulses pause while the map is off screen
  *  - dropped `next-themes` (`useTheme`) — uninstalled here, palette is locked
  *    dark, so the light/dark branch was dead and the import would not resolve
  *  - the dot SVG is built at build time and served as its own cached asset, so
@@ -52,8 +54,41 @@ export default function WorldMap({
   className?: string;
 }) {
   const reduce = useMediaQuery("(prefers-reduced-motion: reduce)");
+  const lite = useLite();
+  // Lite mode drops the idle pulses; the arcs still draw once.
+  const pulse = !reduce && !lite;
   const [active, setActive] = useState<string | null>(null);
+  const [drawn, setDrawn] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
   const { width, height, region } = image;
+
+  /*
+   * One observer does two jobs. The arcs draw the first time the map comes
+   * into view, and the marker pulses — SMIL, which repaints the SVG on the
+   * main thread every frame — only run while it is on screen. Left running,
+   * they animated for the whole visit wherever the reader had scrolled to.
+   */
+  useEffect(() => {
+    const root = rootRef.current;
+    const svg = svgRef.current;
+    if (!root || !svg) return;
+    svg.pauseAnimations();
+    const io = new IntersectionObserver(
+      (entries) => {
+        const on = !!entries[0]?.isIntersecting;
+        if (on) {
+          setDrawn(true);
+          svg.unpauseAnimations();
+        } else {
+          svg.pauseAnimations();
+        }
+      },
+      { rootMargin: "-10%" },
+    );
+    io.observe(root);
+    return () => io.disconnect();
+  }, []);
 
   const project = (lat: number, lng: number) => ({
     x: ((lng - region.lng.min) / (region.lng.max - region.lng.min)) * width,
@@ -105,7 +140,11 @@ export default function WorldMap({
   };
 
   return (
-    <div className={cn("relative w-full", className)} style={{ aspectRatio: `${width} / ${height}` }}>
+    <div
+      ref={rootRef}
+      className={cn("relative w-full", className)}
+      style={{ aspectRatio: `${width} / ${height}` }}
+    >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={src}
@@ -118,6 +157,7 @@ export default function WorldMap({
       />
 
       <svg
+        ref={svgRef}
         viewBox={`0 0 ${width} ${height}`}
         className="pointer-events-none absolute inset-0 h-full w-full select-none"
         role="group"
@@ -139,18 +179,26 @@ export default function WorldMap({
           // lit, the rest step back rather than disappear.
           const related = !active || key(dot.start) === active || key(dot.end) === active;
           return (
-            <motion.path
+            /*
+             * `pathLength={1}` normalises the arc, so one dash of length 1 is
+             * the whole curve and an offset of 1 hides all of it. Drawing is
+             * the offset running to 0 — each arc a beat after the last.
+             */
+            <path
               key={`arc-${i}`}
               d={curve(a, b)}
               fill="none"
               stroke="url(#reach-arc)"
               strokeWidth={related && active ? 0.9 : 0.6}
-              className="transition-[stroke-width,opacity] duration-300"
               opacity={related ? 1 : 0.18}
-              initial={reduce ? { pathLength: 1 } : { pathLength: 0 }}
-              whileInView={{ pathLength: 1 }}
-              viewport={{ once: true, margin: "-10%" }}
-              transition={reduce ? { duration: 0 } : { duration: 1.1, delay: 0.35 * i, ease: "easeOut" }}
+              pathLength={1}
+              strokeDasharray={1}
+              strokeDashoffset={drawn || reduce ? 0 : 1}
+              style={{
+                transition: reduce
+                  ? "none"
+                  : `stroke-dashoffset 1.1s ease-out ${0.35 * i}s, stroke-width 0.3s, opacity 0.3s`,
+              }}
             />
           );
         })}
@@ -160,7 +208,7 @@ export default function WorldMap({
           const name = [p.label, p.note?.replace(/^\*\s*/, "")].filter(Boolean).join(" — ");
           return (
             <g key={p.key}>
-              {!reduce && !on && (
+              {pulse && !on && (
                 <circle cx={p.x} cy={p.y} r={1.1} fill={lineColor} opacity="0.5">
                   <animate attributeName="r" from="1.1" to="4.5" dur="1.6s" repeatCount="indefinite" />
                   <animate attributeName="opacity" from="0.5" to="0" dur="1.6s" repeatCount="indefinite" />
@@ -219,36 +267,30 @@ export default function WorldMap({
       {/* HTML, not <text>: inside the viewBox the type would scale with the map
           and stop matching anything else on the page. */}
       <div className="pointer-events-none absolute inset-0">
-        <AnimatePresence>
-          {activePoint && (
-            /* The animated element has to be AnimatePresence's own child, or
-               there is nothing left to run an exit on when it unmounts. */
-            <motion.div
-              key={activePoint.key}
-              className="absolute"
-              style={{
-                left: `${(activePoint.x / width) * 100}%`,
-                top: `${(activePoint.y / height) * 100}%`,
-              }}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 4 }}
-              transition={{ duration: reduce ? 0 : 0.18, ease: "easeOut" }}
-            >
-              <span
-                aria-hidden
-                className="absolute left-0 h-4 w-px bg-cobalt/50"
-                style={(activePoint.y / height) * 100 < 26 ? { top: 0 } : { bottom: 0 }}
-              />
-              <div className="absolute" style={anchorStyle()}>
-                <div className="cut-sm min-w-[9rem] whitespace-nowrap border border-cobalt/45 bg-paper px-4 py-3 text-left">
-                  <p className="display text-base leading-none md:text-lg">{activePoint.label}</p>
-                  {activePoint.note && <p className="label mt-2 text-cobalt">{activePoint.note}</p>}
-                </div>
+        {activePoint && (
+          /* Keyed per place, so moving between markers replays the entrance.
+             The keyframe is switched off under reduced motion in globals.css. */
+          <div
+            key={activePoint.key}
+            className="absolute animate-[fade-up_0.18s_ease-out]"
+            style={{
+              left: `${(activePoint.x / width) * 100}%`,
+              top: `${(activePoint.y / height) * 100}%`,
+            }}
+          >
+            <span
+              aria-hidden
+              className="absolute left-0 h-4 w-px bg-cobalt/50"
+              style={(activePoint.y / height) * 100 < 26 ? { top: 0 } : { bottom: 0 }}
+            />
+            <div className="absolute" style={anchorStyle()}>
+              <div className="cut-sm min-w-[9rem] whitespace-nowrap border border-cobalt/45 bg-paper px-4 py-3 text-left">
+                <p className="display text-base leading-none md:text-lg">{activePoint.label}</p>
+                {activePoint.note && <p className="label mt-2 text-cobalt">{activePoint.note}</p>}
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -59,16 +59,25 @@ function AccordionTrigger({
  * Closed panels stay mounted. Radix unmounts a closed panel's children by
  * default, which left every collapsed answer out of the server HTML — present
  * only in the RSC script payload, where crawlers and answer engines do not read
- * it. `forceMount` keeps the text in the document; `data-closed:hidden` hides it
- * visually and from assistive technology, the same approach Skills uses.
+ * it. `forceMount` keeps the text in the document; the closed state below
+ * hides it visually and from assistive technology, the same approach Skills
+ * uses.
  *
- * The inner wrapper has no fixed height. Pinning it to the measured
- * `--radix-accordion-content-height` froze an open panel at the size it had
- * when opened, so narrowing the viewport afterwards clipped the answer.
+ * The panel opens and closes by animating its height, both ways. The trick
+ * is a one-cell grid whose row goes from `0fr` to `1fr`: that resolves to the
+ * content's real height on every frame, so it needs no measured pixel value
+ * — Radix never measures a force-mounted panel — and an open panel still
+ * reflows when the viewport narrows afterwards, instead of being frozen at
+ * the size it opened at and clipping the answer.
  *
- * Opening fades the panel in with a 4px drop instead of animating height:
- * forceMount means Radix never measures the panel, so a height keyframe ran
- * 0 → auto and snapped. Reduced motion keeps the fade and drops the movement.
+ * The transition sits on a wrapper inside the panel, not on the panel. On
+ * every open and close Radix sets the panel's own `transitionDuration` to
+ * `0s` while it measures, and a transition declared there would never run.
+ *
+ * Closed is `invisible` as well as zero-high, which takes the answer out of
+ * the accessibility tree and the tab order the way `hidden` did. Visibility
+ * flips at the end of the transition when closing, so the text stays on
+ * screen while it folds away, and at the start when opening.
  */
 function AccordionContent({
   className,
@@ -79,16 +88,20 @@ function AccordionContent({
     <AccordionPrimitive.Content
       data-slot="accordion-content"
       forceMount
-      className="overflow-hidden text-sm data-closed:hidden data-open:animate-in data-open:fade-in-0 motion-safe:data-open:slide-in-from-top-1 ease-[cubic-bezier(0.23,1,0.32,1)]"
+      className="group/accordion-content text-sm"
       {...props}
     >
-      <div
-        className={cn(
-          "pt-0 pb-2.5 [&_a]:underline [&_a]:underline-offset-3 [&_a]:hover:text-foreground [&_p:not(:last-child)]:mb-4",
-          className
-        )}
-      >
-        {children}
+      <div className="invisible grid grid-rows-[0fr] opacity-0 transition-[grid-template-rows,opacity,visibility] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] group-data-[state=open]/accordion-content:visible group-data-[state=open]/accordion-content:grid-rows-[1fr] group-data-[state=open]/accordion-content:opacity-100 motion-reduce:transition-none">
+        <div className="min-h-0 overflow-hidden">
+          <div
+            className={cn(
+              "pt-0 pb-2.5 [&_a]:underline [&_a]:underline-offset-3 [&_a]:hover:text-foreground [&_p:not(:last-child)]:mb-4",
+              className
+            )}
+          >
+            {children}
+          </div>
+        </div>
       </div>
     </AccordionPrimitive.Content>
   )

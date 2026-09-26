@@ -403,8 +403,10 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
           <CardStack
             bars={2}
             fit
+            navLabel="The build"
             items={project.build.map((b, i) => ({
               key: b.title,
+              label: b.title,
               content: (
                 <div>
                   <LineDraw delay={0.05} />

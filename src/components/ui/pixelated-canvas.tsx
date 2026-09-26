@@ -1,6 +1,8 @@
 "use client";
 import React from "react";
-import { useMediaQuery } from "@/hooks/use-media-query";
+import { preload } from "react-dom";
+import { getImageProps } from "next/image";
+import { useLite, useMediaQuery } from "@/hooks/use-media-query";
 
 /**
  * Adapted from the original for this project:
@@ -24,13 +26,26 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 type Sample = {
   x: number;
   y: number;
-  r: number;
-  g: number;
-  b: number;
+  /** `rgb(...)`, built once here rather than per dot per frame. */
+  fill: string;
   a: number;
   drop: boolean;
   seed: number;
 };
+
+/**
+ * Same-origin raster sources are fetched through Next's image optimizer, like
+ * every <Image> on the site. The canvas only ever reads the picture at its
+ * CSS-pixel size, so a full-resolution PNG was bytes nothing looked at: the
+ * hero portrait went from 176KB to under 7KB of AVIF, above the fold, on
+ * every visit. `srcSet` lists the 1x candidate first, and 1x is all this
+ * samples. Remote and vector sources pass through untouched.
+ */
+function optimizedSrc(src: string, width: number, height: number) {
+  if (/^(https?:)?\/\//i.test(src) || /\.svg($|\?)/i.test(src)) return src;
+  const { props } = getImageProps({ src, alt: "", width, height });
+  return props.srcSet?.split(", ")[0]?.split(" ")[0] || props.src;
+}
 
 type PixelatedCanvasProps = {
   src: string;
@@ -125,11 +140,21 @@ export const PixelatedCanvas: React.FC<PixelatedCanvasProps> = ({
    * hardware least able to absorb them, for no visible difference at all.
    */
   const finePointer = useMediaQuery("(hover: hover) and (pointer: fine)");
-  const animate = interactive && !reduceMotion && finePointer;
+  // Lite mode: the same portrait, painted once.
+  const lite = useLite();
+  const animate = interactive && !reduceMotion && finePointer && !lite;
 
   // Backing resolution. Display size is handled in CSS when `responsive`.
   const displayWidth = width;
   const displayHeight = height;
+  const source = React.useMemo(() => optimizedSrc(src, width, height), [src, width, height]);
+  /*
+   * The picture is only requested from an effect, after hydration — on a slow
+   * connection a full round trip after the page's JavaScript has arrived.
+   * A preload hint in the server HTML starts that download alongside the
+   * JavaScript instead; the effect's request then comes out of the cache.
+   */
+  preload(source, { as: "image" });
 
   React.useEffect(() => {
     const canvas = canvasRef.current;
@@ -145,13 +170,15 @@ export const PixelatedCanvas: React.FC<PixelatedCanvasProps> = ({
     const targetMouse = { x: -9999, y: -9999 };
     const animMouse = { x: -9999, y: -9999 };
     let lastFrame = 0;
+    /** A frame other than the resting picture is on the canvas. */
+    let distorted = false;
     let pointerInside = false;
     let activity = 0;
     let activityTarget = 0;
 
     const img = new Image();
     // Only meaningful cross-origin; on same-origin it buys nothing.
-    if (/^https?:\/\//i.test(src)) img.crossOrigin = "anonymous";
+    if (/^https?:\/\//i.test(source)) img.crossOrigin = "anonymous";
 
     const compute = () => {
       const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
@@ -183,7 +210,9 @@ export const PixelatedCanvas: React.FC<PixelatedCanvasProps> = ({
       const offscreen = document.createElement("canvas");
       offscreen.width = Math.max(1, Math.floor(displayWidth));
       offscreen.height = Math.max(1, Math.floor(displayHeight));
-      const off = offscreen.getContext("2d");
+      // Read back once, straight after drawing — a CPU-backed context makes
+      // that `getImageData` a copy rather than a stall on the GPU.
+      const off = offscreen.getContext("2d", { willReadFrequently: true });
       if (!off) return;
 
       const iw = img.naturalWidth || displayWidth;
@@ -299,7 +328,7 @@ export const PixelatedCanvas: React.FC<PixelatedCanvasProps> = ({
           const dropoutProb = Math.max(0, Math.min(1, (1 - gradientNorm) * dropoutStrength));
           const seed = hash2D(cx, cy);
 
-          samples.push({ x, y, r, g, b, a, drop: seed < dropoutProb, seed });
+          samples.push({ x, y, fill: `rgb(${r}, ${g}, ${b})`, a, drop: seed < dropoutProb, seed });
         }
       }
 
@@ -308,7 +337,7 @@ export const PixelatedCanvas: React.FC<PixelatedCanvasProps> = ({
 
     const paintDot = (ctx: CanvasRenderingContext2D, s: Sample, px: number, py: number) => {
       ctx.globalAlpha = s.a;
-      ctx.fillStyle = `rgb(${s.r}, ${s.g}, ${s.b})`;
+      ctx.fillStyle = s.fill;
       if (shape === "circle") {
         ctx.beginPath();
         ctx.arc(px, py, dims.dot / 2, 0, Math.PI * 2);
@@ -369,9 +398,15 @@ export const PixelatedCanvas: React.FC<PixelatedCanvasProps> = ({
        * `drawStatic` paints. Park the loop instead of redrawing that same
        * frame forever; the pointer handlers below start it again on the next
        * approach. The IntersectionObserver stays as the outer guard.
+       *
+       * Only repainted if a distorted frame is actually on the canvas. The
+       * observer starts the loop the moment the canvas is on screen, just
+       * after the load has already painted it at rest, and that used to buy a
+       * second identical full paint in the middle of the page's startup.
        */
       if (!pointerInside && act < 0.002) {
-        drawStatic();
+        if (distorted) drawStatic();
+        distorted = false;
         raf = null;
         return;
       }
@@ -416,6 +451,7 @@ export const PixelatedCanvas: React.FC<PixelatedCanvasProps> = ({
         paintDot(ctx, s, drawX, drawY);
       }
       ctx.globalAlpha = 1;
+      distorted = true;
 
       raf = requestAnimationFrame(frame);
     };
@@ -489,10 +525,10 @@ export const PixelatedCanvas: React.FC<PixelatedCanvasProps> = ({
     };
 
     img.onerror = () => {
-      console.error("Failed to load image for PixelatedCanvas:", src);
+      console.error("Failed to load image for PixelatedCanvas:", source);
     };
 
-    img.src = src;
+    img.src = source;
 
     return () => {
       cancelled = true;
@@ -503,7 +539,7 @@ export const PixelatedCanvas: React.FC<PixelatedCanvasProps> = ({
       img.onerror = null;
     };
   }, [
-    src,
+    source,
     displayWidth,
     displayHeight,
     responsive,

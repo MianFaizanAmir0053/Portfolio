@@ -8,6 +8,20 @@
 @source not "../../.claude";
 
 /*
+ * Components that exist in the tree but that no page imports: the shadcn
+ * scaffolds nothing uses yet, and site pieces that have been retired. Tailwind
+ * scans files, not the import graph, so their classes — every `dark:` and
+ * `data-[state]` variant a switch or a dialog carries — were being compiled
+ * into the one stylesheet every page blocks on. Leaving them out cut it by
+ * nearly half.
+ *
+ * START USING ONE OF THESE? Delete it from this list first, or its classes
+ * will not exist and it will render unstyled.
+ */
+@source not "../components/ui/{avatar,badge,button,card,dialog,dropdown-menu,input,label,navigation-menu,scroll-area,select,separator,sheet,skeleton,switch,tabs,textarea,tooltip}.tsx";
+@source not "../components/site/{HeroObject,HeroScene,ComingSoon,OtherWork,BeyondCode}.tsx";
+
+/*
  * FAIZAN AMIR — editorial design system.
  * Palette is locked: paper / paper-deep / ink / ink-muted / cobalt / cobalt-deep.
  * No other colors. No gradients. No shadows.
@@ -168,6 +182,38 @@
   :focus-visible {
     outline: 2px solid var(--focus);
     outline-offset: 3px;
+  }
+
+  /*
+   * Cursors. Tailwind v4's preflight stopped giving buttons a pointer, so every
+   * <button> on the site — accordion rows, the dock toggle, the deck index,
+   * the stack list, the submit — showed the arrow, as if it were plain text.
+   * Anything that acts on a click says so here, once, rather than per element.
+   */
+  button,
+  [role="button"],
+  [type="button"],
+  [type="submit"],
+  [type="reset"],
+  [type="checkbox"],
+  [type="radio"],
+  [type="file"],
+  [type="color"],
+  [type="range"],
+  summary,
+  select {
+    cursor: pointer;
+  }
+
+  /* Not actionable right now, and it should look it. */
+  :disabled,
+  [aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+
+  /* Accepted and working — a submit in flight, say. Wins over `:disabled`. */
+  [aria-busy="true"] {
+    cursor: progress;
   }
 }
 
@@ -388,6 +434,23 @@
   }
 }
 
+/* Mobile dock menu tiles. Staggered per tile from FloatingDockMobile; `both`
+   holds each one hidden until its turn on the way in, and hidden after its
+   turn on the way out, until the menu unmounts. */
+@keyframes dock-item-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+}
+
+@keyframes dock-item-out {
+  to {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+}
+
 /* Skip link: off-screen until focused, then pinned to the top-left in the
    site's own palette. Not `display: none` — a hidden link is not focusable, and
    an unfocusable skip link is decoration. */
@@ -433,6 +496,22 @@
   animation: curtain-lift 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.15s forwards;
 }
 
+/* Route curtain. Mounts covering the screen, holds long enough to paint once,
+   then wipes off to the right; RouteCurtain unmounts it on `animationend`.
+   `both` keeps it covering during the hold. */
+@keyframes route-curtain-wipe {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(100%, 0, 0);
+  }
+}
+
+.route-curtain {
+  animation: route-curtain-wipe 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both;
+}
+
 /* The signature line reveal, as a CSS animation for text that is above the
    fold. The JavaScript version waits for hydration and an IntersectionObserver
    before it will show a word, which put the hero headline — the page's largest
@@ -452,6 +531,32 @@
   animation: line-rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) var(--line-delay, 0s) forwards;
 }
 
+/*
+ * Lite mode — a constrained device or connection (see src/lib/lite.ts). The
+ * content is untouched; what goes is the work that never stops. No curtains
+ * standing between a slow page and its reader, no loops that run for as long
+ * as the page is open, and no backdrop blur, which re-samples everything
+ * behind the pane on every scrolled frame. The glass keeps its opaque base,
+ * so the dock stays legible without it.
+ */
+html[data-lite] .load-curtain,
+html[data-lite] .route-curtain {
+  animation: none;
+  display: none;
+}
+
+html[data-lite] .animate-bob,
+html[data-lite] .animate-drift,
+html[data-lite] .animate-flicker {
+  animation: none;
+}
+
+html[data-lite] .glass-fill,
+html[data-lite] .backdrop-blur-md {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -460,12 +565,14 @@
   .animate-bob,
   .animate-drift,
   .animate-flicker,
+  .dock-item,
   [class*="animate-[fade-up"] {
     animation: none !important;
   }
 
   /* No wipe, no rise: show the page and the words immediately. */
-  .load-curtain {
+  .load-curtain,
+  .route-curtain {
     animation: none;
     display: none;
   }

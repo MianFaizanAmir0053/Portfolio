@@ -3,26 +3,33 @@
 import { Suspense, useEffect } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import Script from "next/script";
-import { GA_ID, GTM_ID, gtmPush } from "@/lib/analytics";
+import { GA_ID, GTM_DATA_LAYER, GTM_ID, gtmPush } from "@/lib/analytics";
 
 /**
  * Google Tag Manager container script. Rendered from the root layout so it
- * loads on every page; `beforeInteractive` hoists it ahead of first-party code.
+ * loads on every page, after everything the page itself needs.
  */
 export function GoogleTagManager() {
   if (!GTM_ID) return null;
 
   return (
-    // `afterInteractive`, not `beforeInteractive`: the container script was
-    // being hoisted into <head> and fetched ahead of first-party code, so a
-    // tag manager sat on the critical path of every page load. Measurement is
-    // not worth largest-contentful-paint. GTM still fires its own pageview.
-    <Script id="gtm-base" strategy="afterInteractive">
+    // `lazyOnload`: fetched once the page's own resources are in and the
+    // browser is idle. `afterInteractive` still started the container download
+    // during hydration, where on a slow connection it competed with the page's
+    // own chunks and images for the same bandwidth, and its execution landed
+    // on the main thread just as the page became interactive. Measurement is
+    // not worth either. GTM still fires its own pageview when it arrives, and
+    // anything pushed to its data layer before then is queued, not lost.
+    //
+    // The container runs on its own data layer (`GTM_DATA_LAYER`), not the
+    // `dataLayer` gtag.js uses — see the note on the constant for the
+    // duplicate Google tag download the shared one caused.
+    <Script id="gtm-base" strategy="lazyOnload">
       {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
 j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','${GTM_ID}');`}
+})(window,document,'script','${GTM_DATA_LAYER}','${GTM_ID}');`}
     </Script>
   );
 }
@@ -55,9 +62,10 @@ export function GoogleAnalytics() {
       <Script
         id="ga-src"
         src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
-        strategy="afterInteractive"
+        strategy="lazyOnload"
       />
-      <Script id="ga-init" strategy="afterInteractive">
+      {/* Idle-loaded for the same reason as the container above. */}
+      <Script id="ga-init" strategy="lazyOnload">
         {`window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 window.gtag = gtag;

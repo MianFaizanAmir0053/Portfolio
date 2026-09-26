@@ -146,23 +146,30 @@ export function Turnstile({
 
   if (!siteKey) return null;
 
+  /*
+   * Space held for the widget and its status line from the first render.
+   * Both used to appear from nothing — the widget's 65px frame when the
+   * script arrived, then a status line that came and went — and each change
+   * of height at the foot of the page made every ScrollTrigger above it
+   * re-measure: a full double pass, several hundred milliseconds on a slow
+   * phone, landing just as the reader reached the form. It was layout shift
+   * in the plain sense too.
+   */
   return (
     <div className={className}>
-      <div id={containerId} />
-      {status === "pending" && (
-        <p className="label mt-2" aria-live="polite">
-          [VERIFYING…]
-        </p>
-      )}
-      {status === "failed" && (
-        <p className="label mt-2 text-cobalt" aria-live="polite">
-          [CAPTCHA UNAVAILABLE] Send the message to{" "}
-          <a href={`mailto:${PERSON.email}`} className="underline">
-            {PERSON.email}
-          </a>{" "}
-          instead.
-        </p>
-      )}
+      <div id={containerId} className="min-h-[65px]" />
+      <p className={`label mt-2 min-h-[1.2em] ${status === "failed" ? "text-cobalt" : ""}`} aria-live="polite">
+        {status === "pending" && "[VERIFYING…]"}
+        {status === "failed" && (
+          <>
+            [CAPTCHA UNAVAILABLE] Send the message to{" "}
+            <a href={`mailto:${PERSON.email}`} className="underline">
+              {PERSON.email}
+            </a>{" "}
+            instead.
+          </>
+        )}
+      </p>
     </div>
   );
 }

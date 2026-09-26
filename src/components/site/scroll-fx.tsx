@@ -2,6 +2,7 @@
 
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import type Lenis from "lenis";
 import {
   Fragment,
   createContext,
@@ -15,8 +16,9 @@ import {
   type RefObject,
 } from "react";
 import { cn } from "@/lib/utils";
-import { useMediaQuery } from "@/hooks/use-media-query";
+import { useLite, useMediaQuery } from "@/hooks/use-media-query";
 import { scrollSignal } from "@/lib/scroll-signal";
+import { onLenis } from "@/lib/lenis-instance";
 
 if (typeof window !== "undefined") gsap.registerPlugin(ScrollTrigger);
 
@@ -69,7 +71,7 @@ const PINNED_HEIGHT = "h-[calc(100svh-var(--bar-h))]";
 const PIN_TYPE = "transform" as const;
 
 /*
- * No snapping on the pinned sections, deliberately.
+ * No ScrollTrigger snapping, deliberately.
  *
  * ScrollTrigger snaps by tweening the window's scroll position once it decides
  * scrolling has stopped. Lenis owns that position — it lerps toward its own
@@ -80,8 +82,8 @@ const PIN_TYPE = "transform" as const;
  * an ordinary scroll, roughly every time the wheel paused for a frame. That is
  * the judder that used to hit the Experience rail.
  *
- * Nothing replaces it. A rail whose panels are different widths has no natural
- * grid to snap to, and reading is better served by stopping wherever you like.
+ * The held sections still come to rest on whole panels, through
+ * `settleOnStops`, which asks Lenis to make the move rather than racing it.
  */
 
 /**
@@ -92,11 +94,17 @@ const PIN_TYPE = "transform" as const;
  * the right default to ship in HTML: it is usable with no JavaScript at all,
  * and the real mode lands on the first client render without a hydration
  * mismatch (that is what `useSyncExternalStore` is for).
+ *
+ * Lite mode (see `@/lib/lite`) takes the reduced-motion path: a device that
+ * cannot hold a pinned, scrubbed section at frame rate reads better with the
+ * same content simply flowing down the page.
  */
 export function useFxMode() {
   const reduce = useMediaQuery(REDUCE);
   const desktop = useMediaQuery(DESKTOP);
-  return { motion: !reduce, desktop, pinned: !reduce && desktop };
+  const lite = useLite();
+  const motion = !reduce && !lite;
+  return { motion, reduce, desktop, pinned: motion && desktop };
 }
 
 /* ============================================================
@@ -107,9 +115,8 @@ export function useFxMode() {
  * Keeps ScrollTrigger honest and publishes the shared scroll signal.
  *
  * Pinned sections measure their distances up front, so anything that changes
- * layout after first paint — webfonts swapping in, images decoding, the load
- * curtain lifting — has to force a re-measure or every pin lands in the wrong
- * place.
+ * layout after first paint — webfonts swapping in, images decoding — has to
+ * force a re-measure or every pin lands in the wrong place.
  */
 export function ScrollFxRoot() {
   useEffect(() => {
@@ -121,14 +128,6 @@ export function ScrollFxRoot() {
      * By the second pass the starts are right, the ordering is right, and the
      * positions settle.
      */
-    /*
-     * Coalesced. Three sources — the curtain timer, the load event and
-     * document.fonts.ready — each used to fire the double refresh above, so a
-     * normal page load ran up to six full re-measures of every trigger on the
-     * main thread inside the first two seconds. They almost always land within
-     * a few hundred milliseconds of each other, so one trailing refresh after
-     * the last of them does the same job for a sixth of the work.
-     */
     let pending: number | null = null;
     const refresh = () => {
       if (pending !== null) window.clearTimeout(pending);
@@ -139,10 +138,26 @@ export function ScrollFxRoot() {
       }, 120);
     };
 
-    // The load curtain clears at ~1s; measure once it is gone.
-    const curtain = window.setTimeout(refresh, 1200);
-    window.addEventListener("load", refresh);
-    document.fonts?.ready.then(refresh).catch(() => {});
+    /*
+     * Once, when the page's resources and its fonts are both in — not once
+     * for each. The fonts, the load event and a fixed 1.2s timer each used to
+     * start their own double pass, and a 120ms coalescing window only merged
+     * them on a fast machine: on a throttled phone they land seconds apart,
+     * which made it three double passes — six full re-measures — in the
+     * first seconds of the visit. The timer covered the load curtain, which
+     * is a fixed, transform-only overlay and never moved a trigger. Anything
+     * that does change the page height later is the ResizeObserver's job.
+     */
+    let cancelled = false;
+    const loaded =
+      document.readyState === "complete"
+        ? Promise.resolve()
+        : new Promise<void>((resolve) => window.addEventListener("load", () => resolve(), { once: true }));
+    Promise.all([loaded, document.fonts?.ready])
+      .then(() => {
+        if (!cancelled) refresh();
+      })
+      .catch(() => {});
 
     /*
      * Opening or closing an accordion changes the page height after every
@@ -172,6 +187,17 @@ export function ScrollFxRoot() {
     });
 
     /*
+     * ScrollTrigger also re-measures by itself on `load`. The pass above
+     * already runs once the load is in, so the built-in one was one more full
+     * re-measure of every pin in the busiest second of the visit — on a slow
+     * phone, a couple of hundred milliseconds of main thread for positions
+     * the next pass overwrites. The other events stay. Set here rather than
+     * at import, because ScrollTrigger only wires those listeners once it has
+     * a <body> — creating the trigger above guarantees that it has.
+     */
+    ScrollTrigger.config({ autoRefreshEvents: "visibilitychange,DOMContentLoaded,resize" });
+
+    /*
      * `onUpdate` stops firing the moment scrolling stops, which would leave
      * `velocity` frozen at whatever it last was — consumers would read the page
      * as permanently racing. Decaying it on the ticker means it falls back to
@@ -186,9 +212,8 @@ export function ScrollFxRoot() {
     gsap.ticker.add(decay);
 
     return () => {
-      window.clearTimeout(curtain);
+      cancelled = true;
       if (pending !== null) window.clearTimeout(pending);
-      window.removeEventListener("load", refresh);
       resized.disconnect();
       gsap.ticker.remove(decay);
       page.kill();
@@ -392,25 +417,319 @@ function usePinnedScrollGuard(ref: RefObject<HTMLElement | null>, active: boolea
 }
 
 /* ============================================================
+ * SETTLE — held sections come to rest on a whole panel
+ * ============================================================ */
+
+/** How far past a stop a scroll has to carry before it commits to the next. */
+const COMMIT = 0.2;
+
+/**
+ * The most a wheel has to carry, whatever the share: one notch. A fifth of a
+ * full-screen panel is two notches of a mouse wheel, so a single deliberate
+ * notch used to be taken for a slip and pulled straight back.
+ */
+const WHEEL_COMMIT_PX = 48;
+
+/** Stillness that stands in for the end of a scroll, where there is no `scrollend`. */
+const QUIET_MS = 150;
+
+/**
+ * Carries a scroll that comes to rest between two stops on to one of them, so
+ * a held section never stops with two panels half on screen.
+ *
+ * Hand-rolled rather than ScrollTrigger's snap (see the note at the top of
+ * this file) and rather than Lenis's snap plugin, which only knows "nearest".
+ * Nearest pulls a small nudge straight back, which reads as the page refusing
+ * to move. Here the scroll's direction decides: a fifth of the way onward
+ * commits to the next stop, and anything less is a slip and is undone.
+ *
+ * It answers to what the reader did, not to what kind of screen they have. A
+ * phone emulated in a desktop browser is a touch screen driven by a mouse
+ * wheel, and so is an iPad with a trackpad; deciding by `(pointer: coarse)`
+ * left both with no settle at all.
+ *  - A wheel under Lenis settles once the wheel goes quiet, aimed at where
+ *    Lenis is heading, and Lenis makes the move, so it glides like the scroll
+ *    before it.
+ *  - A finger settles the moment its fling stops (`scrollend`), once it is
+ *    off the glass, and a native smooth scroll makes the move — off the main
+ *    thread, like the fling. A fling caught under the finger, or a drag that
+ *    stopped before it lifted, ends without another scroll, so the lift
+ *    settles those.
+ *  - A wheel without Lenis (lite mode) settles on the scroll's `scrollend`.
+ *  - A browser with no `scrollend` gets a moment's stillness in its place.
+ * Arrow keys, the scrollbar and anchor links leave the page where they put
+ * it. Page Up, Page Down and Space step a whole stop instead, and an anchor
+ * jump Lenis is running through the section is never hijacked.
+ *
+ * Live from a run-up before the first stop to the same distance past the
+ * last. Arriving in the direction of travel lands on the first stop; leaving
+ * is never pulled back.
+ */
+function settleOnStops({
+  stops,
+  runUp,
+  sideways = false,
+}: {
+  /** Page scroll positions to rest on, ascending. Read afresh at every settle. */
+  stops: () => number[];
+  /** How far outside the first and last stop a scroll is still carried in. */
+  runUp: () => number;
+  /** The left and right arrows step too, while held — for a row that travels sideways. */
+  sideways?: boolean;
+}) {
+  const nativeEnd = "onscrollend" in window;
+  let lenis: Lenis | null = null;
+  // What last moved the page. Only a wheel or a finger is ever settled.
+  let source: "wheel" | "touch" | null = null;
+  let armed = false;
+  let touching = false;
+  let direction = 1;
+  let lastY = window.scrollY;
+  let lastMoveAt = 0;
+  let timer = 0;
+
+  const unLenis = onLenis((instance) => {
+    lenis = instance;
+    return () => {
+      lenis = null;
+    };
+  });
+
+  const later = (fn: () => void, ms: number) => {
+    window.clearTimeout(timer);
+    timer = window.setTimeout(fn, ms);
+  };
+
+  // Where the page is heading: Lenis's target mid-glide, the page itself otherwise.
+  const heading = () => (lenis && source !== "touch" ? lenis.targetScroll : window.scrollY);
+
+  const move = (target: number) => {
+    const distance = Math.abs(target - window.scrollY);
+    if (distance < 2) return;
+    if (lenis && source !== "touch") {
+      lenis.scrollTo(target, {
+        // A nudge back into place is quick; a whole panel travels further and
+        // gets proportionally longer, so both feel like the same motion.
+        duration: gsap.utils.clamp(0.35, 0.85, 0.3 + (0.6 * distance) / window.innerHeight),
+        easing: (t) => 1 - (1 - t) ** 4,
+      });
+    } else {
+      window.scrollTo({ top: target, behavior: "smooth" });
+    }
+  };
+
+  const settle = () => {
+    const points = stops();
+    if (points.length < 2) return;
+    const y = heading();
+    const first = points[0];
+    const last = points[points.length - 1];
+    const edge = runUp();
+    if (y < first) {
+      if (direction > 0 && y >= first - edge) move(first);
+      return;
+    }
+    if (y > last) {
+      if (direction < 0 && y <= last + edge) move(last);
+      return;
+    }
+    let base = 0;
+    while (base < points.length - 2 && points[base + 1] <= y + 1) base += 1;
+    const span = points[base + 1] - points[base];
+    const commit = source === "wheel" ? Math.min(COMMIT * span, WHEEL_COMMIT_PX) : COMMIT * span;
+    // How far the scroll carried from the stop it set off from.
+    const carried = direction > 0 ? y - points[base] : points[base + 1] - y;
+    const ahead = direction > 0 ? base + 1 : base;
+    const behind = direction > 0 ? base : base + 1;
+    move(points[carried > commit ? ahead : behind]);
+  };
+
+  const settleNow = () => {
+    window.clearTimeout(timer);
+    if (!armed || touching) return;
+    armed = false;
+    // A move Lenis is making on its own — an anchor jump passing through — is
+    // left alone. A wheel's settle lands mid-glide on purpose.
+    if (source !== "wheel" && lenis?.isScrolling === "smooth") return;
+    settle();
+  };
+
+  const onWheel = (e: WheelEvent) => {
+    // Pinch-zoom on a trackpad, a sideways swipe, or a nested scroller that
+    // scrolls itself: none of them moved the page.
+    if (e.ctrlKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+    if (e.target instanceof Element && e.target.closest("[data-lenis-prevent]")) return;
+    source = "wheel";
+    armed = true;
+    direction = Math.sign(e.deltaY) || direction;
+    // Without Lenis the wheel scrolls natively, and its own end settles it.
+    if (lenis) later(settleNow, 160);
+  };
+
+  const onTouchStart = () => {
+    touching = true;
+    source = "touch";
+    armed = true;
+    window.clearTimeout(timer);
+  };
+  const onTouchEnd = (e: TouchEvent) => {
+    // A new swipe that cancels the previous settle reports that settle's end
+    // with the finger still down; wait for the swipe's own end.
+    touching = e.touches.length > 0;
+    if (touching) return;
+    const lifted = performance.now();
+    // Nothing moved after the lift: there is no scroll left to end.
+    later(() => {
+      if (lastMoveAt <= lifted) settleNow();
+    }, QUIET_MS);
+  };
+
+  const onScroll = () => {
+    const y = window.scrollY;
+    if (y === lastY) return;
+    // A wheel's direction is its own; anything else is read off the page.
+    if (source !== "wheel") direction = y > lastY ? 1 : -1;
+    lastY = y;
+    lastMoveAt = performance.now();
+    if (!nativeEnd && armed && !touching && !(source === "wheel" && lenis)) later(settleNow, QUIET_MS);
+  };
+  const onScrollEnd = () => {
+    // Lenis ends a scroll every frame it moves the page; the wheel's own quiet has it.
+    if (source === "wheel" && lenis) return;
+    settleNow();
+  };
+
+  const onKey = (e: KeyboardEvent) => {
+    if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return;
+    const t = e.target as HTMLElement | null;
+    if (t?.closest?.("input, textarea, select, button, [contenteditable=''], [contenteditable='true']")) return;
+    const arrow = e.key === "ArrowRight" || e.key === "ArrowLeft";
+    if (arrow && !sideways) return;
+    const forward = e.key === "PageDown" || (e.key === " " && !e.shiftKey) || e.key === "ArrowRight";
+    const back = e.key === "PageUp" || (e.key === " " && e.shiftKey) || e.key === "ArrowLeft";
+    if (!forward && !back) return;
+    const points = stops();
+    if (points.length < 2) return;
+    const y = heading();
+    // The page keys also carry the reader in from the run-up; the arrows only
+    // steer a row that is already held.
+    const edge = arrow ? 1 : runUp();
+    if (y < points[0] - edge || y > points[points.length - 1] + edge) return;
+    const target = forward ? points.find((p) => p > y + 1) : points.findLast((p) => p < y - 1);
+    // Off either end the key falls through, and the page carries on as normal.
+    if (target === undefined) return;
+    e.preventDefault();
+    source = null;
+    armed = false;
+    direction = forward ? 1 : -1;
+    move(target);
+  };
+
+  const goTo = (index: number) => {
+    const points = stops();
+    if (!points.length) return;
+    const target = points[gsap.utils.clamp(0, points.length - 1, index)];
+    source = null;
+    armed = false;
+    direction = target >= window.scrollY ? 1 : -1;
+    move(target);
+  };
+
+  window.addEventListener("wheel", onWheel, { passive: true });
+  window.addEventListener("touchstart", onTouchStart, { passive: true });
+  window.addEventListener("touchend", onTouchEnd, { passive: true });
+  window.addEventListener("touchcancel", onTouchEnd, { passive: true });
+  window.addEventListener("scroll", onScroll, { passive: true });
+  if (nativeEnd) window.addEventListener("scrollend", onScrollEnd);
+  window.addEventListener("keydown", onKey);
+
+  return {
+    goTo,
+    destroy: () => {
+      window.clearTimeout(timer);
+      unLenis();
+      window.removeEventListener("wheel", onWheel);
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchend", onTouchEnd);
+      window.removeEventListener("touchcancel", onTouchEnd);
+      window.removeEventListener("scroll", onScroll);
+      if (nativeEnd) window.removeEventListener("scrollend", onScrollEnd);
+      window.removeEventListener("keydown", onKey);
+    },
+  };
+}
+
+/**
+ * Where a row of panels rests, as shares of its travel: each panel centred in
+ * the frame, clamped to the ends of the row. A stop closer than a quarter of
+ * the frame to the one before is dropped — on a wide screen the first two
+ * panels are both in full view at the start, and a second stop a few dozen
+ * pixels on would read as a stutter — and the end of the row wins over a
+ * panel just short of it.
+ */
+function panelStops(panels: HTMLElement[], frame: number, travel: number) {
+  const out = [0];
+  if (travel <= 0) return out;
+  const gap = frame / 4 / travel;
+  for (const panel of panels) {
+    const at = gsap.utils.clamp(0, 1, (panel.offsetLeft + panel.offsetWidth / 2 - frame / 2) / travel);
+    if (at - out[out.length - 1] >= gap) out.push(at);
+  }
+  const end = out.length - 1;
+  if (out[end] < 1) {
+    if (end > 0 && 1 - out[end] < gap) out[end] = 1;
+    else out.push(1);
+  }
+  return out;
+}
+
+/* ============================================================
  * HORIZONTAL SCROLL — vertical wheel, horizontal travel
  * ============================================================ */
 
-type HMode = "pinned" | "swipe" | "stack";
+type HMode = "pinned" | "sticky" | "swipe" | "stack";
 const HScrollContext = createContext<HMode>("swipe");
 
 /**
- * Pins a section and turns downward scrolling into horizontal travel.
+ * Height of `100svh` in pixels — the viewport with the browser's toolbars
+ * showing, the smallest it gets. `innerHeight` grows when a phone's URL bar
+ * slides away, and a fit judged against that would stop fitting the moment
+ * the bar came back.
+ */
+function smallViewportHeight() {
+  const probe = document.createElement("div");
+  probe.style.cssText = "position:fixed;top:0;left:0;width:0;height:100svh;visibility:hidden;pointer-events:none";
+  document.body.appendChild(probe);
+  const height = probe.offsetHeight;
+  probe.remove();
+  return height || window.innerHeight;
+}
+
+/**
+ * Turns downward scrolling into horizontal travel.
  *
- * Three modes, read from the user's own settings rather than guessed:
- *  - `pinned` — desktop with motion allowed. The section locks to the viewport
- *    and the track slides left as the wheel turns.
- *  - `swipe` — small screens. Pinning fights mobile URL-bar resizing and
- *    momentum scrolling, so the track becomes a native snap carousel instead.
- *  - `stack` — reduced motion. No pin, no travel: panels stack down the page,
- *    which is what someone asking for less motion actually wants to read.
+ * Four modes, read from the user's own settings and the screen rather than
+ * guessed:
+ *  - `pinned` — desktop with motion allowed. GSAP pins the section and the
+ *    track slides left as the wheel turns.
+ *  - `sticky` — phones. The same scroll-down, cards-slide-across reading, but
+ *    held with CSS `position: sticky` instead of a GSAP pin. A pin is applied
+ *    from script after the browser has already scrolled, which on a phone's
+ *    native momentum scroll shows as the section jolting at the pin point,
+ *    and it is thrown by the URL bar resizing the viewport. Sticky is laid
+ *    out by the browser itself, sized in `svh` so the URL bar cannot move
+ *    it, and the only scripted part is the track's slide. Used only when
+ *    every panel fits the held screen; a held screen cannot scroll, so a
+ *    panel too tall for it would lose its bottom for good.
+ *    Lite mode lands here too, on any screen: a sticky box and one transform
+ *    per scrolled frame is about the cheapest way there is to do this.
+ *  - `swipe` — screens where the panels would not fit held (a phone on its
+ *    side, mostly): a native snap carousel you swipe through.
+ *  - `stack` — reduced motion. No travel: panels stack down the page, which
+ *    is what someone asking for less motion actually wants.
  *
  * DOM order is reading order in every mode, so tab order is already correct.
- * While pinned, focusing an off-screen panel scrolls the page to it — a
+ * While held, focusing an off-screen panel scrolls the page to it — a
  * keyboard user would otherwise be typing into something they cannot see.
  */
 export function HorizontalScroll({
@@ -427,10 +746,14 @@ export function HorizontalScroll({
   className?: string;
   trackClassName?: string;
 }) {
-  const { pinned, motion } = useFxMode();
-  const mode: HMode = pinned ? "pinned" : motion ? "swipe" : "stack";
+  const { pinned, reduce } = useFxMode();
+  const [fits, setFits] = useState(false);
+  const mode: HMode = pinned ? "pinned" : reduce ? "stack" : fits ? "sticky" : "swipe";
+  const held = mode === "pinned" || mode === "sticky";
 
+  const outerRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
   const scrollerRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const counterRef = useRef<HTMLSpanElement>(null);
@@ -438,7 +761,7 @@ export function HorizontalScroll({
   const stRef = useRef<ScrollTrigger | null>(null);
   const total = steps.length;
 
-  usePinnedScrollGuard(viewportRef, mode === "pinned");
+  usePinnedScrollGuard(viewportRef, held);
 
   const report = useCallback(
     (progress: number) => {
@@ -451,6 +774,37 @@ export function HorizontalScroll({
     },
     [total],
   );
+
+  /*
+   * Small screens: do the panels fit a held screen? The tallest panel's
+   * content against the screen left under the utility bar and this section's
+   * own label row, with a little air. Re-checked whenever a panel or the
+   * screen changes size, so turning the phone on its side drops back to the
+   * swipe row and turning it back holds again.
+   */
+  useEffect(() => {
+    if (pinned || reduce) return;
+    const header = headerRef.current;
+    const track = trackRef.current;
+    if (!header || !track) return;
+    const contents = Array.from(track.querySelectorAll<HTMLElement>("[data-hpanel] > *"));
+    if (!contents.length) return;
+
+    const check = () => {
+      const room = smallViewportHeight() - barHeight() - header.offsetHeight;
+      const tallest = Math.max(...contents.map((el) => el.offsetHeight));
+      setFits(tallest + 24 <= room);
+    };
+
+    check();
+    const ro = new ResizeObserver(check);
+    contents.forEach((el) => ro.observe(el));
+    window.addEventListener("resize", check);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", check);
+    };
+  }, [pinned, reduce]);
 
   /* pinned: GSAP drives the track */
   useEffect(() => {
@@ -498,9 +852,92 @@ export function HorizontalScroll({
     };
   }, [mode, report]);
 
-  /* pinned: keep keyboard focus on screen */
+  /*
+   * sticky: the screen holds itself; this only slides the track.
+   *
+   * The outer box is made taller than the held screen by exactly the track's
+   * travel, and that extra height is the scroll that drives it — scroll down
+   * that far and the last panel has arrived just as the section lets go.
+   * The travel lives in a CSS variable, so a resize updates the height
+   * without a React render.
+   */
   useEffect(() => {
-    if (mode !== "pinned") return;
+    if (mode !== "sticky") return;
+    const outer = outerRef.current;
+    const viewport = viewportRef.current;
+    const track = trackRef.current;
+    if (!outer || !viewport || !track) return;
+
+    const travel = () => Math.max(0, track.scrollWidth - viewport.clientWidth);
+    const size = () => outer.style.setProperty("--h-travel", `${travel()}px`);
+    size();
+    const ro = new ResizeObserver(size);
+    ro.observe(track);
+    ro.observe(viewport);
+
+    // Where the screen actually sticks, read from CSS so the two can't drift.
+    const stickAt = () => parseFloat(getComputedStyle(viewport).top) || 0;
+
+    const ctx = gsap.context(() => {
+      const tween = gsap.to(track, {
+        x: () => -travel(),
+        ease: "none",
+        scrollTrigger: {
+          trigger: outer,
+          start: () => `top top+=${stickAt()}`,
+          end: () => `+=${travel()}`,
+          /*
+           * Locked to the scroll, no catch-up. The cards are the scroll here:
+           * they move with the finger, glide with the fling, and stop when it
+           * stops. A trailing catch-up added a second, separate motion after
+           * every scroll and blurred the settle onto a panel into it.
+           */
+          scrub: true,
+          invalidateOnRefresh: true,
+          onUpdate: (self) => report(self.progress),
+          onRefresh: (self) => report(self.progress),
+        },
+      });
+      stRef.current = tween.scrollTrigger ?? null;
+    }, viewport);
+
+    return () => {
+      ro.disconnect();
+      ctx.revert();
+      stRef.current = null;
+      outer.style.removeProperty("--h-travel");
+    };
+  }, [mode, report]);
+
+  /*
+   * held: come to rest with a panel centred, pinned or sticky alike. The
+   * stops are `panelStops` laid over the stretch of page scroll that drives
+   * the track, read from whichever trigger is live when the scroll ends; the
+   * left and right arrows step through them too.
+   */
+  useEffect(() => {
+    if (!held) return;
+    const viewport = viewportRef.current;
+    const track = trackRef.current;
+    if (!viewport || !track) return;
+    const panels = Array.from(track.querySelectorAll<HTMLElement>("[data-hpanel]"));
+
+    const settle = settleOnStops({
+      stops: () => {
+        const st = stRef.current;
+        if (!st) return [];
+        const frame = viewport.clientWidth;
+        return panelStops(panels, frame, track.scrollWidth - frame).map((p) => st.start + p * (st.end - st.start));
+      },
+      runUp: () => window.innerHeight * 0.2,
+      sideways: true,
+    });
+    return settle.destroy;
+  }, [held]);
+
+  /* held: keep keyboard focus on screen */
+  useEffect(() => {
+    if (!held) return;
     const track = trackRef.current;
     const viewport = viewportRef.current;
     if (!track || !viewport) return;
@@ -522,16 +959,17 @@ export function HorizontalScroll({
 
       const distance = track.scrollWidth - viewport.clientWidth;
       if (distance <= 0) return;
-      const ratio = gsap.utils.clamp(0, 1, panel.offsetLeft / distance);
+      // Centred, the way the row comes to rest.
+      const centre = panel.offsetLeft + panel.offsetWidth / 2 - viewport.clientWidth / 2;
+      const ratio = gsap.utils.clamp(0, 1, centre / distance);
       // Explicitly instant: the intent here is a reposition, not a journey, and
-      // a native smooth scroll would run against both Lenis and this trigger's
-      // own snap tween at the same time.
+      // a native smooth scroll would run against Lenis.
       window.scrollTo({ top: st.start + (st.end - st.start) * ratio, behavior: "instant" });
     };
 
     track.addEventListener("focusin", onFocusIn);
     return () => track.removeEventListener("focusin", onFocusIn);
-  }, [mode]);
+  }, [held]);
 
   /* swipe: mirror the native scroller into the rail */
   useEffect(() => {
@@ -549,12 +987,25 @@ export function HorizontalScroll({
 
   return (
     <HScrollContext.Provider value={mode}>
-      <div className={cn("relative", className)} data-fx={mode}>
+      <div
+        ref={outerRef}
+        className={cn(
+          "relative",
+          // The held screen plus the track's travel: the scroll that drives it.
+          mode === "sticky" && "h-[calc(100svh-var(--bar-h)+var(--h-travel,0px))]",
+          className,
+        )}
+        data-fx={mode}
+      >
         <div
           ref={viewportRef}
-          className={cn("flex flex-col", mode === "pinned" && `${PINNED_HEIGHT} overflow-hidden`)}
+          className={cn(
+            "flex flex-col",
+            held && `${PINNED_HEIGHT} overflow-hidden`,
+            mode === "sticky" && "sticky top-[var(--bar-h)]",
+          )}
         >
-          <div className="wrap flex items-center gap-5 py-5 md:py-6">
+          <div ref={headerRef} className="wrap flex items-center gap-5 py-5 md:py-6">
             <span className="label whitespace-nowrap text-ink">{label}</span>
             {mode !== "stack" && (
               <>
@@ -595,6 +1046,7 @@ export function HorizontalScroll({
               className={cn(
                 "relative flex px-5 md:px-10",
                 mode === "stack" ? "flex-col" : "w-max flex-row items-stretch gap-8 md:h-full md:gap-14",
+                mode === "sticky" && "h-full",
                 /*
                  * Clearance for the fixed dock rail. This track is not inside
                  * `.wrap`, so it never got the right-hand allowance the rest of
@@ -640,8 +1092,10 @@ export function HPanel({
       className={cn(
         "relative",
         mode === "stack" ? "w-full rule-t py-10 last:rule-b" : cn("shrink-0 snap-center", width),
-        mode === "pinned" && "flex h-full flex-col justify-center",
-        mode === "swipe" && "py-8",
+        (mode === "pinned" || mode === "sticky") && "flex h-full flex-col justify-center",
+        // One panel a swipe, like the held rail: a hard fling stops at the next
+        // panel instead of skating past it.
+        mode === "swipe" && "snap-always py-8",
         className,
       )}
     >
@@ -998,22 +1452,94 @@ export function KineticHeadline({
  * PINNED LIT TEXT — the statement, read to you
  * ============================================================ */
 
+type LitFact = { k: string; v: string; anchor?: string; pos?: string };
+
+/** Stable empty default, so an effect keyed on `facts` does not re-run on every render. */
+const NO_FACTS: LitFact[] = [];
+
+/**
+ * The sweep, shared by the pinned and the sticky statement: every word rises
+ * from dim to lit in reading order, and each fact's anchor word turns cobalt
+ * at the moment the sweep reaches it. Where the fact's card is in the held
+ * frame (`cards[i]`), the card arrives in the same beat.
+ */
+function buildSweep(tl: gsap.core.Timeline, copy: HTMLElement, facts: LitFact[], cards: HTMLElement[]) {
+  // Document order across every paragraph, so one sweep runs the whole way.
+  const words = gsap.utils.toArray<HTMLElement>("[data-lit-word]", copy);
+  if (!words.length) return;
+
+  // The sweep: WORD_LIT to light one word, SWEEP to travel the statement.
+  const WORD_LIT = 0.35;
+  const SWEEP = 2.6;
+  tl.fromTo(
+    words,
+    { opacity: 0.45 },
+    { opacity: 1, ease: "none", duration: WORD_LIT, stagger: { amount: SWEEP } },
+    0,
+  );
+
+  const span = tl.duration();
+  if (!facts.length) return;
+
+  /*
+   * A fact is timed off the word it annotates rather than off a slice of
+   * the hold: `stagger.amount` spreads the sweep evenly across the words, so
+   * the moment word `i` finishes lighting is known arithmetic. Facts with no
+   * anchor fall back to an even spread.
+   */
+  const cobalt =
+    getComputedStyle(document.documentElement).getPropertyValue("--cobalt").trim() || "#c8ff3d";
+  const litAt = (i: number) => (words.length > 1 ? (SWEEP * i) / (words.length - 1) : 0) + WORD_LIT;
+
+  if (cards.length) gsap.set(cards, { opacity: 0 });
+  facts.forEach((fact, i) => {
+    const anchor = fact.anchor?.toLowerCase();
+    const wordIndex = anchor ? words.findIndex((w) => w.dataset.word === anchor) : -1;
+    const at = wordIndex >= 0 ? litAt(wordIndex) : span * (0.2 + i * 0.3);
+
+    // Nothing leaves. Each card stays put once it has arrived, so the
+    // statement finishes the hold surrounded by everything it earned.
+    const card = cards[i];
+    if (card) {
+      tl.fromTo(
+        card,
+        { opacity: 0, y: 18, scale: 0.97 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: "power2.out" },
+        at,
+      );
+    }
+
+    // The word and its note light together — that pairing is the whole
+    // reason the card is where it is. Without a card in the frame the word
+    // still marks itself, for the list that follows the hold.
+    if (wordIndex >= 0) {
+      tl.to(words[wordIndex], { color: cobalt, duration: 0.3, ease: "none" }, at);
+    }
+  });
+}
+
 /**
  * A statement held on screen and lit a word at a time as the page is scrolled.
  *
- * Pinning is the point: the reader is not chasing a paragraph up the screen,
+ * Holding is the point: the reader is not chasing a paragraph up the screen,
  * they are standing still while it resolves out of the dark. Nothing moves —
  * only the text's own brightness — which is what keeps it calm at this size.
  *
+ * Held two ways. Desktop pins it with GSAP, as the rest of the desktop page
+ * does. Phones hold it with CSS `position: sticky` in a box made taller than
+ * the screen by the length of the hold — the same reasoning as the Experience
+ * rail: a script-applied pin lands after a phone's native momentum scroll has
+ * already moved, and jolts; sticky is laid out by the browser. The phone hold
+ * needs the statement to fit the held screen, since a held screen cannot
+ * scroll; where it does not (a phone on its side), and under reduced motion,
+ * the copy is simply legible and the section is an ordinary centred block.
+ *
  * `accent` words take the serif italic used everywhere else on the site, so
  * the line has some rhythm rather than being one even block of type.
- *
- * Without a pin (small screens, reduced motion) the copy is simply legible and
- * the section is an ordinary centred block.
  */
 export function PinnedLitText({
   paragraphs,
-  facts = [],
+  facts = NO_FACTS,
   lead,
   footer,
   accent = [],
@@ -1030,9 +1556,10 @@ export function PinnedLitText({
    * `anchor` is the word in the copy this fact belongs to — that word lights
    * cobalt at the same moment, which is what makes the pairing readable rather
    * than just decorative. `pos` places the card on wide screens, where there is
-   * margin to scatter into; narrower ones lay the same cards out in a row.
+   * margin to scatter into; narrower ones lay the same cards out in a row, and
+   * a phone lists them after the hold, where there is room for them.
    */
-  facts?: { k: string; v: string; anchor?: string; pos?: string }[];
+  facts?: LitFact[];
   /** Sits above the statement — label and heading. */
   lead?: ReactNode;
   /** Sits below it, inside the same held frame. */
@@ -1042,30 +1569,60 @@ export function PinnedLitText({
   className?: string;
   textClassName?: string;
 }) {
-  const { pinned } = useFxMode();
+  const { pinned, reduce } = useFxMode();
+  const [fits, setFits] = useState(false);
+  const sticky = !pinned && !reduce && fits;
+  const held = pinned || sticky;
   /* Cards only scatter where there is margin either side of the column to
      scatter into. Below that they line up in a row instead of sitting on top
      of the very text they are annotating. */
   const wide = useMediaQuery("(min-width: 1280px)");
   const scatter = pinned && wide && facts.length > 0;
+  const holdRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
+  const columnRef = useRef<HTMLDivElement>(null);
   const copyRef = useRef<HTMLDivElement>(null);
   const factsRef = useRef<HTMLDListElement>(null);
   const barRef = useRef<HTMLSpanElement>(null);
 
-  usePinnedScrollGuard(viewportRef, pinned);
+  usePinnedScrollGuard(viewportRef, held);
 
+  /*
+   * Small screens: does the statement fit a held screen? The column's content
+   * against the screen left under the utility bar, with some air. The hold's
+   * progress bar only renders once held, so it is allowed for while it is
+   * absent — otherwise holding would add it, stop fitting, and let go again.
+   */
+  useEffect(() => {
+    if (pinned || reduce) return;
+    const column = columnRef.current;
+    if (!column) return;
+
+    const check = () => {
+      const cs = getComputedStyle(column);
+      const content = column.offsetHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+      const bar = barRef.current ? 0 : 41;
+      setFits(content + bar + 48 <= smallViewportHeight() - barHeight());
+    };
+
+    check();
+    const ro = new ResizeObserver(check);
+    ro.observe(column);
+    window.addEventListener("resize", check);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", check);
+    };
+  }, [pinned, reduce]);
+
+  /* pinned: desktop, GSAP holds the frame */
   useEffect(() => {
     if (!pinned) return;
     const viewport = viewportRef.current;
-    const el = copyRef.current;
-    if (!viewport || !el) return;
+    const copy = copyRef.current;
+    if (!viewport || !copy) return;
 
     const ctx = gsap.context(() => {
-      // Document order across every paragraph, so one sweep runs the whole way.
-      const words = gsap.utils.toArray<HTMLElement>("[data-lit-word]", el);
-      if (!words.length) return;
-
       /*
        * One timeline on one trigger, rather than a second ScrollTrigger for the
        * facts. Anything driven off its own trigger inside a pinned section stops
@@ -1100,174 +1657,195 @@ export function PinnedLitText({
         },
       });
 
-      // The sweep: WORD_LIT to light one word, SWEEP to travel the statement.
-      const WORD_LIT = 0.35;
-      const SWEEP = 2.6;
-      tl.fromTo(
-        words,
-        { opacity: 0.45 },
-        { opacity: 1, ease: "none", duration: WORD_LIT, stagger: { amount: SWEEP } },
-        0,
-      );
-
-      const span = tl.duration();
-      const cards = factsRef.current
-        ? gsap.utils.toArray<HTMLElement>("[data-fact]", factsRef.current)
-        : [];
-      if (!cards.length) return;
-
-      /*
-       * A card is timed off the word it annotates rather than off a slice of
-       * the hold: `stagger.amount` spreads the sweep evenly across the words, so
-       * the moment word `i` finishes lighting is known arithmetic. Facts with no
-       * anchor fall back to an even spread.
-       */
-      const cobalt =
-        getComputedStyle(document.documentElement).getPropertyValue("--cobalt").trim() || "#c8ff3d";
-      const litAt = (i: number) =>
-        (words.length > 1 ? (SWEEP * i) / (words.length - 1) : 0) + WORD_LIT;
-
-      gsap.set(cards, { opacity: 0 });
-      cards.forEach((card, i) => {
-        const anchor = card.dataset.anchor?.toLowerCase();
-        const wordIndex = anchor
-          ? words.findIndex((w) => w.dataset.word === anchor)
-          : -1;
-        const at = wordIndex >= 0 ? litAt(wordIndex) : span * (0.2 + i * 0.3);
-
-        // Nothing leaves. Each card stays put once it has arrived, so the
-        // statement finishes the hold surrounded by everything it earned.
-        tl.fromTo(
-          card,
-          { opacity: 0, y: 18, scale: 0.97 },
-          { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: "power2.out" },
-          at,
-        );
-
-        // The word and its note light together — that pairing is the whole
-        // reason the card is where it is.
-        if (wordIndex >= 0) {
-          tl.to(words[wordIndex], { color: cobalt, duration: 0.3, ease: "none" }, at);
-        }
-      });
+      const cards = factsRef.current ? gsap.utils.toArray<HTMLElement>("[data-fact]", factsRef.current) : [];
+      buildSweep(tl, copy, facts, cards);
     }, viewport);
 
     return () => ctx.revert();
-  }, [pinned]);
+  }, [pinned, facts]);
+
+  /*
+   * sticky: phones. The screen holds itself; this only scrubs the sweep across
+   * the extra height the hold box adds — measured off the boxes themselves, so
+   * the scroll length and the CSS that makes it can never disagree.
+   */
+  useEffect(() => {
+    if (!sticky) return;
+    const hold = holdRef.current;
+    const viewport = viewportRef.current;
+    const copy = copyRef.current;
+    if (!hold || !viewport || !copy) return;
+
+    const stickAt = () => parseFloat(getComputedStyle(viewport).top) || 0;
+    const distance = () => Math.max(0, hold.offsetHeight - viewport.offsetHeight);
+
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: hold,
+          start: () => `top top+=${stickAt()}`,
+          end: () => `+=${distance()}`,
+          scrub: true,
+          invalidateOnRefresh: true,
+          onUpdate: (self) => {
+            if (barRef.current) barRef.current.style.transform = `scaleX(${self.progress})`;
+          },
+        },
+      });
+      // The facts follow the hold on a phone, so no cards join the sweep.
+      buildSweep(tl, copy, facts, []);
+    }, viewport);
+
+    return () => ctx.revert();
+  }, [sticky, facts]);
 
   const accentSet = new Set(accent.map((w) => w.toLowerCase()));
   const clean = (word: string) => word.toLowerCase().replace(/[^a-z0-9']/gi, "");
 
-  return (
-    <div className={cn("relative", className)} data-fx={pinned ? "pinned" : "flow"}>
-      <div
-        ref={viewportRef}
-        className={cn(
-          "relative flex flex-col items-center justify-center text-center",
-          pinned && `${PINNED_HEIGHT} overflow-hidden`,
-        )}
-      >
+  const factList = facts.length > 0 && (
+    <dl
+      ref={factsRef}
+      className={cn(
+        scatter
+          ? "pointer-events-none absolute inset-0"
+          : cn(
+              "wrap grid max-w-3xl gap-4 text-left",
+              pinned
+                ? "mt-9 grid-cols-3 [@media(max-height:760px)]:mt-6"
+                : sticky
+                  ? // After the hold: the statement has let go, and the notes it
+                    // lit up are read as a list.
+                    "grid-cols-1 border-t border-ink/15 pt-8 pb-16"
+                  : "mt-12 grid-cols-1 border-t border-ink/15 pt-8",
+            ),
+      )}
+    >
+      {facts.map((f) => (
+        /*
+         * One wrapper, not two. A <dl> may wrap each dt/dd pair in a
+         * single <div>; nesting a second one broke the description list
+         * outright, so the term/definition relationship never formed for
+         * assistive technology or for anything parsing the markup. The
+         * positioning and the card styling merge onto this element.
+         *
+         * The hairline down the left edge is the same rule motif the rest
+         * of the page uses to mark an aside.
+         */
         <div
+          key={f.k}
+          data-fact
+          data-anchor={f.anchor}
           className={cn(
-            "wrap flex flex-col items-center py-16 motion-safe:md:py-0",
-            // Narrower column when cards are scattering, so they have margin to
-            // land in rather than crowding the text.
-            scatter ? "max-w-2xl" : "max-w-3xl",
+            "cut-sm border-l-2 border-cobalt bg-paper-deep/90 px-4 py-3",
+            // The list is click-through so it never shadows the copy it
+            // sits over; the cards themselves stay selectable.
+            scatter && `pointer-events-auto absolute w-[15rem] ${f.pos ?? "left-[4%] top-[20%]"}`,
+            pinned && "opacity-0",
           )}
         >
-          {lead}
-
-          <div ref={copyRef} className={cn("flex flex-col", textClassName)}>
-            {paragraphs.map((block) => {
-              const words = block.split(" ");
-              return (
-                <p key={block} className="text-pretty">
-                  {words.map((word, i) => (
-                    /*
-                     * The space is a sibling of the word, never the last thing
-                     * inside it: trailing whitespace at the end of an inline
-                     * box is stripped, which ran every word together.
-                     */
-                    <Fragment key={`${word}-${i}`}>
-                      <span
-                        data-lit-word
-                        data-word={clean(word)}
-                        className={accentSet.has(clean(word)) ? "accent-word" : undefined}
-                      >
-                        {word}
-                      </span>
-                      {i < words.length - 1 ? " " : null}
-                    </Fragment>
-                  ))}
-                </p>
-              );
-            })}
-          </div>
-
-          {/* How much of the hold is left, so the pin never feels open-ended. */}
-          {pinned && (
-            <span aria-hidden className="relative mt-10 block h-px w-24 bg-ink/20">
-              <span
-                ref={barRef}
-                className="absolute inset-y-0 left-0 block w-full origin-left bg-cobalt"
-                style={{ transform: "scaleX(0)" }}
-              />
-            </span>
-          )}
-
-          {footer}
+          <dt className="label text-cobalt">[{f.k}]</dt>
+          <dd className="mt-1.5 text-[13px] leading-5 text-ink-muted">{f.v}</dd>
         </div>
+      ))}
+    </dl>
+  );
 
-        {/*
-          Marginalia, outside the column so it can use the whole frame. Wide
-          screens scatter the cards into the margin at the point each one is
-          earned; anything narrower lines them up under the copy, where they
-          still arrive one at a time and still stay.
-        */}
-        {facts.length > 0 && (
-          <dl
-            ref={factsRef}
+  return (
+    <div className={cn("relative", className)} data-fx={pinned ? "pinned" : sticky ? "sticky" : "flow"}>
+      <div
+        ref={holdRef}
+        // The held screen plus the hold: 1.35 screens of scroll to read it, the
+        // same length the desktop pin holds for.
+        className={cn(sticky && "h-[calc(100svh-var(--bar-h)+135svh)]")}
+      >
+        <div
+          ref={viewportRef}
+          className={cn(
+            "relative flex flex-col items-center justify-center text-center",
+            held && `${PINNED_HEIGHT} overflow-hidden`,
+            sticky && "sticky top-[var(--bar-h)]",
+          )}
+        >
+          <div
+            ref={columnRef}
             className={cn(
-              scatter
-                ? "pointer-events-none absolute inset-0"
-                : cn(
-                    "wrap grid max-w-3xl gap-4 text-left",
-                    pinned
-                      ? "mt-9 grid-cols-3 [@media(max-height:760px)]:mt-6"
-                      : "mt-12 grid-cols-1 border-t border-ink/15 pt-8",
-                  ),
+              "wrap flex flex-col items-center py-16 motion-safe:md:py-0",
+              sticky && "py-0",
+              // Narrower column when cards are scattering, so they have margin to
+              // land in rather than crowding the text.
+              scatter ? "max-w-2xl" : "max-w-3xl",
             )}
           >
-            {facts.map((f) => (
-              /*
-               * One wrapper, not two. A <dl> may wrap each dt/dd pair in a
-               * single <div>; nesting a second one broke the description list
-               * outright, so the term/definition relationship never formed for
-               * assistive technology or for anything parsing the markup. The
-               * positioning and the card styling merge onto this element.
-               *
-               * The hairline down the left edge is the same rule motif the rest
-               * of the page uses to mark an aside.
-               */
-              <div
-                key={f.k}
-                data-fact
-                data-anchor={f.anchor}
-                className={cn(
-                  "cut-sm border-l-2 border-cobalt bg-paper-deep/90 px-4 py-3",
-                  // The list is click-through so it never shadows the copy it
-                  // sits over; the cards themselves stay selectable.
-                  scatter && `pointer-events-auto absolute w-[15rem] ${f.pos ?? "left-[4%] top-[20%]"}`,
-                  pinned && "opacity-0",
-                )}
-              >
-                <dt className="label text-cobalt">[{f.k}]</dt>
-                <dd className="mt-1.5 text-[13px] leading-5 text-ink-muted">{f.v}</dd>
-              </div>
-            ))}
-          </dl>
-        )}
+            {lead}
+
+            <div
+              ref={copyRef}
+              className={cn(
+                "flex flex-col",
+                /*
+                 * Held, every word waits dim until the sweep reaches it — in
+                 * the stylesheet, not only as the sweep's own starting value.
+                 * GSAP writes a word's starting style lazily, when the sweep
+                 * first reaches it, and a ScrollTrigger refresh clears the
+                 * inline styles of words it has not reached yet; on a phone,
+                 * where the hold is set up just after that refresh, every word
+                 * ahead of the sweep showed fully lit. Lit words carry their
+                 * own inline opacity, which wins over this.
+                 */
+                held && "**:data-lit-word:opacity-45",
+                textClassName,
+              )}
+            >
+              {paragraphs.map((block) => {
+                const words = block.split(" ");
+                return (
+                  <p key={block} className="text-pretty">
+                    {words.map((word, i) => (
+                      /*
+                       * The space is a sibling of the word, never the last thing
+                       * inside it: trailing whitespace at the end of an inline
+                       * box is stripped, which ran every word together.
+                       */
+                      <Fragment key={`${word}-${i}`}>
+                        <span
+                          data-lit-word
+                          data-word={clean(word)}
+                          className={accentSet.has(clean(word)) ? "accent-word" : undefined}
+                        >
+                          {word}
+                        </span>
+                        {i < words.length - 1 ? " " : null}
+                      </Fragment>
+                    ))}
+                  </p>
+                );
+              })}
+            </div>
+
+            {/* How much of the hold is left, so the hold never feels open-ended. */}
+            {held && (
+              <span aria-hidden className="relative mt-10 block h-px w-24 bg-ink/20">
+                <span
+                  ref={barRef}
+                  className="absolute inset-y-0 left-0 block w-full origin-left bg-cobalt"
+                  style={{ transform: "scaleX(0)" }}
+                />
+              </span>
+            )}
+
+            {footer}
+          </div>
+
+          {/*
+            Marginalia, outside the column so it can use the whole frame. Wide
+            screens scatter the cards into the margin at the point each one is
+            earned; narrower desktops line them up under the copy, where they
+            still arrive one at a time and still stay.
+          */}
+          {!sticky && factList}
+        </div>
       </div>
+      {sticky && factList}
     </div>
   );
 }
@@ -1583,10 +2161,10 @@ function useRevealed(ref: RefObject<HTMLElement | null>, rootMargin = "0px 0px -
  * covers it — no measured scroll distances, nothing to go stale against pin
  * spacing elsewhere on the page, and it survives a resize on its own.
  *
- * The only scripted part is depth: a panel dims and shrinks by however much of
- * it the next one has covered, read from live geometry each frame. Without
- * motion that is skipped and the panels stop sticking, leaving an ordinary
- * column of cards.
+ * The only scripted parts are depth — a panel dims and shrinks by however
+ * much of it the next one has covered, read from live geometry each frame —
+ * and the settle onto a whole panel. Under reduced motion neither runs and the
+ * panels stop sticking, leaving an ordinary column of cards.
  */
 export function CardStack({
   items,
@@ -1594,8 +2172,10 @@ export function CardStack({
   cardClassName,
   bars = 1,
   fit = false,
+  navLabel = "Panels",
 }: {
-  items: { key: string; content: ReactNode }[];
+  /** `label` names the panel in the index; falls back to its number. */
+  items: { key: string; label?: string; content: ReactNode }[];
   className?: string;
   cardClassName?: string;
   /**
@@ -1605,21 +2185,26 @@ export function CardStack({
    */
   bars?: 1 | 2;
   /**
-   * Stack whenever the tallest panel's content fits the screen, instead of
-   * behind the fixed DESKTOP height floor. That floor is sized for the
-   * homepage's tall project cards; a deck of shorter panels would otherwise
-   * sit as a plain column on any laptop under 640px of viewport.
+   * Stack wherever the tallest panel's content fits the held screen — phones
+   * included — instead of behind the fixed DESKTOP floor. A panel's content
+   * can style itself for the deck (`in-data-[fx=stacked]:`), and a phone
+   * slide does: it drops its long-form detail so it fits, and the fit is
+   * measured in that shape.
    */
   fit?: boolean;
+  /** Accessible name for the deck's index. */
+  navLabel?: string;
 }) {
   const fx = useFxMode();
-  const wide = useMediaQuery("(min-width: 768px)");
   const [fits, setFits] = useState(false);
-  const pinned = fit ? fx.motion && wide && fits : fx.pinned;
+  const pinned = fit ? !fx.reduce && fits : fx.pinned;
   const rootRef = useRef<HTMLDivElement>(null);
+  const goToRef = useRef<((index: number) => void) | null>(null);
+  const [inDeck, setInDeck] = useState(false);
+  const [current, setCurrent] = useState(0);
 
   useEffect(() => {
-    if (!fit) return;
+    if (!fit || fx.reduce) return;
     const root = rootRef.current;
     if (!root) return;
     const contents = Array.from(root.querySelectorAll<HTMLElement>("[data-card] > *"));
@@ -1627,9 +2212,24 @@ export function CardStack({
     const check = () => {
       const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
       const barH = parseFloat(getComputedStyle(root).getPropertyValue("--bar-h")) * rem || 44;
-      // offsetHeight, not getBoundingClientRect: the depth scale shrinks the box.
+      /*
+       * Measured as the panels would sit in the deck. Content that styles
+       * itself for the stacked state is laid out that way for the reading and
+       * put straight back, in the same task, so nothing ever paints it.
+       * `offsetHeight`, not `getBoundingClientRect`: the depth scale shrinks
+       * the box.
+       */
+      const was = root.dataset.fx;
+      root.dataset.fx = "stacked";
       const tallest = Math.max(0, ...contents.map((el) => el.offsetHeight));
-      setFits(tallest <= window.innerHeight - bars * barH);
+      if (was) root.dataset.fx = was;
+      /*
+       * Against `100svh`, the height the slots are drawn at, not `innerHeight`.
+       * On a phone `innerHeight` grows when the URL bar slides away and shrinks
+       * when it comes back, and a deck judged against it would flip between
+       * stacked and flat mid-scroll.
+       */
+      setFits(tallest <= smallViewportHeight() - bars * barH);
     };
 
     check();
@@ -1640,10 +2240,11 @@ export function CardStack({
       ro.disconnect();
       window.removeEventListener("resize", check);
     };
-  }, [fit, bars]);
+  }, [fit, bars, fx.reduce]);
 
+  /* depth: the covered panel dims and shrinks — skipped in lite mode */
   useEffect(() => {
-    if (!pinned) return;
+    if (!pinned || !fx.motion) return;
     const root = rootRef.current;
     if (!root) return;
 
@@ -1731,17 +2332,140 @@ export function CardStack({
       window.removeEventListener("resize", markDirty);
       cards.forEach((card) => gsap.set(card, { scale: 1, opacity: 1 }));
     };
-  }, [pinned]);
+  }, [pinned, fx.motion]);
+
+  /*
+   * Settle on a whole panel (see `settleOnStops`). Stopping part-way through
+   * a hand-over left two panels half on screen; this carries the scroll on to
+   * a whole one, so it ends up filling the frame under the bars. Live inside
+   * the deck plus a run-up of a fifth of a screen either side.
+   *
+   * The gate below only says where the stops fall and whether the deck is on
+   * screen, which the index needs.
+   */
+  useEffect(() => {
+    if (!pinned) return;
+    const root = rootRef.current;
+    if (!root) return;
+    const count = items.length;
+    if (count < 2) return;
+
+    const barsPx = () => {
+      const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+      return bars * (parseFloat(getComputedStyle(root).getPropertyValue("--bar-h")) * rem || 44);
+    };
+
+    let margin = 0;
+    let first = 0;
+    let step = 0;
+    let active = false;
+
+    const settle = settleOnStops({
+      stops: () => (step > 0 ? Array.from({ length: count }, (_, i) => first + step * i) : []),
+      runUp: () => margin,
+    });
+    goToRef.current = settle.goTo;
+
+    const onScroll = () => {
+      if (!active || step <= 0) return;
+      const index = gsap.utils.clamp(0, count - 1, Math.round((window.scrollY - first) / step));
+      setCurrent((prev) => (prev === index ? prev : index));
+    };
+
+    const gate = ScrollTrigger.create({
+      trigger: root,
+      // `start` is resolved before `end`, so the run-up is re-read once per
+      // refresh and both edges agree on it.
+      start: () => {
+        margin = window.innerHeight * 0.2;
+        return `top top+=${barsPx() + margin}`;
+      },
+      end: () => `bottom bottom-=${margin}`,
+      invalidateOnRefresh: true,
+      onRefresh: (self) => {
+        // Panel i fills the frame once it has stuck, and each slot is one
+        // panel tall, so the stops are evenly spaced across the deck.
+        first = self.start + margin;
+        step = (self.end - margin - first) / (count - 1);
+        active = self.isActive;
+        setInDeck(active);
+        onScroll();
+      },
+      onToggle: (self) => {
+        active = self.isActive;
+        setInDeck(active);
+      },
+    });
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    return () => {
+      settle.destroy();
+      window.removeEventListener("scroll", onScroll);
+      gate.kill();
+      goToRef.current = null;
+      setInDeck(false);
+    };
+  }, [pinned, bars, items.length]);
+
+  const showNav = pinned && items.length > 1;
 
   return (
     <div ref={rootRef} className={cn("relative", className)} data-fx={pinned ? "stacked" : "flow"}>
+      {/*
+       * Where you are in the deck, and a way to jump. Sits in the left gutter,
+       * which the dock rail on the right leaves free, and only while the deck
+       * is on screen — `inert` takes it out of the tab order otherwise. Not
+       * on a phone, where there is no gutter to sit in: the slide would run
+       * underneath it.
+       */}
+      {showNav && (
+        <nav
+          aria-label={navLabel}
+          inert={!inDeck}
+          className={cn(
+            "fixed left-3 top-1/2 z-50 -translate-y-1/2 transition-opacity duration-300 max-md:hidden",
+            inDeck ? "opacity-100" : "pointer-events-none opacity-0",
+          )}
+        >
+          <ol className="flex flex-col items-start gap-1">
+            {items.map((item, i) => {
+              const on = i === current;
+              return (
+                <li key={item.key}>
+                  <button
+                    type="button"
+                    onClick={() => goToRef.current?.(i)}
+                    aria-label={item.label ?? `${i + 1} of ${items.length}`}
+                    aria-current={on ? "step" : undefined}
+                    title={item.label}
+                    // The hit area is the whole row; the mark inside is small.
+                    className="group/tick flex h-6 w-7 items-center"
+                  >
+                    <span
+                      aria-hidden
+                      className={cn(
+                        "block h-px transition-all duration-300",
+                        on ? "w-5 bg-cobalt" : "w-2.5 bg-ink/40 group-hover/tick:w-4 group-hover/tick:bg-ink",
+                      )}
+                    />
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
+          <span aria-hidden className="label mt-2 block tabular-nums text-ink-muted">
+            {pad(current + 1)}
+          </span>
+        </nav>
+      )}
       {items.map((item, i) => (
         <div
           key={item.key}
           data-card-slot
           className={cn(
-            // Stacking is desktop-only: a card that fills a phone screen cannot
-            // hold a project's full write-up, and `overflow-hidden` would clip it.
+            // Only once every panel fits the held screen: a panel taller than
+            // the screen would lose its bottom to `overflow-hidden` for good.
             pinned &&
               (bars === 2
                 ? "sticky top-[calc(var(--bar-h)*2)] h-[calc(100svh-var(--bar-h)*2)]"

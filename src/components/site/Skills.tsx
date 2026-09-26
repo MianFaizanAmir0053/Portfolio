@@ -53,24 +53,34 @@ export function Skills() {
                    * Rendered always, hidden when closed. Conditional mounting
                    * kept 22 of the 25 technology names out of the served HTML
                    * entirely — the page claimed a stack it never actually
-                   * stated to anything that does not run JavaScript. `hidden`
-                   * collapses it for sighted users and screen readers alike
-                   * while leaving the text in the document.
+                   * stated to anything that does not run JavaScript.
+                   *
+                   * It folds open and shut rather than appearing: a one-cell
+                   * grid animating its row from `0fr` to `1fr`, which is the
+                   * list's real height at every frame. Closed it is also
+                   * `invisible`, which keeps it out of the accessibility tree
+                   * as `hidden` did — flipped at the end of the fold on the
+                   * way shut, so the names stay visible while they go.
                    */}
-                  <ul
+                  <div
                     id={`skills-panel-${s.n}`}
-                    hidden={!isOpen}
-                    className="flex flex-wrap gap-x-6 gap-y-2 pb-6"
+                    className={`grid transition-[grid-template-rows,opacity,visibility] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none ${
+                      isOpen ? "visible grid-rows-[1fr] opacity-100" : "invisible grid-rows-[0fr] opacity-0"
+                    }`}
                   >
-                    {s.items.map((i) => (
-                      <li key={i} className="text-sm text-ink-muted">
-                        <span aria-hidden className="text-cobalt">
-                          *
-                        </span>{" "}
-                        {i}
-                      </li>
-                    ))}
-                  </ul>
+                    <div className="min-h-0 overflow-hidden">
+                      <ul className="flex flex-wrap gap-x-6 gap-y-2 pb-6">
+                        {s.items.map((i) => (
+                          <li key={i} className="text-sm text-ink-muted">
+                            <span aria-hidden className="text-cobalt">
+                              *
+                            </span>{" "}
+                            {i}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
                 </li>
               );
             })}

@@ -79,6 +79,10 @@ const ABOUT_FACTS = [
  * The five questions someone types before they type a name. Rendered on the
  * page and mirrored into FAQPage structured data — one source, so the answer an
  * engine quotes is the answer a visitor reads.
+ *
+ * Hiring questions lead, since most readers are hiring: availability, then the
+ * strongest area — the two a recruiter screens on. The shipped list serves
+ * both readers and follows; location closes.
  */
 const HOME_FAQS = [
   {
@@ -86,20 +90,20 @@ const HOME_FAQS = [
     a: "Faizan Amir is a senior full-stack and AI engineer building production applications with React, Next.js, TypeScript, Node.js and Python. He specialises in RAG, agent workflows and LLM integration.",
   },
   {
-    q: "What has he actually shipped?",
-    a: "Four live products and two builds in development: telehealth commerce with 250+ subscriptions and £31,000+ revenue, an AI site builder with 150+ users, legal RAG at 95% extraction accuracy on its evaluated set, an AI image SaaS with 200+ users and $5,000+ revenue, plus e-commerce and fintech platforms.",
-  },
-  {
     q: "Is he available to hire?",
     a: "Yes, for scoped builds and embedded contract work. Email faizanamir0053@gmail.com or use the contact form; replies usually arrive within one working day.",
   },
   {
-    q: "Where is he based and who does he work with?",
-    a: "He is based in Lahore, Pakistan (UTC+5) and works with teams in the United States, United Kingdom, Middle East and Europe.",
-  },
-  {
     q: "What is his strongest area?",
     a: "Applied AI backed by product engineering: structure-aware retrieval, routed agents, human approval and evaluation. Five or more RAG and agentic systems have reached production.",
+  },
+  {
+    q: "What has he actually shipped?",
+    a: "Four live products and two builds in development: telehealth commerce with 250+ subscriptions and £31,000+ revenue, an AI site builder with 150+ users, legal RAG at 95% extraction accuracy on its evaluated set, an AI image SaaS with 200+ users and $5,000+ revenue, plus e-commerce and fintech platforms.",
+  },
+  {
+    q: "Where is he based and who does he work with?",
+    a: "He is based in Lahore, Pakistan (UTC+5) and works with teams in the United States, United Kingdom, Middle East and Europe.",
   },
 ];
 
@@ -134,11 +138,26 @@ export default function Index() {
           speed={42}
           className="rule-t rule-b"
         />
-        {/* Proof first: the case studies right after the hero, then the
-            career for hiring managers, then the longer About and Stack. */}
-        <FeaturedWork />
-        <Experience />
+        {/*
+         * A personal portfolio, so the person comes first: the About
+         * statement is the second section, straight after the introduction,
+         * before anything is asked of the reader.
+         *
+         * After that, ordered for who actually reads it: roughly six in ten
+         * are hiring — recruiters and hiring managers — and four in ten are
+         * clients with a project. A recruiter's questions come in a fixed
+         * order: where has he worked, doing what, can he prove it, does the
+         * stack match. So the career follows the introduction, then the case
+         * studies, then the stack inventory, while all three are still being
+         * read closely. The case studies are also the client's proof, which
+         * is why they sit ahead of the stack rather than behind it. Reach and
+         * the FAQ are the slower read either reader does last, and the FAQ
+         * sits against the contact block so the objections are answered just
+         * before the ask.
+         */}
         <About />
+        <Experience />
+        <FeaturedWork />
         <Skills />
         <Reach />
         <Faq />
@@ -206,22 +225,24 @@ function Hero() {
           </p>
         </FadeIn>
 
-        {/* Two doors, one per reader: a client with a project, and a hiring
-            manager who wants the résumé. */}
+        {/* Two doors, one per reader, in the order the readers arrive: the
+            hiring manager who wants the résumé — the larger share — gets the
+            filled button and the first position; the client with a project
+            gets the second door, still one click from a brief. */}
         <FadeIn delay={0.35}>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link
-              href="/contact"
-              className="bg-cobalt px-6 py-3 text-sm font-medium text-paper transition-colors hover:bg-cobalt-deep"
-            >
-              Have a project? Start here →
-            </Link>
             <a
               href="/resume.pdf"
-              className="border border-ink px-6 py-3 text-sm font-medium text-ink transition-colors hover:bg-ink hover:text-paper"
+              className="bg-cobalt px-6 py-3 text-sm font-medium text-paper transition-colors hover:bg-cobalt-deep"
             >
               Hiring? Get my resume ↓
             </a>
+            <Link
+              href="/contact"
+              className="border border-ink px-6 py-3 text-sm font-medium text-ink transition-colors hover:bg-ink hover:text-paper"
+            >
+              Have a project? Start here →
+            </Link>
           </div>
         </FadeIn>
 
@@ -322,7 +343,7 @@ function About() {
         textClassName="mt-7 gap-4 text-[clamp(1.05rem,1.7vw,1.45rem)] leading-[1.5] text-ink [@media(max-height:760px)]:mt-5 [@media(max-height:760px)]:gap-3 [@media(max-height:760px)]:text-[clamp(0.95rem,1.4vw,1.15rem)]"
         lead={
           <>
-            <Tag className="block">[03] ABOUT</Tag>
+            <Tag className="block">[02] ABOUT</Tag>
             {/* CurtainText, not KineticHeadline: a scroll-scrubbed headline
                 inside a pinned section freezes the moment the pin engages, and
                 would sit here half-scattered. This one runs on its own clock
@@ -355,7 +376,7 @@ function Experience() {
 
   return (
     <section id="experience" className="rule-t" aria-label="Experience">
-      <HorizontalScroll label="[02] EXPERIENCE" steps={steps}>
+      <HorizontalScroll label="[03] EXPERIENCE" steps={steps}>
         <HPanel width="w-[84vw] sm:w-[58vw] md:w-[38vw] lg:w-[30vw]">
           <div className="flex flex-col justify-center md:min-h-[58vh]">
             <CurtainText
@@ -443,9 +464,9 @@ function Experience() {
               ))}
             </dl>
             <MagneticSurface className="mt-8 w-fit" strength={0.3} radius={70} lift={0}>
-              {/* The case studies now sit above this rail, so its closing
-                  link points forward, at the one thing a hiring manager
-                  wants next. */}
+              {/* The end of the career is where a hiring manager decides, so
+                  the rail closes on the one thing they want next. Anyone
+                  still reading scrolls straight on into the case studies. */}
               <a href="/resume.pdf" className="label group relative inline-block text-cobalt">
                 DOWNLOAD RESUME ↓
                 <span className="absolute -bottom-1 left-0 h-px w-0 bg-cobalt transition-all duration-300 group-hover:w-full" />
@@ -492,13 +513,15 @@ function FeaturedWork() {
        */}
       <CardStack
         fit
+        navLabel="Case studies"
         items={featuredProjects.map((p, i) => ({
           key: p.slug,
+          label: p.name,
           content: (
             <article id={`work-${p.slug}`} className="group scroll-mt-24">
               <LineDraw delay={0.05} />
               <div
-                className={`wrap grid items-center gap-8 py-12 md:grid-cols-2 md:gap-14 motion-safe:md:py-0 ${
+                className={`wrap grid items-center gap-8 py-12 md:grid-cols-2 md:gap-14 motion-safe:md:py-0 max-md:in-data-[fx=stacked]:gap-5 max-md:in-data-[fx=stacked]:py-6 ${
                   i % 2 === 1 ? "md:[direction:rtl]" : ""
                 }`}
               >
@@ -509,6 +532,8 @@ function FeaturedWork() {
                         src={p.image}
                         alt={p.alt}
                         cut={i % 2 === 0 ? "cut-tr" : "cut-bl"}
+                        // A shallower frame on a phone slide, so the slide fits one screen.
+                        ratio="aspect-[16/10] max-md:in-data-[fx=stacked]:aspect-[2/1]"
                         grayscale
                         parallax={false}
                       />
@@ -535,6 +560,12 @@ function FeaturedWork() {
  * <Link> already, so their call-to-action has to stay a <span> — an anchor
  * inside an anchor is invalid. The pinned rows have no wrapper, so they pass
  * `href` and get a real link.
+ *
+ * On a phone, once the deck stacks (`max-md:in-data-[fx=stacked]:`), the
+ * write-up becomes a slide that fits one screen: the key decision and the
+ * stack tags step out, the summary holds to three lines and the numeral
+ * shrinks. All of it is still in the page, and in full on the case study one
+ * tap away; a phone that cannot hold the deck gets the full rows as before.
  */
 function ProjectAside({ project: p, href }: { project: Project; href?: string }) {
   const cta = (
@@ -547,7 +578,7 @@ function ProjectAside({ project: p, href }: { project: Project; href?: string })
   return (
     <div className={href ? "group" : undefined}>
       {href && (
-        <p className="display text-[18vw] leading-[0.8] text-transparent [-webkit-text-stroke:1px_var(--ink)] transition-colors duration-300 group-hover:text-cobalt group-hover:[-webkit-text-stroke:1px_var(--cobalt)] md:text-[7vw] [@media(min-width:768px)_and_(max-height:700px)]:text-[4.5vw]">
+        <p className="display text-[18vw] leading-[0.8] text-transparent [-webkit-text-stroke:1px_var(--ink)] transition-colors duration-300 group-hover:text-cobalt group-hover:[-webkit-text-stroke:1px_var(--cobalt)] md:text-[7vw] [@media(min-width:768px)_and_(max-height:700px)]:text-[4.5vw] max-md:in-data-[fx=stacked]:hidden">
           [{p.index}]
         </p>
       )}
@@ -569,7 +600,7 @@ function ProjectAside({ project: p, href }: { project: Project; href?: string })
           [IN DEVELOPMENT]
         </span>
       )}
-      <p className="mt-4 max-w-lg text-sm leading-7 text-ink-muted [@media(max-height:700px)]:mt-3 [@media(max-height:700px)]:leading-6">
+      <p className="mt-4 max-w-lg text-sm leading-7 text-ink-muted [@media(max-height:700px)]:mt-3 [@media(max-height:700px)]:leading-6 max-md:in-data-[fx=stacked]:line-clamp-3">
         {p.summary}
       </p>
 
@@ -589,7 +620,7 @@ function ProjectAside({ project: p, href }: { project: Project; href?: string })
        *
        * Short viewports get a tighter setting rather than a clipped card.
        */}
-      <div className="mt-6 rule-t pt-4 [@media(max-height:760px)]:mt-4 [@media(max-height:760px)]:pt-3">
+      <div className="mt-6 rule-t pt-4 [@media(max-height:760px)]:mt-4 [@media(max-height:760px)]:pt-3 max-md:in-data-[fx=stacked]:hidden">
         <p className="label">[KEY DECISION]</p>
         <p className="mt-2 max-w-lg text-sm leading-7 text-ink-muted [@media(max-height:760px)]:leading-6">
           {p.decisions[0]}
@@ -598,7 +629,7 @@ function ProjectAside({ project: p, href }: { project: Project; href?: string })
 
       {/* Capped: the longest stacks run to nine, and a stacked card has to fit
           the screen it sits on. The full list is on the case study itself. */}
-      <div className="mt-5 flex flex-wrap gap-2 [@media(max-height:760px)]:mt-3">
+      <div className="mt-5 flex flex-wrap gap-2 [@media(max-height:760px)]:mt-3 max-md:in-data-[fx=stacked]:hidden">
         {p.stack.slice(0, STACK_TAGS_ON_CARD).map((t) => (
           <span key={t} className="label border border-ink px-2 py-1 text-ink">
             {t}
@@ -703,9 +734,26 @@ function Contact() {
             accent={["real."]}
             scatter={1.4}
           />
-          {/* Grouped by who is writing: a client with a project, or a hiring
-              manager. Each group leads with the thing that reader needs. */}
+          {/* Grouped by who is writing: a hiring manager, or a client with a
+              project — hiring first, as the larger share of readers. Each
+              group leads with the thing that reader needs. */}
           <dl className="mt-10 space-y-8">
+            <div>
+              <dt className="label">[HIRING]</dt>
+              <dd className="mt-2 space-y-2">
+                <a href="/resume.pdf" className="block text-cobalt hover:underline">
+                  Download resume (PDF) ↓
+                </a>
+                <span className="flex gap-4 text-sm">
+                  <a href={SOCIAL.linkedin} target="_blank" rel="noopener" className="hover:text-cobalt">
+                    LinkedIn ↗
+                  </a>
+                  <a href={SOCIAL.github} target="_blank" rel="noopener" className="hover:text-cobalt">
+                    GitHub ↗
+                  </a>
+                </span>
+              </dd>
+            </div>
             <div>
               <dt className="label">[PROJECTS]</dt>
               <dd className="mt-2 space-y-2">
@@ -723,22 +771,6 @@ function Contact() {
                 >
                   WhatsApp +92 303 0649009
                 </a>
-              </dd>
-            </div>
-            <div>
-              <dt className="label">[HIRING]</dt>
-              <dd className="mt-2 space-y-2">
-                <a href="/resume.pdf" className="block text-cobalt hover:underline">
-                  Download resume (PDF) ↓
-                </a>
-                <span className="flex gap-4 text-sm">
-                  <a href={SOCIAL.linkedin} target="_blank" rel="noopener" className="hover:text-cobalt">
-                    LinkedIn ↗
-                  </a>
-                  <a href={SOCIAL.github} target="_blank" rel="noopener" className="hover:text-cobalt">
-                    GitHub ↗
-                  </a>
-                </span>
               </dd>
             </div>
           </dl>

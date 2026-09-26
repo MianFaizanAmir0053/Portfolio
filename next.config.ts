@@ -17,6 +17,20 @@ const nextConfig: NextConfig = {
   /* One less fingerprinting header on every response. */
   poweredByHeader: false,
 
+  experimental: {
+    /*
+     * The stylesheet ships inside the HTML instead of as a <link> the browser
+     * has to discover and fetch before it can paint anything. On a slow link
+     * that request also queued behind the preloaded fonts and the scripts for
+     * the same bandwidth. Measured on the home page, cold cache, first paint:
+     * 1.53s -> 1.11s at 300ms RTT / 1.6Mbps, and 3.40s -> 1.54s at 800ms RTT /
+     * 400kbps. The cost is ~11KB more HTML per full page load (the sheet
+     * compresses to ~10KB), paid again by returning visitors instead of
+     * coming from cache; client-side navigations still use a cached <link>.
+     */
+    inlineCss: true,
+  },
+
   images: {
     /* AVIF first, WebP as the fallback — both are far smaller than the source
        PNG/JPG screenshots that will replace the placeholder SVGs. */

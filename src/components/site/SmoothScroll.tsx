@@ -5,6 +5,8 @@ import Lenis from "lenis";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { barHeight } from "./scroll-fx";
+import { setLenis } from "@/lib/lenis-instance";
+import { isLite } from "@/lib/lite";
 
 /**
  * Lenis smooth scrolling, wired into the GSAP ticker.
@@ -21,8 +23,10 @@ import { barHeight } from "./scroll-fx";
 export function SmoothScroll() {
   useEffect(() => {
     // A smoothed scroll is an animation. Anyone who asked the OS not to see
-    // animations gets the browser's own scrolling, untouched.
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    // animations gets the browser's own scrolling, untouched — and so does a
+    // constrained device, where a script re-writing the scroll position every
+    // frame is exactly the work it cannot spare.
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || isLite()) return;
 
     gsap.registerPlugin(ScrollTrigger);
 
@@ -45,6 +49,7 @@ export function SmoothScroll() {
     });
 
     lenis.on("scroll", ScrollTrigger.update);
+    setLenis(lenis);
 
     const raf = (time: number) => lenis.raf(time * 1000);
     gsap.ticker.add(raf);
@@ -59,6 +64,7 @@ export function SmoothScroll() {
     return () => {
       gsap.ticker.remove(raf);
       gsap.ticker.lagSmoothing(500, 33);
+      setLenis(null);
       lenis.destroy();
     };
   }, []);

@@ -230,6 +230,7 @@ export function ContactForm() {
         <button
           type="submit"
           disabled={status === "sending"}
+          aria-busy={status === "sending"}
           className="bg-cobalt px-6 py-3 text-sm font-medium text-paper transition-colors hover:bg-cobalt-deep disabled:opacity-60"
         >
           {status === "sending" ? "Sending…" : "Send message"}

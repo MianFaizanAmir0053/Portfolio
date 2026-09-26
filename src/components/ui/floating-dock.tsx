@@ -3,7 +3,9 @@
  * Floating dock — liquid-glass chrome on editorial geometry.
  *
  * Adapted from the original Aceternity component for this project:
- *  - `motion/react` -> `framer-motion` (the package this repo already uses)
+ *  - no motion library: the reveal, the menu and the rail labels are CSS
+ *    transitions and keyframes. This component is on every route, and it was
+ *    one of the reasons a second animation runtime shipped next to GSAP.
  *  - `@tabler/icons-react` -> `lucide-react` (avoids a second icon library)
  *  - hardcoded gray/neutral + `dark:` variants -> design tokens. This site has
  *    a single locked dark palette and never sets a `.dark` class, so every
@@ -17,8 +19,7 @@
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { Menu } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useRef, useState, type MouseEventHandler, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 
 export type DockItem = {
@@ -44,10 +45,7 @@ function DockLink({
   href: string;
   className?: string;
   children: ReactNode;
-} & React.AriaAttributes & {
-    onMouseEnter?: MouseEventHandler;
-    onMouseLeave?: MouseEventHandler;
-  }) {
+} & React.AriaAttributes) {
   if (isExternal(href) || isFile(href)) {
     const external = isExternal(href);
     return (
@@ -104,8 +102,15 @@ function GlassPane() {
 const CLIP_HIDDEN = "inset(-800px 50% -32px)";
 const CLIP_SHOWN = "inset(-800px 0% -32px)";
 
-/** Slight overshoot — the elastic settle Apple uses. */
-const REVEAL = { type: "spring", stiffness: 220, damping: 26, mass: 0.9 } as const;
+/**
+ * A fast start and a long, soft settle — what the spring this replaced
+ * (near-critically damped, so it never visibly overshot) actually drew.
+ */
+const SETTLE = "cubic-bezier(0.22, 1, 0.36, 1)";
+
+/** Menu tiles enter and leave one after another, this far apart. */
+const STAGGER_S = 0.05;
+const ITEM_S = 0.25;
 
 export const FloatingDock = ({
   items,
@@ -162,21 +167,51 @@ const FloatingDockMobile = ({
   visible: boolean;
 }) => {
   const [open, setOpen] = useState(false);
+  /** Open, but playing its tiles out before the sheet unmounts. */
+  const [closing, setClosing] = useState(false);
   const reduce = useMediaQuery("(prefers-reduced-motion: reduce)");
   const rootRef = useRef<HTMLDivElement>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
+  const closeTimer = useRef(0);
 
   // Concealing the dock closes the menu, so it never reappears still-open on the
   // next scroll down. Adjusted during render rather than in an effect: an effect
   // would need rAF//a paint to land, and rAF is throttled in background tabs —
-  // the reset would silently not happen.
+  // the reset would silently not happen. No exit here: the whole dock is
+  // already clipping itself away.
   const [wasVisible, setWasVisible] = useState(visible);
   if (wasVisible !== visible) {
     setWasVisible(visible);
-    if (!visible && open) setOpen(false);
+    if (!visible && open) {
+      setOpen(false);
+      setClosing(false);
+    }
   }
 
   const isOpen = open && visible;
+  const expanded = isOpen && !closing;
+
+  /*
+   * Closing waits for the last tile to leave. The tiles go top-first, a
+   * stagger apart, so that is the stagger across the column plus one tile's
+   * own exit. A timer rather than `animationend`, which never fires when the
+   * animations are switched off.
+   */
+  const exitMs = reduce ? 0 : ((items.length - 1) * STAGGER_S + ITEM_S) * 1000;
+  const close = useCallback(() => {
+    window.clearTimeout(closeTimer.current);
+    if (exitMs === 0) {
+      setOpen(false);
+      return;
+    }
+    setClosing(true);
+    closeTimer.current = window.setTimeout(() => {
+      setOpen(false);
+      setClosing(false);
+    }, exitMs);
+  }, [exitMs]);
+
+  useEffect(() => () => window.clearTimeout(closeTimer.current), []);
 
   /*
    * A disclosure that declares `aria-expanded` has to behave like one: Escape
@@ -186,16 +221,16 @@ const FloatingDockMobile = ({
    * DockNav. Both listeners are attached only while the sheet is open.
    */
   useEffect(() => {
-    if (!isOpen) return;
+    if (!expanded) return;
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
-      setOpen(false);
+      close();
       toggleRef.current?.focus();
     };
     const onPointerDown = (e: PointerEvent) => {
       if (rootRef.current?.contains(e.target as Node)) return;
-      setOpen(false);
+      close();
     };
 
     document.addEventListener("keydown", onKeyDown);
@@ -204,114 +239,121 @@ const FloatingDockMobile = ({
       document.removeEventListener("keydown", onKeyDown);
       document.removeEventListener("pointerdown", onPointerDown);
     };
-  }, [isOpen]);
+  }, [expanded, close]);
 
   return (
-    <motion.div
+    <div
       ref={rootRef}
-      animate={{
+      style={{
         clipPath: visible ? CLIP_SHOWN : CLIP_HIDDEN,
         opacity: visible ? 1 : 0,
+        transition: reduce ? "none" : `clip-path 0.5s ${SETTLE}, opacity 0.3s ease-out`,
       }}
-      transition={reduce ? { duration: 0 } : REVEAL}
       className={cn("block md:hidden", className, !visible && "pointer-events-none")}
     >
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            layoutId="nav"
-            /*
-             * Its own box, and capped. Eleven tiles stand ~490px off the
-             * bottom of the screen; a landscape phone has about 330px of
-             * height, so the first items ran off the top of a `fixed` wrapper
-             * with nothing to scroll. `w-max` keeps the labels inside the
-             * scroll box so only the vertical axis moves, and `svh` is the same
-             * unit the pinned sections measure in.
-             */
-            className="absolute bottom-full right-0 mb-3 flex max-h-[calc(100svh-9rem)] w-max flex-col items-end gap-2 overflow-y-auto overscroll-contain"
-          >
-            {/*
-             * Pages first, then sections of a page. Below `sm` the utility bar
-             * has room for the status tag and one link, so without this row the
-             * only route to /work, /services and /about on a phone is the
-             * footer — thirteen sections down. One row of chips rather than
-             * three more tiles: the sheet already stands eight items tall and a
-             * short phone cannot afford another 150px of column.
-             */}
-            {routes && routes.length > 0 && (
-              <>
-                <div className="flex items-center gap-2">
-                  {routes.map((route) => (
-                    <DockLink
-                      key={route.href}
-                      href={route.href}
-                      aria-current={activeHref === route.href ? "page" : undefined}
-                      className="label relative flex h-11 items-center px-3 text-cobalt focus-visible:-outline-offset-4"
-                    >
-                      <GlassPane />
-                      <span className="relative">[{route.title}]</span>
-                    </DockLink>
-                  ))}
-                </div>
-                <span aria-hidden className="my-1 h-px w-11 bg-[var(--hairline)]" />
-              </>
-            )}
-            {items.map((item, idx) => {
-              const active = activeHref === item.href;
-              return (
-                <motion.div
-                  key={item.title}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10, transition: { delay: idx * 0.05 } }}
-                  transition={{ delay: (items.length - 1 - idx) * 0.05 }}
-                  className="flex items-center gap-2"
-                >
-                  <span className="label border border-[var(--hairline)] bg-paper-deep/90 px-2 py-1 text-cobalt backdrop-blur-md">
-                    [{item.title}]
-                  </span>
+      {isOpen && (
+        <div
+          /*
+           * Its own box, and capped. Eleven tiles stand ~490px off the
+           * bottom of the screen; a landscape phone has about 330px of
+           * height, so the first items ran off the top of a `fixed` wrapper
+           * with nothing to scroll. `w-max` keeps the labels inside the
+           * scroll box so only the vertical axis moves, and `svh` is the same
+           * unit the pinned sections measure in.
+           */
+          className="absolute bottom-full right-0 mb-3 flex max-h-[calc(100svh-9rem)] w-max flex-col items-end gap-2 overflow-y-auto overscroll-contain"
+        >
+          {/*
+           * Pages first, then sections of a page. Below `sm` the utility bar
+           * has room for the status tag and one link, so without this row the
+           * only route to /work, /services and /about on a phone is the
+           * footer — thirteen sections down. One row of chips rather than
+           * three more tiles: the sheet already stands eight items tall and a
+           * short phone cannot afford another 150px of column.
+           */}
+          {routes && routes.length > 0 && (
+            <>
+              <div className="flex items-center gap-2">
+                {routes.map((route) => (
                   <DockLink
-                    href={item.href}
-                    aria-label={item.title}
-                    aria-current={active ? "page" : undefined}
-                    // Ring pulled inside the pane: the default 3px offset draws
-                    // it on whatever is behind the dock, which over the footer
-                    // is white on white.
-                    className="relative flex h-11 w-11 shrink-0 items-center justify-center focus-visible:-outline-offset-4"
+                    key={route.href}
+                    href={route.href}
+                    aria-current={activeHref === route.href ? "page" : undefined}
+                    className="label relative flex h-11 items-center px-3 text-cobalt focus-visible:-outline-offset-4"
                   >
                     <GlassPane />
-                    <span
-                      className={cn(
-                        "relative flex h-[18px] w-[18px] items-center justify-center text-[13px] transition-colors",
-                        active ? "text-cobalt" : "text-ink",
-                      )}
-                    >
-                      {item.icon}
-                    </span>
+                    <span className="relative">[{route.title}]</span>
                   </DockLink>
-                </motion.div>
-              );
-            })}
-          </motion.div>
-        )}
-      </AnimatePresence>
+                ))}
+              </div>
+              <span aria-hidden className="my-1 h-px w-11 bg-[var(--hairline)]" />
+            </>
+          )}
+          {items.map((item, idx) => {
+            const active = activeHref === item.href;
+            // In from the bottom up, out from the top down.
+            const delay = (closing ? idx : items.length - 1 - idx) * STAGGER_S;
+            return (
+              <div
+                key={item.title}
+                className="dock-item flex items-center gap-2"
+                style={{
+                  animation: `${closing ? "dock-item-out" : "dock-item-in"} ${ITEM_S}s ${SETTLE} ${delay}s both`,
+                }}
+              >
+                <span className="label border border-[var(--hairline)] bg-paper-deep/90 px-2 py-1 text-cobalt backdrop-blur-md">
+                  [{item.title}]
+                </span>
+                <DockLink
+                  href={item.href}
+                  aria-label={item.title}
+                  aria-current={active ? "page" : undefined}
+                  // Ring pulled inside the pane: the default 3px offset draws
+                  // it on whatever is behind the dock, which over the footer
+                  // is white on white.
+                  className="relative flex h-11 w-11 shrink-0 items-center justify-center focus-visible:-outline-offset-4"
+                >
+                  <GlassPane />
+                  <span
+                    className={cn(
+                      "relative flex h-[18px] w-[18px] items-center justify-center text-[13px] transition-colors",
+                      active ? "text-cobalt" : "text-ink",
+                    )}
+                  >
+                    {item.icon}
+                  </span>
+                </DockLink>
+              </div>
+            );
+          })}
+        </div>
+      )}
       <button
         type="button"
         ref={toggleRef}
-        onClick={() => setOpen(!isOpen)}
-        aria-expanded={isOpen}
-        aria-label={isOpen ? "Close navigation" : "Open navigation"}
+        onClick={() => {
+          if (expanded) {
+            close();
+            return;
+          }
+          // Opening — or catching a sheet that is still on its way out.
+          window.clearTimeout(closeTimer.current);
+          setClosing(false);
+          setOpen(true);
+        }}
+        aria-expanded={expanded}
+        aria-label={expanded ? "Close navigation" : "Open navigation"}
         className="relative flex h-12 w-12 items-center justify-center focus-visible:-outline-offset-4"
       >
         <GlassPane />
         <Menu
           className={cn(
             "relative h-5 w-5 transition-[color,transform] duration-300",
-            isOpen ? "rotate-90 text-cobalt" : "text-ink",
+            expanded ? "rotate-90 text-cobalt" : "text-ink",
           )}
         />
       </button>
-    </motion.div>
+    </div>
   );
 };
 
@@ -341,10 +383,15 @@ const FloatingDockDesktop = ({
   const activeIndex = items.findIndex((item) => item.href === activeHref);
 
   return (
-    <motion.div
-      initial={false}
-      animate={{ opacity: visible ? 1 : 0, x: visible ? 0 : 12 }}
-      transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 260, damping: 30 }}
+    <div
+      style={{
+        opacity: visible ? 1 : 0,
+        // `transform`, not the `translate` property: the rail is centred with
+        // Tailwind's `-translate-y-1/2`, which owns `translate`. The two
+        // compose rather than one overwriting the other.
+        transform: visible ? "none" : "translateX(12px)",
+        transition: reduce ? "none" : `opacity 0.35s ease-out, transform 0.45s ${SETTLE}`,
+      }}
       className={cn("hidden md:flex flex-col items-center", className, !visible && "pointer-events-none")}
     >
       {/* The hairline sits behind the tiles, full height, so it reads as one
@@ -358,7 +405,7 @@ const FloatingDockDesktop = ({
           <RailTile key={item.title} {...item} active={i === activeIndex} />
         ))}
       </div>
-    </motion.div>
+    </div>
   );
 };
 
@@ -373,16 +420,12 @@ function RailTile({
   href: string;
   active: boolean;
 }) {
-  const [hovered, setHovered] = useState(false);
-
   return (
     <DockLink
       href={href}
       aria-label={title}
       aria-current={active ? "page" : undefined}
       className="group relative shrink-0"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
     >
       <span
         style={{ width: RAIL_TILE, height: RAIL_TILE }}
@@ -396,19 +439,18 @@ function RailTile({
         {icon}
       </span>
 
-      <AnimatePresence>
-        {hovered && (
-          <motion.span
-            initial={{ opacity: 0, x: 4 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 2 }}
-            transition={{ duration: 0.15 }}
-            className="label pointer-events-none absolute right-full top-1/2 mr-3 w-max -translate-y-1/2 border border-[var(--hairline)] bg-paper-deep/95 px-2 py-1 text-cobalt backdrop-blur-md"
-          >
-            [{title}]
-          </motion.span>
-        )}
-      </AnimatePresence>
+      {/*
+       * Hover state in CSS rather than React: no re-render per tile per hover,
+       * and keyboard focus gets the same label a pointer does. `invisible`
+       * while hidden, so the blur behind it is not composited for nothing;
+       * the name itself is the link's `aria-label`, hence `aria-hidden`.
+       */}
+      <span
+        aria-hidden
+        className="label pointer-events-none invisible absolute right-full top-1/2 mr-3 w-max -translate-y-1/2 translate-x-1 border border-[var(--hairline)] bg-paper-deep/95 px-2 py-1 text-cobalt opacity-0 backdrop-blur-md transition-[opacity,translate,visibility] duration-150 group-hover:visible group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:visible group-focus-visible:translate-x-0 group-focus-visible:opacity-100"
+      >
+        [{title}]
+      </span>
     </DockLink>
   );
 }
