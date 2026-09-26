@@ -433,6 +433,9 @@ const WHEEL_COMMIT_PX = 48;
 /** Stillness that stands in for the end of a scroll, where there is no `scrollend`. */
 const QUIET_MS = 150;
 
+/** Wheel silence that ends a gesture: the next notch after it starts a new one. */
+const WHEEL_QUIET_MS = 160;
+
 /**
  * Carries a scroll that comes to rest between two stops on to one of them, so
  * a held section never stops with two panels half on screen.
@@ -442,6 +445,13 @@ const QUIET_MS = 150;
  * Nearest pulls a small nudge straight back, which reads as the page refusing
  * to move. Here the scroll's direction decides: a fifth of the way onward
  * commits to the next stop, and anything less is a slip and is undone.
+ *
+ * One wheel gesture moves one stop. A flick of the wheel is several notches
+ * in quick succession, and left alone it carried the page past a stop before
+ * the settle ever ran, so the section appeared to skip one. While a gesture
+ * lasts, Lenis's target is held to the stops either side of where it began;
+ * one arriving from outside the section is held at the first stop it meets.
+ * The far side of either end stays open, so leaving is never held up.
  *
  * It answers to what the reader did, not to what kind of screen they have. A
  * phone emulated in a desktop browser is a touch screen driven by a mouse
@@ -454,7 +464,8 @@ const QUIET_MS = 150;
  *    off the glass, and a native smooth scroll makes the move — off the main
  *    thread, like the fling. A fling caught under the finger, or a drag that
  *    stopped before it lifted, ends without another scroll, so the lift
- *    settles those.
+ *    settles those. A fling is the browser's own momentum and is not held
+ *    back; it settles on the next stop in its direction from where it ends.
  *  - A wheel without Lenis (lite mode) settles on the scroll's `scrollend`.
  *  - A browser with no `scrollend` gets a moment's stillness in its place.
  * Arrow keys, the scrollbar and anchor links leave the page where they put
@@ -487,33 +498,40 @@ function settleOnStops({
   let lastY = window.scrollY;
   let lastMoveAt = 0;
   let timer = 0;
-
-  const unLenis = onLenis((instance) => {
-    lenis = instance;
-    return () => {
-      lenis = null;
-    };
-  });
+  // Where a settle or a key step is taking the page, until it gets there or
+  // the reader takes over; `native` when the browser is making the move.
+  let flight: { to: number; native: boolean } | null = null;
+  // How far the wheel gesture under way may carry the page.
+  let reach: { lower: number; upper: number } | null = null;
 
   const later = (fn: () => void, ms: number) => {
     window.clearTimeout(timer);
     timer = window.setTimeout(fn, ms);
   };
 
-  // Where the page is heading: Lenis's target mid-glide, the page itself otherwise.
-  const heading = () => (lenis && source !== "touch" ? lenis.targetScroll : window.scrollY);
+  // Where the page is heading: the stop a move is making for, Lenis's target
+  // mid-glide, or the page itself.
+  const heading = () => flight?.to ?? (lenis && source !== "touch" ? lenis.targetScroll : window.scrollY);
 
   const move = (target: number) => {
     const distance = Math.abs(target - window.scrollY);
-    if (distance < 2) return;
+    if (distance < 2) {
+      flight = null;
+      return;
+    }
     if (lenis && source !== "touch") {
+      flight = { to: target, native: false };
       lenis.scrollTo(target, {
         // A nudge back into place is quick; a whole panel travels further and
         // gets proportionally longer, so both feel like the same motion.
         duration: gsap.utils.clamp(0.35, 0.85, 0.3 + (0.6 * distance) / window.innerHeight),
         easing: (t) => 1 - (1 - t) ** 4,
+        onComplete: () => {
+          if (flight?.to === target) flight = null;
+        },
       });
     } else {
+      flight = { to: target, native: true };
       window.scrollTo({ top: target, behavior: "smooth" });
     }
   };
@@ -546,6 +564,7 @@ function settleOnStops({
 
   const settleNow = () => {
     window.clearTimeout(timer);
+    reach = null;
     if (!armed || touching) return;
     armed = false;
     // A move Lenis is making on its own — an anchor jump passing through — is
@@ -554,22 +573,73 @@ function settleOnStops({
     settle();
   };
 
+  /*
+   * The stops either side of `from`, or the first one a gesture from outside
+   * the section would meet. An end with nothing beyond it is left open.
+   */
+  const reachFrom = (from: number) => {
+    const open = { lower: -Infinity, upper: Infinity };
+    const points = stops();
+    if (points.length < 2) return open;
+    const first = points[0];
+    const last = points[points.length - 1];
+    if (from < first - 1) return { ...open, upper: first };
+    if (from > last + 1) return { ...open, lower: last };
+    let at = 0;
+    for (let i = 1; i < points.length; i += 1) if (Math.abs(points[i] - from) < Math.abs(points[at] - from)) at = i;
+    return {
+      lower: at > 0 ? points[at - 1] : -Infinity,
+      upper: at < points.length - 1 ? points[at + 1] : Infinity,
+    };
+  };
+
+  /* Runs after Lenis has taken the notch (see below), so its target includes it. */
   const onWheel = (e: WheelEvent) => {
-    // Pinch-zoom on a trackpad, a sideways swipe, or a nested scroller that
-    // scrolls itself: none of them moved the page.
-    if (e.ctrlKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+    // Pinch-zoom on a trackpad, a purely sideways swipe, or a nested scroller
+    // that scrolls itself: none of them moved the page.
+    if (e.ctrlKey || e.deltaY === 0) return;
     if (e.target instanceof Element && e.target.closest("[data-lenis-prevent]")) return;
     source = "wheel";
     armed = true;
-    direction = Math.sign(e.deltaY) || direction;
+    direction = Math.sign(e.deltaY);
     // Without Lenis the wheel scrolls natively, and its own end settles it.
-    if (lenis) later(settleNow, 160);
+    if (!lenis) return;
+    let target = lenis.targetScroll;
+    if (!reach) {
+      // A notch that lands while a settle is still gliding counts from the
+      // stop the settle was making for. Lenis measured it from wherever the
+      // glide had got to, which would lose the notch to the stop behind.
+      const from = flight && (flight.native || lenis.isScrolling === "smooth") ? flight.to : window.scrollY;
+      flight = null;
+      reach = reachFrom(from);
+      target = from + (lenis.targetScroll - window.scrollY);
+    }
+    const held = gsap.utils.clamp(reach.lower, reach.upper, target);
+    // As if the wheel had carried exactly this far: Lenis's own glide.
+    if (held !== lenis.targetScroll) lenis.scrollTo(held, { programmatic: false, lerp: lenis.options.lerp });
+    later(settleNow, WHEEL_QUIET_MS);
   };
+
+  const unLenis = onLenis((instance) => {
+    lenis = instance;
+    /*
+     * Re-added so it runs after Lenis's own wheel listener, which Lenis puts
+     * on the window as it is constructed: the target read above must already
+     * include the notch. Listeners on one target run in the order added.
+     */
+    window.removeEventListener("wheel", onWheel);
+    window.addEventListener("wheel", onWheel, { passive: true });
+    return () => {
+      lenis = null;
+    };
+  });
 
   const onTouchStart = () => {
     touching = true;
     source = "touch";
     armed = true;
+    flight = null;
+    reach = null;
     window.clearTimeout(timer);
   };
   const onTouchEnd = (e: TouchEvent) => {
@@ -591,9 +661,11 @@ function settleOnStops({
     if (source !== "wheel") direction = y > lastY ? 1 : -1;
     lastY = y;
     lastMoveAt = performance.now();
+    if (flight?.native && Math.abs(y - flight.to) < 1) flight = null;
     if (!nativeEnd && armed && !touching && !(source === "wheel" && lenis)) later(settleNow, QUIET_MS);
   };
   const onScrollEnd = () => {
+    if (flight?.native) flight = null;
     // Lenis ends a scroll every frame it moves the page; the wheel's own quiet has it.
     if (source === "wheel" && lenis) return;
     settleNow();
@@ -657,30 +729,6 @@ function settleOnStops({
       window.removeEventListener("keydown", onKey);
     },
   };
-}
-
-/**
- * Where a row of panels rests, as shares of its travel: each panel centred in
- * the frame, clamped to the ends of the row. A stop closer than a quarter of
- * the frame to the one before is dropped — on a wide screen the first two
- * panels are both in full view at the start, and a second stop a few dozen
- * pixels on would read as a stutter — and the end of the row wins over a
- * panel just short of it.
- */
-function panelStops(panels: HTMLElement[], frame: number, travel: number) {
-  const out = [0];
-  if (travel <= 0) return out;
-  const gap = frame / 4 / travel;
-  for (const panel of panels) {
-    const at = gsap.utils.clamp(0, 1, (panel.offsetLeft + panel.offsetWidth / 2 - frame / 2) / travel);
-    if (at - out[out.length - 1] >= gap) out.push(at);
-  }
-  const end = out.length - 1;
-  if (out[end] < 1) {
-    if (end > 0 && 1 - out[end] < gap) out[end] = 1;
-    else out.push(1);
-  }
-  return out;
 }
 
 /* ============================================================
@@ -910,30 +958,27 @@ export function HorizontalScroll({
   }, [mode, report]);
 
   /*
-   * held: come to rest with a panel centred, pinned or sticky alike. The
-   * stops are `panelStops` laid over the stretch of page scroll that drives
-   * the track, read from whichever trigger is live when the scroll ends; the
-   * left and right arrows step through them too.
+   * held: come to rest on a checkpoint, pinned or sticky alike. The stops are
+   * the rail's own ticks, evenly spread over the stretch of page scroll that
+   * drives the track, so every stop lights exactly one more tick and moves
+   * the counter by one. With panels of one width they are also where each
+   * panel sits centred; on a wide screen, where two panels share the frame,
+   * centring would put two stops a few dozen pixels apart and the scroll
+   * would seem to skip one. The left and right arrows step through them too.
    */
   useEffect(() => {
     if (!held) return;
-    const viewport = viewportRef.current;
-    const track = trackRef.current;
-    if (!viewport || !track) return;
-    const panels = Array.from(track.querySelectorAll<HTMLElement>("[data-hpanel]"));
-
     const settle = settleOnStops({
       stops: () => {
         const st = stRef.current;
-        if (!st) return [];
-        const frame = viewport.clientWidth;
-        return panelStops(panels, frame, track.scrollWidth - frame).map((p) => st.start + p * (st.end - st.start));
+        if (!st || total < 2) return [];
+        return Array.from({ length: total }, (_, i) => st.start + (i / (total - 1)) * (st.end - st.start));
       },
       runUp: () => window.innerHeight * 0.2,
       sideways: true,
     });
     return settle.destroy;
-  }, [held]);
+  }, [held, total]);
 
   /* held: keep keyboard focus on screen */
   useEffect(() => {
@@ -957,11 +1002,17 @@ export function HorizontalScroll({
       const box = panel.getBoundingClientRect();
       if (box.left >= 0 && box.right <= window.innerWidth) return;
 
-      const distance = track.scrollWidth - viewport.clientWidth;
+      const frame = viewport.clientWidth;
+      const distance = track.scrollWidth - frame;
       if (distance <= 0) return;
-      // Centred, the way the row comes to rest.
-      const centre = panel.offsetLeft + panel.offsetWidth / 2 - viewport.clientWidth / 2;
-      const ratio = gsap.utils.clamp(0, 1, centre / distance);
+      // The panel's own checkpoint, where the row comes to rest with it in
+      // view — or centred, should the checkpoint not show it whole.
+      const panels = Array.from(track.querySelectorAll<HTMLElement>("[data-hpanel]"));
+      let ratio = panels.length === total && total > 1 ? panels.indexOf(panel) / (total - 1) : -1;
+      const left = panel.offsetLeft - ratio * distance;
+      if (ratio < 0 || left < 0 || left + panel.offsetWidth > frame) {
+        ratio = gsap.utils.clamp(0, 1, (panel.offsetLeft + panel.offsetWidth / 2 - frame / 2) / distance);
+      }
       // Explicitly instant: the intent here is a reposition, not a journey, and
       // a native smooth scroll would run against Lenis.
       window.scrollTo({ top: st.start + (st.end - st.start) * ratio, behavior: "instant" });
@@ -969,7 +1020,7 @@ export function HorizontalScroll({
 
     track.addEventListener("focusin", onFocusIn);
     return () => track.removeEventListener("focusin", onFocusIn);
-  }, [held]);
+  }, [held, total]);
 
   /* swipe: mirror the native scroller into the rail */
   useEffect(() => {
