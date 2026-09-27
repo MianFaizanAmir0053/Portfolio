@@ -3,6 +3,7 @@
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import type Lenis from "lenis";
+import type { VirtualScrollData } from "lenis";
 import {
   Fragment,
   createContext,
@@ -10,6 +11,7 @@ import {
   useContext,
   useEffect,
   useId,
+  useLayoutEffect,
   useRef,
   useState,
   type ReactNode,
@@ -18,22 +20,22 @@ import {
 import { cn } from "@/lib/utils";
 import { useLite, useMediaQuery } from "@/hooks/use-media-query";
 import { scrollSignal } from "@/lib/scroll-signal";
-import { onLenis } from "@/lib/lenis-instance";
+import { gateWheel, onLenis } from "@/lib/lenis-instance";
+import { introHydrated, introReady } from "@/lib/intro";
+import { DESKTOP } from "@/lib/media";
+import { markReady, whenReady } from "@/lib/ready";
 
 if (typeof window !== "undefined") gsap.registerPlugin(ScrollTrigger);
 
-const REDUCE = "(prefers-reduced-motion: reduce)";
 /*
- * Width alone is not enough to qualify for a pinned section. A pinned box is
- * `100svh` tall and clipped, and because it is pinned there is no scroll that
- * can reveal what overflows it — so a viewport too short to hold the content
- * loses that content outright. A landscape phone is ≥768px wide and ~400px
- * tall, which is exactly that case. The height floor sends it down the
- * already-built unpinned paths instead: horizontal rails become swipe rows,
- * the pinned statement becomes a normal flow block, the card stack becomes a
- * column. 1280x720 laptops clear it comfortably.
+ * A layout effect on the client, a plain effect on the server (where neither
+ * runs, but a layout effect warns). For decisions that change the page's
+ * height: made here, their state lands in the same commit as hydration, so the
+ * page settles before it is measured instead of shifting straight after.
  */
-const DESKTOP = "(min-width: 768px) and (min-height: 640px)";
+const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
+
+const REDUCE = "(prefers-reduced-motion: reduce)";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
@@ -69,6 +71,20 @@ const PINNED_HEIGHT = "h-[calc(100svh-var(--bar-h))]";
  * disagree with the page about where it is.
  */
 const PIN_TYPE = "transform" as const;
+
+/**
+ * Every pinned section is measured before anything else.
+ *
+ * A pin adds its scroll distance to the page, so every trigger below it has
+ * to be measured after it — and ScrollTrigger measures in the order of the
+ * start positions it found last time. A section only becomes a pin once the
+ * client knows it is on a desktop, a render after hydration, so the first
+ * measurement after load ran in the wrong order: triggers below a pin
+ * measured the page without it. The fix used to be measuring the whole page
+ * twice. Ranking pins first makes one pass right, and among themselves they
+ * keep page order — each measures its start after the pins above it exist.
+ */
+const PIN_PRIORITY = 1;
 
 /*
  * No ScrollTrigger snapping, deliberately.
@@ -120,13 +136,14 @@ export function useFxMode() {
  */
 export function ScrollFxRoot() {
   useEffect(() => {
+    // The page has hydrated: the intro's bar re-times the rest of its run from here.
+    introHydrated();
+
     /*
-     * Twice, deliberately. A refresh measures with pin spacing reverted, then
-     * restores it — so on the first pass a trigger that sits *below* a pin can
-     * report a start thousands of pixels too high, which sorts it ahead of
-     * that pin and leaves it measured against a page that no longer exists.
-     * By the second pass the starts are right, the ordering is right, and the
-     * positions settle.
+     * One pass at a time. The page used to be measured twice in a row, because
+     * a trigger below a pin could be measured before the pin existed in its
+     * ordering; ranking pins first (`PIN_PRIORITY`) makes a single pass right.
+     * A burst of changes is measured once, after it settles.
      */
     let pending: number | null = null;
     const refresh = () => {
@@ -134,9 +151,32 @@ export function ScrollFxRoot() {
       pending = window.setTimeout(() => {
         pending = null;
         ScrollTrigger.refresh();
-        requestAnimationFrame(() => ScrollTrigger.refresh());
       }, 120);
     };
+
+    /*
+     * When ScrollTrigger last finished measuring the whole page, whatever the
+     * cause. Creating a pin queues a pass of its own for the next frame.
+     */
+    let measuredAt = -1;
+    const main = document.getElementById("main");
+    let lastHeight = main?.offsetHeight ?? 0;
+    const onMeasured = () => {
+      measuredAt = performance.now();
+      /*
+       * What was just measured is the page as it stands, so a height change
+       * reported before now is accounted for. Without this the observer below
+       * compared against the height it saw at hydration — before the pins and
+       * the card deck had added several thousand pixels — and its first report
+       * set off a second full pass straight after the first.
+       */
+      lastHeight = main?.offsetHeight ?? 0;
+      if (pending !== null) {
+        window.clearTimeout(pending);
+        pending = null;
+      }
+    };
+    ScrollTrigger.addEventListener("refresh", onMeasured);
 
     /*
      * Once, when the page's resources and its fonts are both in — not once
@@ -153,11 +193,38 @@ export function ScrollFxRoot() {
       document.readyState === "complete"
         ? Promise.resolve()
         : new Promise<void>((resolve) => window.addEventListener("load", () => resolve(), { once: true }));
+    /*
+     * That pass is also the moment the page is ready — booted, fonts in,
+     * every pinned section measured against the finished layout — so it is
+     * what lets the first-load intro leave (see `Intro`).
+     *
+     * On the next frame, not after a quiet period: nothing else is coming,
+     * and the intro is waiting on it. By then the pass a new pin queued has
+     * usually already measured the finished page, and when it has, measuring
+     * it again would only repeat the work.
+     */
+    let fallback = 0;
+    const ready = () => {
+      window.clearTimeout(fallback);
+      markReady();
+      introReady();
+    };
+    // A load event that never arrives — one stalled resource — must not hold
+    // the intro, or the setup waiting on the page, for good.
+    fallback = window.setTimeout(ready, 6000);
     Promise.all([loaded, document.fonts?.ready])
       .then(() => {
-        if (!cancelled) refresh();
+        if (cancelled) return;
+        const settledAt = performance.now();
+        requestAnimationFrame(() => {
+          if (cancelled) return;
+          if (measuredAt < settledAt) ScrollTrigger.refresh();
+          ready();
+        });
       })
-      .catch(() => {});
+      .catch(() => {
+        if (!cancelled) ready();
+      });
 
     /*
      * Opening or closing an accordion changes the page height after every
@@ -166,8 +233,6 @@ export function ScrollFxRoot() {
      * by the panels' height and its words can stay at autoAlpha 0. A refresh
      * resizes the pin spacers once and then settles, so this runs one pass.
      */
-    const main = document.getElementById("main");
-    let lastHeight = main?.offsetHeight ?? 0;
     const resized = new ResizeObserver(() => {
       const height = main?.offsetHeight ?? 0;
       if (Math.abs(height - lastHeight) < 2) return;
@@ -213,7 +278,9 @@ export function ScrollFxRoot() {
 
     return () => {
       cancelled = true;
+      window.clearTimeout(fallback);
       if (pending !== null) window.clearTimeout(pending);
+      ScrollTrigger.removeEventListener("refresh", onMeasured);
       resized.disconnect();
       gsap.ticker.remove(decay);
       page.kill();
@@ -433,44 +500,82 @@ const WHEEL_COMMIT_PX = 48;
 /** Stillness that stands in for the end of a scroll, where there is no `scrollend`. */
 const QUIET_MS = 150;
 
-/** Wheel silence that ends a gesture: the next notch after it starts a new one. */
+/** Wheel silence after which a free-scrolling wheel is settled. */
 const WHEEL_QUIET_MS = 160;
 
+/** A pause in the wheel longer than this makes the next notch a new scroll. */
+const SCROLL_GAP_MS = 100;
+
+/** A climb in the deltas is never read as a new scroll sooner than this after the last began. */
+const SCROLL_MIN_MS = 150;
+
+/** What a new scroll has to carry before it turns a panel, so a stray brush of a touchpad doesn't. */
+const SCROLL_START_PX = 10;
+
+/** Wheel travel that turns each further panel while a scroll keeps going, at most. */
+const STEP_MAX_PX = 400;
+
+type WheelScroll = {
+  /** When the last wheel event arrived, and which way it went. */
+  at: number;
+  dir: number;
+  /** The axis the scroll began on, which it keeps. */
+  axis: "x" | "y";
+  /** When the last new scroll began. */
+  began: number;
+  /** The last few event sizes, and the largest since the scroll began. */
+  recent: number[];
+  peak: number;
+  /** Travel of a new scroll that has not turned a panel yet; `null` once it has. */
+  pending: number | null;
+  /** Travel carried toward the next panel of a scroll that keeps going. */
+  credit: number;
+};
+
 /**
- * Carries a scroll that comes to rest between two stops on to one of them, so
- * a held section never stops with two panels half on screen.
+ * Brings a held section to rest on whole panels, so it never stops with two
+ * of them half on screen.
  *
- * Hand-rolled rather than ScrollTrigger's snap (see the note at the top of
- * this file) and rather than Lenis's snap plugin, which only knows "nearest".
- * Nearest pulls a small nudge straight back, which reads as the page refusing
- * to move. Here the scroll's direction decides: a fifth of the way onward
- * commits to the next stop, and anything less is a slip and is undone.
+ * A wheel steps. Inside a section each separate scroll turns one panel, the
+ * moment it starts, and a scroll that keeps going turns another for every
+ * stretch of travel after that — a notch or a brush of a touchpad moves one
+ * panel, three quick flicks move three, and one long scroll runs on through
+ * the section and out of the far end. What makes a scroll "separate" is read
+ * off the wheel stream itself:
+ *  - a pause (a mouse wheel's notches come in bursts);
+ *  - a change of direction;
+ *  - on a touchpad, a new swipe landing in the momentum of the last one,
+ *    which never pauses but shows as the deltas climbing again after they
+ *    had died away.
+ * Momentum's dying tail counts for half, so a single swipe doesn't run on
+ * for as far as its glide would have carried the page. The wheel is taken
+ * from Lenis for the purpose (see `gateWheel`), and each panel is reached by
+ * Lenis easing the page to it. Arriving from outside, the section holds the
+ * page at the first panel it meets; beyond the last, the wheel is Lenis's
+ * again.
  *
- * One wheel gesture moves one stop. A flick of the wheel is several notches
- * in quick succession, and left alone it carried the page past a stop before
- * the settle ever ran, so the section appeared to skip one. While a gesture
- * lasts, Lenis's target is held to the stops either side of where it began;
- * one arriving from outside the section is held at the first stop it meets.
- * The far side of either end stays open, so leaving is never held up.
+ * An earlier version let the wheel glide and snapped only once it went quiet,
+ * holding each gesture to one panel. A touchpad's momentum keeps the wheel
+ * busy for a second or more after the fingers lift, so the gesture never
+ * ended, every swipe after it was swallowed, and the section read as stuck
+ * until the reader stopped touching the pad.
  *
- * It answers to what the reader did, not to what kind of screen they have. A
- * phone emulated in a desktop browser is a touch screen driven by a mouse
- * wheel, and so is an iPad with a trackpad; deciding by `(pointer: coarse)`
- * left both with no settle at all.
- *  - A wheel under Lenis settles once the wheel goes quiet, aimed at where
- *    Lenis is heading, and Lenis makes the move, so it glides like the scroll
- *    before it.
+ * Everything else settles once it comes to rest, by the scroll's direction:
+ * a fifth of the way onward commits to the next stop, and anything less is a
+ * slip and is undone. Nearest, as Lenis's snap plugin does it, pulls a small
+ * nudge straight back, which reads as the page refusing to move.
  *  - A finger settles the moment its fling stops (`scrollend`), once it is
  *    off the glass, and a native smooth scroll makes the move — off the main
  *    thread, like the fling. A fling caught under the finger, or a drag that
  *    stopped before it lifted, ends without another scroll, so the lift
- *    settles those. A fling is the browser's own momentum and is not held
- *    back; it settles on the next stop in its direction from where it ends.
+ *    settles those.
  *  - A wheel without Lenis (lite mode) settles on the scroll's `scrollend`.
  *  - A browser with no `scrollend` gets a moment's stillness in its place.
- * Arrow keys, the scrollbar and anchor links leave the page where they put
- * it. Page Up, Page Down and Space step a whole stop instead, and an anchor
- * jump Lenis is running through the section is never hijacked.
+ * It answers to what the reader did, not to what kind of screen they have: a
+ * phone emulated in a desktop browser is a touch screen driven by a wheel,
+ * and so is an iPad with a trackpad. Arrow keys, the scrollbar and anchor
+ * links leave the page where they put it; Page Up, Page Down and Space step a
+ * whole stop instead, and an anchor jump passing through is never hijacked.
  *
  * Live from a run-up before the first stop to the same distance past the
  * last. Arriving in the direction of travel lands on the first stop; leaving
@@ -485,7 +590,10 @@ function settleOnStops({
   stops: () => number[];
   /** How far outside the first and last stop a scroll is still carried in. */
   runUp: () => number;
-  /** The left and right arrows step too, while held — for a row that travels sideways. */
+  /**
+   * For a row that travels sideways: the left and right arrows step too
+   * while it is held, and so does a sideways swipe on a touchpad.
+   */
   sideways?: boolean;
 }) {
   const nativeEnd = "onscrollend" in window;
@@ -498,22 +606,52 @@ function settleOnStops({
   let lastY = window.scrollY;
   let lastMoveAt = 0;
   let timer = 0;
-  // Where a settle or a key step is taking the page, until it gets there or
-  // the reader takes over; `native` when the browser is making the move.
+  // Where a settle or a step is taking the page, until it gets there or the
+  // reader takes over; `native` when the browser is making the move.
   let flight: { to: number; native: boolean } | null = null;
-  // How far the wheel gesture under way may carry the page.
-  let reach: { lower: number; upper: number } | null = null;
+  const wheel: WheelScroll = {
+    at: -Infinity,
+    dir: 0,
+    axis: "y",
+    began: -Infinity,
+    recent: [],
+    peak: 0,
+    pending: null,
+    credit: 0,
+  };
+
+  const unLenis = onLenis((instance) => {
+    lenis = instance;
+    return () => {
+      lenis = null;
+    };
+  });
 
   const later = (fn: () => void, ms: number) => {
     window.clearTimeout(timer);
     timer = window.setTimeout(fn, ms);
   };
 
+  /*
+   * The stop a move of ours is still making for. Lenis keeps a move's
+   * `userData` only while that move runs, so a move of ours that an anchor
+   * jump has since replaced no longer counts.
+   */
+  const inFlight = () => {
+    if (flight && (flight.native || (lenis?.isScrolling === "smooth" && lenis.userData.settle === flight.to))) {
+      return flight.to;
+    }
+    flight = null;
+    return null;
+  };
+
   // Where the page is heading: the stop a move is making for, Lenis's target
   // mid-glide, or the page itself.
-  const heading = () => flight?.to ?? (lenis && source !== "touch" ? lenis.targetScroll : window.scrollY);
+  const heading = () => inFlight() ?? (lenis && source !== "touch" ? lenis.targetScroll : window.scrollY);
 
   const move = (target: number) => {
+    const flying = inFlight();
+    if (flying !== null && Math.abs(target - flying) < 1) return;
     const distance = Math.abs(target - window.scrollY);
     if (distance < 2) {
       flight = null;
@@ -526,6 +664,7 @@ function settleOnStops({
         // gets proportionally longer, so both feel like the same motion.
         duration: gsap.utils.clamp(0.35, 0.85, 0.3 + (0.6 * distance) / window.innerHeight),
         easing: (t) => 1 - (1 - t) ** 4,
+        userData: { settle: target },
         onComplete: () => {
           if (flight?.to === target) flight = null;
         },
@@ -564,7 +703,6 @@ function settleOnStops({
 
   const settleNow = () => {
     window.clearTimeout(timer);
-    reach = null;
     if (!armed || touching) return;
     armed = false;
     // A move Lenis is making on its own — an anchor jump passing through — is
@@ -574,26 +712,108 @@ function settleOnStops({
   };
 
   /*
-   * The stops either side of `from`, or the first one a gesture from outside
-   * the section would meet. An end with nothing beyond it is left open.
+   * The wheel, under Lenis: steps inside the section (see above). Returns
+   * `false` for an event it has taken, `true` to leave it to Lenis.
    */
-  const reachFrom = (from: number) => {
-    const open = { lower: -Infinity, upper: Infinity };
+  const onLenisWheel = ({ deltaX, deltaY, event }: VirtualScrollData) => {
+    if (!lenis || lenis.isStopped || event.type !== "wheel" || event.ctrlKey) return true;
+    if (event.target instanceof Element && event.target.closest("[data-lenis-prevent]")) return true;
     const points = stops();
-    if (points.length < 2) return open;
+    if (points.length < 2) return true;
     const first = points[0];
     const last = points[points.length - 1];
-    if (from < first - 1) return { ...open, upper: first };
-    if (from > last + 1) return { ...open, lower: last };
-    let at = 0;
-    for (let i = 1; i < points.length; i += 1) if (Math.abs(points[i] - from) < Math.abs(points[at] - from)) at = i;
-    return {
-      lower: at > 0 ? points[at - 1] : -Infinity,
-      upper: at < points.length - 1 ? points[at + 1] : Infinity,
+    const at = inFlight() ?? lenis.targetScroll;
+    const inside = at >= first - 1 && at <= last + 1;
+    const take = () => {
+      if (event.cancelable) event.preventDefault();
+      return false;
     };
-  };
 
-  /* Runs after Lenis has taken the notch (see below), so its target includes it. */
+    // Read the stream: is this the start of a new scroll? Timed by when each
+    // event happened, not when it is handled — a busy frame delivers several
+    // at once, and their handling times would read as pauses between them.
+    const now = event.timeStamp;
+    /*
+     * A sideways swipe is a sideways row's own direction, while it is held.
+     * A scroll keeps the axis it began on: the tail of a vertical swipe on a
+     * touchpad wobbles across both, and reading each event by whichever was
+     * larger turned the wobble into panels stepping back and forth.
+     */
+    if (now - wheel.at > SCROLL_GAP_MS) {
+      wheel.axis = sideways && inside && Math.abs(deltaX) > Math.abs(deltaY) * 1.5 ? "x" : "y";
+    }
+    const delta = wheel.axis === "x" ? deltaX : deltaY;
+    if (delta === 0) return inside ? take() : true;
+    const dir = Math.sign(delta);
+    const size = Math.abs(delta);
+    const fresh = now - wheel.at > SCROLL_GAP_MS || dir !== wheel.dir;
+    const floor = wheel.recent.length ? Math.min(...wheel.recent) : size;
+    const surge =
+      !fresh && now - wheel.began > SCROLL_MIN_MS && floor < wheel.peak * 0.7 && size > floor * 1.5 + 4;
+    const dying = !fresh && !surge && size < wheel.peak * 0.8;
+    wheel.at = now;
+    wheel.dir = dir;
+    wheel.recent = fresh ? [size] : [...wheel.recent.slice(-2), size];
+    if (fresh || surge) {
+      wheel.began = now;
+      wheel.peak = size;
+      wheel.pending = 0;
+    } else {
+      wheel.peak = Math.max(wheel.peak, size);
+    }
+
+    const stepTo = (target: number) => {
+      source = "wheel";
+      direction = dir;
+      move(target);
+    };
+    const stepPx = Math.min(STEP_MAX_PX, (last - first) / (points.length - 1));
+
+    if (!inside) {
+      // Free until the wheel would carry the page across an end; then the
+      // page is held there, and this scroll has had its panel.
+      const crossing = dir > 0 ? at < first && at + delta >= first : at > last && at + delta <= last;
+      if (!crossing) return true;
+      wheel.pending = null;
+      wheel.credit = -stepPx / 2;
+      stepTo(dir > 0 ? first : last);
+      return take();
+    }
+
+    let step = false;
+    if (wheel.pending !== null) {
+      wheel.pending += size;
+      if (wheel.pending >= SCROLL_START_PX) {
+        wheel.pending = null;
+        wheel.credit = -stepPx / 2;
+        step = true;
+      }
+    } else {
+      wheel.credit += dying ? size / 2 : size;
+      if (wheel.credit >= stepPx) {
+        wheel.credit -= stepPx;
+        step = true;
+      }
+    }
+    if (!step) return take();
+
+    const target = dir > 0 ? points.find((p) => p > at + 1) : points.findLast((p) => p < at - 1);
+    if (target !== undefined) {
+      stepTo(target);
+      return take();
+    }
+    // A step past the end: the section lets go, and the page carries on from
+    // the end by this notch, as Lenis would have taken it.
+    flight = null;
+    lenis.scrollTo((dir > 0 ? last : first) + dir * Math.max(size, 2), {
+      programmatic: false,
+      lerp: lenis.options.lerp,
+    });
+    return take();
+  };
+  const unGate = gateWheel(onLenisWheel);
+
+  /* The wheel, for the settle: arms it, and says which way the reader went. */
   const onWheel = (e: WheelEvent) => {
     // Pinch-zoom on a trackpad, a purely sideways swipe, or a nested scroller
     // that scrolls itself: none of them moved the page.
@@ -603,43 +823,14 @@ function settleOnStops({
     armed = true;
     direction = Math.sign(e.deltaY);
     // Without Lenis the wheel scrolls natively, and its own end settles it.
-    if (!lenis) return;
-    let target = lenis.targetScroll;
-    if (!reach) {
-      // A notch that lands while a settle is still gliding counts from the
-      // stop the settle was making for. Lenis measured it from wherever the
-      // glide had got to, which would lose the notch to the stop behind.
-      const from = flight && (flight.native || lenis.isScrolling === "smooth") ? flight.to : window.scrollY;
-      flight = null;
-      reach = reachFrom(from);
-      target = from + (lenis.targetScroll - window.scrollY);
-    }
-    const held = gsap.utils.clamp(reach.lower, reach.upper, target);
-    // As if the wheel had carried exactly this far: Lenis's own glide.
-    if (held !== lenis.targetScroll) lenis.scrollTo(held, { programmatic: false, lerp: lenis.options.lerp });
-    later(settleNow, WHEEL_QUIET_MS);
+    if (lenis) later(settleNow, WHEEL_QUIET_MS);
   };
-
-  const unLenis = onLenis((instance) => {
-    lenis = instance;
-    /*
-     * Re-added so it runs after Lenis's own wheel listener, which Lenis puts
-     * on the window as it is constructed: the target read above must already
-     * include the notch. Listeners on one target run in the order added.
-     */
-    window.removeEventListener("wheel", onWheel);
-    window.addEventListener("wheel", onWheel, { passive: true });
-    return () => {
-      lenis = null;
-    };
-  });
 
   const onTouchStart = () => {
     touching = true;
     source = "touch";
     armed = true;
     flight = null;
-    reach = null;
     window.clearTimeout(timer);
   };
   const onTouchEnd = (e: TouchEvent) => {
@@ -719,6 +910,7 @@ function settleOnStops({
     goTo,
     destroy: () => {
       window.clearTimeout(timer);
+      unGate();
       unLenis();
       window.removeEventListener("wheel", onWheel);
       window.removeEventListener("touchstart", onTouchStart);
@@ -828,9 +1020,10 @@ export function HorizontalScroll({
    * content against the screen left under the utility bar and this section's
    * own label row, with a little air. Re-checked whenever a panel or the
    * screen changes size, so turning the phone on its side drops back to the
-   * swipe row and turning it back holds again.
+   * swipe row and turning it back holds again. Decided before the first
+   * paint (see `useIsomorphicLayoutEffect`).
    */
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     if (pinned || reduce) return;
     const header = headerRef.current;
     const track = trackRef.current;
@@ -873,6 +1066,7 @@ export function HorizontalScroll({
           end: () => `+=${distance()}`,
           pin: true,
           pinType: PIN_TYPE,
+          refreshPriority: PIN_PRIORITY,
           /*
            * `true`, not a number. A numeric scrub adds its own catch-up on top
            * of the smoothing Lenis is already applying to the wheel, so the
@@ -1215,6 +1409,7 @@ export function TypeTunnel({
           end: () => `+=${window.innerHeight * 1.15}`,
           pin: true,
           pinType: PIN_TYPE,
+          refreshPriority: PIN_PRIORITY,
           // Direct, for the same reason as the horizontal rail above.
           scrub: true,
           invalidateOnRefresh: true,
@@ -1402,59 +1597,74 @@ export function KineticHeadline({
     const el = ref.current;
     if (!el) return;
 
-    const ctx = gsap.context(() => {
-      const words = el.querySelectorAll<HTMLElement>("[data-kinetic-word]");
-      if (!words.length) return;
+    /*
+     * Once the page is ready (see `whenReady`) — unless the headline is on
+     * screen already, where waiting would show it whole and then snap it back
+     * to its start. Below the fold nobody sees the difference.
+     */
+    let ctx: gsap.Context | null = null;
+    const build = () => {
+      ctx = gsap.context(() => {
+        const words = el.querySelectorAll<HTMLElement>("[data-kinetic-word]");
+        if (!words.length) return;
 
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: el,
-          start: "top 92%",
-          end: "top 34%",
-          scrub: 0.6,
-          invalidateOnRefresh: true,
-        },
-      });
-
-      tl.fromTo(
-        words,
-        {
-          yPercent: 118,
-          xPercent: (i: number) => ((i % 3) - 1) * 16 * scatter,
-          rotate: (i: number) => (i % 2 ? 6 : -6) * scatter,
-          autoAlpha: 0,
-        },
-        {
-          yPercent: 0,
-          xPercent: 0,
-          rotate: 0,
-          autoAlpha: 1,
-          duration: 1,
-          ease: "power3.out",
-          stagger: 0.14,
-        },
-      )
-        // the hold — scrolling continues, the line does not
-        .to({}, { duration: 0.55 });
-
-      /*
-       * Only if there is an accent to swell. A headline with no `accent` words
-       * yields an empty NodeList, and GSAP logs "target [object NodeList] not
-       * found" for every one of them on every render — noise that buries real
-       * warnings in the dev console.
-       */
-      const accents = el.querySelectorAll("[data-kinetic-accent]");
-      if (accents.length) {
-        tl.to(accents, {
-          scale: 1.05,
-          duration: 0.35,
-          ease: "power2.out",
-          transformOrigin: "left center",
+        const tl = gsap.timeline({
+          scrollTrigger: {
+            trigger: el,
+            start: "top 92%",
+            end: "top 34%",
+            scrub: 0.6,
+            invalidateOnRefresh: true,
+          },
         });
-      }
-    }, el);
 
-    return () => ctx.revert();
+        tl.fromTo(
+          words,
+          {
+            yPercent: 118,
+            xPercent: (i: number) => ((i % 3) - 1) * 16 * scatter,
+            rotate: (i: number) => (i % 2 ? 6 : -6) * scatter,
+            autoAlpha: 0,
+          },
+          {
+            yPercent: 0,
+            xPercent: 0,
+            rotate: 0,
+            autoAlpha: 1,
+            duration: 1,
+            ease: "power3.out",
+            stagger: 0.14,
+          },
+        )
+          // the hold — scrolling continues, the line does not
+          .to({}, { duration: 0.55 });
+
+        /*
+         * Only if there is an accent to swell. A headline with no `accent` words
+         * yields an empty NodeList, and GSAP logs "target [object NodeList] not
+         * found" for every one of them on every render — noise that buries real
+         * warnings in the dev console.
+         */
+        const accents = el.querySelectorAll("[data-kinetic-accent]");
+        if (accents.length) {
+          tl.to(accents, {
+            scale: 1.05,
+            duration: 0.35,
+            ease: "power2.out",
+            transformOrigin: "left center",
+          });
+        }
+      }, el);
+    };
+
+    const onScreen = el.getBoundingClientRect().top < window.innerHeight;
+    let cancel = () => {};
+    if (onScreen) build();
+    else cancel = whenReady(build);
+    return () => {
+      cancel();
+      ctx?.revert();
+    };
   }, [motion, scatter]);
 
   const accentSet = new Set(accent.map((w) => w.toLowerCase()));
@@ -1643,8 +1853,9 @@ export function PinnedLitText({
    * against the screen left under the utility bar, with some air. The hold's
    * progress bar only renders once held, so it is allowed for while it is
    * absent — otherwise holding would add it, stop fitting, and let go again.
+   * Decided before the first paint (see `useIsomorphicLayoutEffect`).
    */
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     if (pinned || reduce) return;
     const column = columnRef.current;
     if (!column) return;
@@ -1688,6 +1899,7 @@ export function PinnedLitText({
           end: () => `+=${window.innerHeight * 1.35}`,
           pin: true,
           pinType: PIN_TYPE,
+          refreshPriority: PIN_PRIORITY,
           // One layer of smoothing, not two — Lenis already smooths the wheel.
           scrub: true,
           /*
@@ -2115,24 +2327,35 @@ export function ParallaxLayer({
     if (!el) return;
     const trigger = el.closest(scope ?? "section") ?? el;
 
-    const ctx = gsap.context(() => {
-      gsap.to(el, {
-        yPercent: -speed * 100,
-        rotate,
-        ...(scaleTo != null ? { scale: scaleTo } : {}),
-        ...(fadeTo != null ? { opacity: fadeTo } : {}),
-        ease: "none",
-        scrollTrigger: {
-          trigger,
-          start: "top top",
-          end: "bottom top",
-          scrub: 0.6,
-          invalidateOnRefresh: true,
-        },
-      });
-    }, el);
+    /*
+     * Once the page is ready (see `whenReady`). A layer sits at rest at the
+     * top of the page, where it starts, so nothing on screen changes while it
+     * waits.
+     */
+    let ctx: gsap.Context | null = null;
+    const cancel = whenReady(() => {
+      ctx = gsap.context(() => {
+        gsap.to(el, {
+          yPercent: -speed * 100,
+          rotate,
+          ...(scaleTo != null ? { scale: scaleTo } : {}),
+          ...(fadeTo != null ? { opacity: fadeTo } : {}),
+          ease: "none",
+          scrollTrigger: {
+            trigger,
+            start: "top top",
+            end: "bottom top",
+            scrub: 0.6,
+            invalidateOnRefresh: true,
+          },
+        });
+      }, el);
+    });
 
-    return () => ctx.revert();
+    return () => {
+      cancel();
+      ctx?.revert();
+    };
   }, [motion, speed, rotate, scaleTo, fadeTo, scope]);
 
   return (
@@ -2254,7 +2477,8 @@ export function CardStack({
   const [inDeck, setInDeck] = useState(false);
   const [current, setCurrent] = useState(0);
 
-  useEffect(() => {
+  // Decided before the first paint (see `useIsomorphicLayoutEffect`).
+  useIsomorphicLayoutEffect(() => {
     if (!fit || fx.reduce) return;
     const root = rootRef.current;
     if (!root) return;

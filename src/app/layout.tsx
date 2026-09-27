@@ -5,7 +5,8 @@ import {
   Instrument_Serif,
   Geist_Mono,
 } from "next/font/google";
-import { LoadCurtain, RouteCurtain } from "@/components/site/Curtains";
+import { RouteCurtain } from "@/components/site/Curtains";
+import { Intro } from "@/components/site/Intro";
 import { ScrollProgress } from "@/components/site/primitives";
 import { ScrollFxRoot } from "@/components/site/scroll-fx";
 import { DockNav } from "@/components/site/DockNav";
@@ -13,13 +14,9 @@ import { SmoothScroll } from "@/components/site/SmoothScroll";
 import { JsonLd } from "@/components/site/JsonLd";
 import { SITE_URL, SITE_NAME, PERSON } from "@/lib/site";
 import { LITE_SCRIPT } from "@/lib/lite";
+import { INTRO_SCRIPT } from "@/lib/intro-script";
 import { graph, personSchema, websiteSchema } from "@/lib/schema";
-import {
-  GoogleAnalytics,
-  GoogleTagManager,
-  GoogleTagManagerNoScript,
-  GtmRouteTracker,
-} from "@/components/site/Analytics";
+import { GoogleAnalytics } from "@/components/site/Analytics";
 import "./globals.css";
 
 const bebasNeue = Bebas_Neue({
@@ -143,10 +140,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
     >
       <head>
-        {/* Inline and synchronous on purpose: it has to decide lite mode
-            before the first paint, or the load curtain and the blur it turns
-            off would already be on screen. A few hundred bytes, no request. */}
+        {/* Inline and synchronous on purpose: lite mode, and then whether this
+            load plays the intro, have to be decided before the first paint, or
+            the intro and the blur lite mode turns off would already be on
+            screen. A few hundred bytes each, no request. Order matters: the
+            intro reads what the lite script decided. */}
         <script dangerouslySetInnerHTML={{ __html: LITE_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: INTRO_SCRIPT }} />
       </head>
       <body>
         {/* First focusable thing in the document. Every page here opens with a
@@ -165,14 +165,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             is invalid nesting, and the hydration mismatch it caused made React
             discard the server HTML and rebuild the tree — which orphaned every
             ScrollTrigger pin on the page. */}
-        <GoogleTagManager />
-        <GoogleTagManagerNoScript />
         <GoogleAnalytics />
-        <GtmRouteTracker />
         <SmoothScroll />
         <ScrollProgress />
         <ScrollFxRoot />
-        <LoadCurtain />
+        <Intro />
         <RouteCurtain />
         {children}
         <DockNav />

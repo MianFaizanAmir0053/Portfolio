@@ -6,6 +6,7 @@ import { Briefcase } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { FloatingDock, type DockItem } from "@/components/ui/floating-dock";
+import { whenReady } from "@/lib/ready";
 
 if (typeof window !== "undefined") gsap.registerPlugin(ScrollTrigger);
 
@@ -109,41 +110,45 @@ export function DockNav() {
      * The stack keeps the answer stable when two triggers overlap: the newest
      * active section wins, and leaving one falls back to whichever is still
      * active underneath rather than blanking the marker.
+     *
+     * Built once the page is ready (see `whenReady`): the dock only appears
+     * after the first scroll, and six triggers measured at hydration sat on
+     * the path to the page being usable.
      */
     const active: string[] = [];
-    const triggers = SECTION_IDS.map((id) => {
-      const el = document.getElementById(id);
-      if (!el) return null;
-      return ScrollTrigger.create({
-        trigger: el,
-        start: "top center",
-        end: "bottom center",
-        /*
-         * Measured after everything else. These are created at hydration,
-         * before the pinned sections exist, and ScrollTrigger re-measures in
-         * creation order unless told otherwise — so they were measured with
-         * the pins' extra scroll length missing, and every section below a pin
-         * lit up thousands of pixels early (reading Stack lit About). Last in
-         * line, they see the finished page. Setting a priority on any trigger
-         * also has ScrollTrigger sort the rest by position before each
-         * re-measure, which is what it wants when triggers are made out of
-         * document order, as the pins always are here.
-         */
-        refreshPriority: -1,
-        onToggle: (self) => {
-          const at = active.indexOf(id);
-          if (self.isActive) {
-            if (at === -1) active.push(id);
-          } else if (at !== -1) {
-            active.splice(at, 1);
-          }
-          const next = active.length ? active[active.length - 1] : null;
-          setSection((prev) => (prev === next ? prev : next));
-        },
+    let triggers: (ScrollTrigger | null)[] = [];
+    const cancel = whenReady(() => {
+      triggers = SECTION_IDS.map((id) => {
+        const el = document.getElementById(id);
+        if (!el) return null;
+        return ScrollTrigger.create({
+          trigger: el,
+          start: "top center",
+          end: "bottom center",
+          /*
+           * Measured after everything else. Measured before the pinned
+           * sections, these missed the pins' extra scroll length, and every
+           * section below a pin lit up thousands of pixels early (reading
+           * Stack lit About). They are built after the pins now, and last in
+           * line they stay right through every later re-measure too.
+           */
+          refreshPriority: -1,
+          onToggle: (self) => {
+            const at = active.indexOf(id);
+            if (self.isActive) {
+              if (at === -1) active.push(id);
+            } else if (at !== -1) {
+              active.splice(at, 1);
+            }
+            const next = active.length ? active[active.length - 1] : null;
+            setSection((prev) => (prev === next ? prev : next));
+          },
+        });
       });
     });
 
     return () => {
+      cancel();
       for (const t of triggers) t?.kill();
     };
   }, [pathname]);

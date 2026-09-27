@@ -1,4 +1,6 @@
 import type Lenis from "lenis";
+import type { VirtualScrollData } from "lenis";
+import { introUp } from "./intro";
 
 /**
  * The page's one Lenis instance, for components that need to cooperate with it
@@ -28,4 +30,39 @@ export function onLenis(listener: Listener) {
     listeners.get(listener)?.();
     listeners.delete(listener);
   };
+}
+
+/**
+ * Wheel input a section takes over, turning it into steps instead of a glide.
+ *
+ * Each gate sees every wheel and touch event, with Lenis's normalised deltas,
+ * before Lenis acts on it — wired in as Lenis's `virtualScroll` option.
+ * Returning `false` claims the event and Lenis leaves it alone; the gate is
+ * then responsible for the event's `preventDefault`.
+ */
+type WheelGate = (data: VirtualScrollData) => boolean;
+
+const gates = new Set<WheelGate>();
+
+export function gateWheel(gate: WheelGate) {
+  gates.add(gate);
+  return () => {
+    gates.delete(gate);
+  };
+}
+
+export function passWheel(data: VirtualScrollData) {
+  /*
+   * Nothing scrolls under the first-load intro. The head script's own wheel
+   * hold stops the browser scrolling, but Lenis scrolls the page itself, and
+   * it boots while the intro is still up. `lenis.stop()` would hold it too,
+   * but it also clips the root's overflow, which drops the scrollbar and
+   * re-lays the page out at a new width under every pinned section.
+   */
+  if (introUp()) {
+    if (data.event.type === "wheel" && data.event.cancelable) data.event.preventDefault();
+    return false;
+  }
+  for (const gate of gates) if (!gate(data)) return false;
+  return true;
 }

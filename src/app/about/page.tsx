@@ -215,10 +215,16 @@ export default function About() {
           </div>
         </section>
 
-        <section className="wrap rule-t py-16 md:py-24">
-          <Tag className="mb-3 block">[05] FAQ</Tag>
-          <h2 className="display mb-8 text-2xl md:text-4xl">Questions people ask first</h2>
-          <Accordion type="multiple" className="max-w-3xl rule-t">
+        <section className="wrap rule-t grid gap-10 py-16 md:grid-cols-[0.7fr_1.3fr] md:py-24">
+          {/* Travels with the answers, as on the home page's FAQ, instead of
+              sitting above a column the reader has already scrolled past. */}
+          <div className="md:sticky md:top-24 md:self-start">
+            <Tag className="mb-3 block">[05] FAQ</Tag>
+            <h2 className="display text-2xl md:text-[clamp(2.25rem,4vw,3.5rem)] md:leading-[0.9]">
+              Questions people ask first
+            </h2>
+          </div>
+          <Accordion type="multiple" className="rule-t">
             {/* The first answer is already set as this page's lead paragraph
                 above. The FAQPage graph still carries the whole array — a
                 definition belongs in the structured data either way — but

@@ -15,6 +15,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { cn } from "@/lib/utils";
 import { useLite, useMediaQuery } from "@/hooks/use-media-query";
 import { scrollSignal } from "@/lib/scroll-signal";
+import { whenReady } from "@/lib/ready";
 
 /**
  * `useLayoutEffect` on the client, `useEffect` on the server.
@@ -236,6 +237,7 @@ export function CutFrame({
   const wrapRef = useRef<HTMLDivElement>(null);
   /** The overscan layer — the thing that travels. See the note on it below. */
   const overscanRef = useRef<HTMLDivElement>(null);
+  const vector = /\.svg($|\?)/i.test(src);
 
   useEffect(() => {
     if (!parallax) return;
@@ -293,14 +295,23 @@ export function CutFrame({
            * overscan layer, so neither the ±6% parallax travel nor the
            * diagonal corner ever reaches it.
            */}
+          {/*
+           * Diagrams load straight away, at low priority; screenshots wait
+           * for the reader to get near them. A diagram is a few kilobytes of
+           * SVG, and a page that opens part-way down — a reload, the back
+           * button — can open on one: lazy, it was the page's largest paint
+           * and arrived only after layout had found it on screen. Low
+           * priority keeps it behind the fonts and scripts the first screen
+           * needs. A screenshot is hundreds of kilobytes, so it stays lazy.
+           */}
           <div className="absolute inset-x-[4%] top-[12%] bottom-[12%]">
             <Image
               src={src}
               alt={alt}
               fill
               sizes={sizes}
-              loading={eager ? "eager" : "lazy"}
-              fetchPriority={eager ? "high" : "auto"}
+              loading={eager || vector ? "eager" : "lazy"}
+              fetchPriority={eager ? "high" : vector ? "low" : "auto"}
               className={cn(
                 "object-contain transition-[filter,transform] duration-500",
                 grayscale && "grayscale group-hover:grayscale-0 group-hover:scale-[1.03]",
@@ -648,17 +659,27 @@ export function ScrollProgress() {
     gsap.registerPlugin(ScrollTrigger);
 
     // The same measurement ScrollFxRoot already makes for the page, expressed
-    // once here rather than recomputed per event.
-    const trigger = ScrollTrigger.create({
-      trigger: document.documentElement,
-      start: "top top",
-      end: "bottom bottom",
-      onUpdate: (self) => {
-        el.style.transform = `scaleX(${self.progress})`;
-      },
+    // once here rather than recomputed per event. Built once the page is
+    // ready (see `whenReady`): at the top of the page it reads zero anyway.
+    let trigger: ScrollTrigger | null = null;
+    const cancel = whenReady(() => {
+      trigger = ScrollTrigger.create({
+        trigger: document.documentElement,
+        start: "top top",
+        end: "bottom bottom",
+        onUpdate: (self) => {
+          el.style.transform = `scaleX(${self.progress})`;
+        },
+        onRefresh: (self) => {
+          el.style.transform = `scaleX(${self.progress})`;
+        },
+      });
     });
 
-    return () => trigger.kill();
+    return () => {
+      cancel();
+      trigger?.kill();
+    };
   }, []);
 
   return (

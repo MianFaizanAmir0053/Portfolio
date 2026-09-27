@@ -474,10 +474,13 @@
   outline-offset: -4px;
 }
 
-/* Load curtain. Declared here rather than driven from React so it starts when
-   the document parses and clears on a fixed schedule — the page behind it must
-   not wait for hydration to become visible. `forwards` parks it off-screen and
-   `pointer-events: none` keeps it inert once it is out of the way. */
+/*
+ * First-load intro — see `Intro` and `@/lib/intro`. Hidden unless the head
+ * script opted this load in with `data-intro`; `data-ready` sends it off, and
+ * `data-intro-done` takes it out of the page once it has gone. Everything that
+ * moves in it is transform or opacity, so it keeps moving while the main
+ * thread is busy booting the page it covers.
+ */
 @keyframes curtain-lift {
   from {
     transform: translate3d(0, 0, 0);
@@ -487,13 +490,197 @@
   }
 }
 
-.load-curtain {
+.intro {
+  display: none;
+}
+
+html[data-intro] .intro {
+  display: block;
   position: fixed;
   inset: 0;
   z-index: 90;
-  pointer-events: none;
   background: var(--paper-deep);
-  animation: curtain-lift 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.15s forwards;
+}
+
+/* The bar completes first, then the panel lifts, taking its content with it. */
+html[data-ready] .intro {
+  pointer-events: none;
+  animation: curtain-lift 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
+}
+
+html[data-intro-done] .intro {
+  display: none;
+}
+
+.intro-body {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+}
+
+.intro-stage {
+  flex: 1;
+}
+
+.intro-kicker {
+  margin-bottom: 1rem;
+  animation: intro-in 0.6s ease-out both;
+}
+
+.intro-rise {
+  transform: translateY(110%);
+  animation: line-rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) var(--line-delay, 0s) forwards;
+}
+
+@keyframes intro-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+}
+
+/*
+ * The facts: all in one grid cell, each on screen once for `--fact-ms`, in the
+ * order the head script dealt them (`--i`), the next arriving as the last one
+ * leaves. Sixteen of them outlast any load the intro waits for, so nothing
+ * repeats. The first comes as the name rises; a repeat visit expected to load
+ * quickly sets `--fact-lead` later, so the facts, and the question above them,
+ * only appear if the load runs long.
+ */
+.intro-facts-kicker {
+  margin-bottom: 1rem;
+  animation: intro-in 0.6s ease-out var(--fact-lead, 0.4s) both;
+}
+
+.intro-facts {
+  display: grid;
+}
+
+.intro-fact {
+  grid-area: 1 / 1;
+  opacity: 0;
+  animation: intro-fact var(--fact-ms, 3s) linear calc(var(--fact-lead, 0.4s) + var(--i) * var(--fact-ms, 3s)) both;
+}
+
+@keyframes intro-fact {
+  0% {
+    opacity: 0;
+    transform: translateY(0.6em);
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  10%,
+  90% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-0.4em);
+  }
+}
+
+/*
+ * Progress: the head script runs the first bar against its estimate of the
+ * load (see `introBoot`); the creep here only stands in until it does, or if
+ * it cannot. A second bar runs the rest of the way the moment the page is
+ * ready, from wherever the first one got to.
+ */
+.intro-bar {
+  position: relative;
+  height: 1px;
+  overflow: hidden;
+  background: color-mix(in oklab, var(--ink) 18%, transparent);
+}
+
+.intro-bar > span {
+  position: absolute;
+  inset: 0;
+  background: var(--cobalt);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+.intro-bar > span:first-child {
+  animation: intro-creep 12s linear 0.2s forwards;
+}
+
+html[data-ready] .intro-bar > span:last-child {
+  animation: intro-fill 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes intro-creep {
+  to {
+    transform: scaleX(0.9);
+  }
+}
+
+@keyframes intro-fill {
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/*
+ * Above the bar: a pulse that keeps going whatever the main thread is doing,
+ * the stage the head script reports, and the bar's position as a number. Each
+ * stage's words sit in one grid cell and cross-fade; the ready ones take over
+ * as the panel lifts.
+ */
+.intro-pulse {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: 9999px;
+  background: var(--cobalt);
+  animation: intro-pulse 1.1s ease-in-out infinite;
+}
+
+@keyframes intro-pulse {
+  50% {
+    opacity: 0.25;
+    transform: scale(0.6);
+  }
+}
+
+html[data-ready] .intro-pulse {
+  animation: none;
+}
+
+.intro-status {
+  display: grid;
+}
+
+.intro-status > span {
+  grid-area: 1 / 1;
+  opacity: 0;
+  transform: translateY(0.6em);
+  transition:
+    opacity 0.35s ease,
+    transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html:not([data-intro-stage]) .intro-status > [data-stage="load"],
+html[data-intro-stage="load"] .intro-status > [data-stage="load"],
+html[data-intro-stage="build"] .intro-status > [data-stage="build"],
+html[data-intro-stage="slow"] .intro-status > [data-stage="slow"],
+html[data-intro-stage="polish"] .intro-status > [data-stage="polish"],
+html[data-ready] .intro-status > [data-stage="ready"] {
+  opacity: 1;
+  transform: none;
+}
+
+html[data-ready] .intro-status > [data-stage]:not([data-stage="ready"]) {
+  opacity: 0;
+  transform: translateY(-0.6em);
+}
+
+/* Empty until the head script writes the first number, so it never shows a false 0. */
+.intro-pct {
+  line-height: 0.8;
+}
+
+.intro-pct::before {
+  content: var(--pct, "");
 }
 
 /* Route curtain. Mounts covering the screen, holds long enough to paint once,
@@ -532,6 +719,26 @@
 }
 
 /*
+ * Behind the intro, the lines rise once at parse time where nobody sees them —
+ * and that first paint is the one the largest-paint measurement records, so
+ * it stays early. A new animation name restarts the animation, so they rise
+ * again for the reader as the panel lifts off them.
+ */
+@keyframes line-rise-again {
+  from {
+    transform: translateY(110%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+html[data-intro][data-ready] .line-rise {
+  animation-name: line-rise-again;
+  animation-delay: calc(var(--line-delay, 0s) + 0.45s);
+}
+
+/*
  * Lite mode — a constrained device or connection (see src/lib/lite.ts). The
  * content is untouched; what goes is the work that never stops. No curtains
  * standing between a slow page and its reader, no loops that run for as long
@@ -539,7 +746,6 @@
  * behind the pane on every scrolled frame. The glass keeps its opaque base,
  * so the dock stays legible without it.
  */
-html[data-lite] .load-curtain,
 html[data-lite] .route-curtain {
   animation: none;
   display: none;
@@ -570,8 +776,8 @@ html[data-lite] .backdrop-blur-md {
     animation: none !important;
   }
 
-  /* No wipe, no rise: show the page and the words immediately. */
-  .load-curtain,
+  /* No wipe, no rise: show the page and the words immediately. (The intro
+     never starts here: the head script skips it under reduced motion.) */
   .route-curtain {
     animation: none;
     display: none;

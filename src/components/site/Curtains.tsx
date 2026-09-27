@@ -4,22 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 
 /**
- * Page-load curtain: ink panel wipes upward off-screen.
- *
- * Pure CSS, deliberately. The previous version waited for hydration before
- * starting a 1.2s timer and then animated for another second, so an opaque
- * panel covered the page for roughly two and a half seconds — and on a slow
- * connection, for as long as the JavaScript took to arrive. A keyframe
- * animation declared in the stylesheet starts when the document parses, so the
- * curtain is gone on a fixed schedule whether or not React has booted, and the
- * content behind it paints on time. `prefers-reduced-motion` is handled in the
- * stylesheet too — see `.load-curtain` in globals.css.
- */
-export function LoadCurtain() {
-  return <div aria-hidden className="load-curtain" />;
-}
-
-/**
  * Route curtain: the lime panel wipes off to reveal the new page.
  *
  * It used to wipe *on* first and off after — but Next has already rendered the

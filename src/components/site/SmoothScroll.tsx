@@ -5,7 +5,7 @@ import Lenis from "lenis";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { barHeight } from "./scroll-fx";
-import { setLenis } from "@/lib/lenis-instance";
+import { passWheel, setLenis } from "@/lib/lenis-instance";
 import { isLite } from "@/lib/lite";
 
 /**
@@ -46,6 +46,8 @@ export function SmoothScroll() {
       // Any nested scroller opts out by marking itself — the horizontal
       // case-study rail scrolls itself and must not be intercepted.
       prevent: (node) => node.hasAttribute("data-lenis-prevent"),
+      // Held sections step through their panels instead (see `settleOnStops`).
+      virtualScroll: passWheel,
     });
 
     lenis.on("scroll", ScrollTrigger.update);
