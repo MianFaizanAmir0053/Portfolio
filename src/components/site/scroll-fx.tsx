@@ -276,30 +276,6 @@ export function ScrollFxRoot() {
     };
     gsap.ticker.add(decay);
 
-    /*
-     * Snapping under a finger (`data-touch-snap`, see the stylesheet): on at
-     * a touch, off at a wheel — a trackpad on a tablet, a wheel in a phone
-     * emulator, where Lenis steps the page — and off while Lenis glides the
-     * page itself for an anchor link, which a snap mark on the way would
-     * otherwise catch and hold.
-     */
-    const root = document.documentElement;
-    const snapOn = () => {
-      if (!root.hasAttribute("data-touch-snap")) root.setAttribute("data-touch-snap", "");
-    };
-    const snapOff = () => {
-      if (root.hasAttribute("data-touch-snap")) root.removeAttribute("data-touch-snap");
-    };
-    window.addEventListener("touchstart", snapOn, { passive: true });
-    window.addEventListener("wheel", snapOff, { passive: true });
-    const unLenis = onLenis((lenis) => {
-      const onScroll = () => {
-        if (lenis.isScrolling === "smooth") snapOff();
-      };
-      lenis.on("scroll", onScroll);
-      return () => lenis.off("scroll", onScroll);
-    });
-
     return () => {
       cancelled = true;
       window.clearTimeout(fallback);
@@ -308,10 +284,6 @@ export function ScrollFxRoot() {
       resized.disconnect();
       gsap.ticker.remove(decay);
       page.kill();
-      window.removeEventListener("touchstart", snapOn);
-      window.removeEventListener("wheel", snapOff);
-      unLenis();
-      snapOff();
     };
   }, []);
 
@@ -588,22 +560,21 @@ type WheelScroll = {
  * ended, every swipe after it was swallowed, and the section read as stuck
  * until the reader stopped touching the pad.
  *
- * Everything else settles once it comes to rest, by the scroll's direction:
- * a fifth of the way onward commits to the next stop, and anything less is a
- * slip and is undone. Nearest, as Lenis's snap plugin does it, pulls a small
- * nudge straight back, which reads as the page refusing to move.
- *  - A finger settles the moment its fling stops (`scrollend`), once it is
- *    off the glass, and a native smooth scroll makes the move — off the main
- *    thread, like the fling. A fling caught under the finger, or a drag that
- *    stopped before it lifted, ends without another scroll, so the lift
- *    settles those.
- *  - A wheel without Lenis (lite mode) settles on the scroll's `scrollend`.
- *  - A browser with no `scrollend` gets a moment's stillness in its place.
+ * A wheel without Lenis (lite mode) settles once it comes to rest (its
+ * `scrollend`, or a moment's stillness where there is none), by the scroll's
+ * direction: a fifth of the way onward commits to the next stop, and anything
+ * less is a slip and is undone. Nearest, as Lenis's snap plugin does it,
+ * pulls a small nudge straight back, which reads as the page refusing to move.
+ *
+ * A finger is never settled. It scrolls freely and the page stays wherever it
+ * is left, a panel part-way across included, so a reader on a phone can stop
+ * on any view they want; a settle carried the page on after they had let go.
  * It answers to what the reader did, not to what kind of screen they have: a
  * phone emulated in a desktop browser is a touch screen driven by a wheel,
- * and so is an iPad with a trackpad. Arrow keys, the scrollbar and anchor
- * links leave the page where they put it; Page Up, Page Down and Space step a
- * whole stop instead, and an anchor jump passing through is never hijacked.
+ * and so is an iPad with a trackpad, and those wheels step. Arrow keys, the
+ * scrollbar and anchor links leave the page where they put it; Page Up, Page
+ * Down and Space step a whole stop instead, and an anchor jump passing
+ * through is never hijacked.
  *
  * Live from a run-up before the first stop to the same distance past the
  * last. Arriving in the direction of travel lands on the first stop; leaving
@@ -632,7 +603,6 @@ function settleOnStops({
   let touching = false;
   let direction = 1;
   let lastY = window.scrollY;
-  let lastMoveAt = 0;
   let timer = 0;
   // Where a settle or a step is taking the page, until it gets there or the
   // reader takes over; `native` when the browser is making the move.
@@ -854,23 +824,20 @@ function settleOnStops({
     if (lenis) later(settleNow, WHEEL_QUIET_MS);
   };
 
+  /*
+   * A finger scrolls freely: wherever it leaves the page is where the page
+   * stays, panels part-way included, so a reader can hold any view they
+   * like. A touch also ends a settle a wheel or a key had under way.
+   */
   const onTouchStart = () => {
     touching = true;
     source = "touch";
-    armed = true;
+    armed = false;
     flight = null;
     window.clearTimeout(timer);
   };
   const onTouchEnd = (e: TouchEvent) => {
-    // A new swipe that cancels the previous settle reports that settle's end
-    // with the finger still down; wait for the swipe's own end.
     touching = e.touches.length > 0;
-    if (touching) return;
-    const lifted = performance.now();
-    // Nothing moved after the lift: there is no scroll left to end.
-    later(() => {
-      if (lastMoveAt <= lifted) settleNow();
-    }, QUIET_MS);
   };
 
   const onScroll = () => {
@@ -879,7 +846,6 @@ function settleOnStops({
     // A wheel's direction is its own; anything else is read off the page.
     if (source !== "wheel") direction = y > lastY ? 1 : -1;
     lastY = y;
-    lastMoveAt = performance.now();
     if (flight?.native && Math.abs(y - flight.to) < 1) flight = null;
     if (!nativeEnd && armed && !touching && !(source === "wheel" && lenis)) later(settleNow, QUIET_MS);
   };
@@ -1369,7 +1335,7 @@ export function HorizontalScroll({
             className={cn(
               "min-h-0 flex-1",
               mode === "swipe" &&
-                "snap-x snap-mandatory overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+                "overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
               // The row, as tall as its tallest panel, centred in the held screen.
               mode === "sticky" && "flex flex-col justify-center",
             )}
@@ -1404,23 +1370,6 @@ export function HorizontalScroll({
             </div>
           </div>
         </div>
-        {/*
-         * Where a finger's fling comes to rest while held: one mark per
-         * checkpoint, down the travel. The browser snaps to them itself (see
-         * `data-touch-snap` in the stylesheet), so a fling glides into a stop
-         * instead of stopping and being carried back to it. After the screen
-         * in the markup, which stays this box's first child.
-         */}
-        {mode === "sticky" &&
-          steps.map((_, i) => (
-            <span
-              key={i}
-              aria-hidden
-              data-snap-stop
-              className="pointer-events-none absolute left-0 h-px w-px"
-              style={{ top: `calc(var(--h-travel, 0px) * ${total > 1 ? i / (total - 1) : 0})` }}
-            />
-          ))}
       </div>
     </HScrollContext.Provider>
   );
@@ -1450,13 +1399,12 @@ export function HPanel({
       data-hpanel
       className={cn(
         "relative",
-        mode === "stack" ? "w-full rule-t py-10 last:rule-b" : cn("shrink-0 snap-center", width),
+        mode === "stack" ? "w-full rule-t py-10 last:rule-b" : cn("shrink-0", width),
         mode === "pinned" && "flex h-full flex-col justify-center",
         // Stretched to the row's height by the track; the content grows into it.
         (mode === "sticky" || mode === "swipe") && "flex flex-col *:grow",
-        // One panel a swipe, like the held rail: a hard fling stops at the next
-        // panel instead of skating past it.
-        mode === "swipe" && "snap-always py-8",
+        // Swiped freely: the row stops wherever the finger leaves it.
+        mode === "swipe" && "py-8",
         className,
       )}
     >
@@ -2922,33 +2870,24 @@ export function CardStack({
         </div>
       ))}
       {/*
-       * A mark per stop, one held panel apart. Under a finger the browser
-       * snaps to them itself (see `data-touch-snap` in the stylesheet), so a
-       * fling glides into the next panel instead of stopping short and being
-       * carried there after. Each also times the depth of the panel it
-       * belongs to: from its top reaching the bars, as the next panel starts
-       * to climb, to its bottom doing so, as that panel covers it. Last in
-       * the markup, so the panels keep their places among the children.
+       * The depth's timing: a mark per covered panel, one held panel apart,
+       * each timing the panel it belongs to — from its top reaching the bars,
+       * as the next panel starts to climb, to its bottom doing so, as that
+       * panel covers it. Last in the markup, so the panels keep their places
+       * among the children.
        */}
-      {pinned &&
-        items.map((item, i) => (
+      {cssDepthOn &&
+        items.slice(0, -1).map((item, i) => (
           <span
-            key={`${item.key}-stop`}
+            key={`${item.key}-depth`}
             aria-hidden
-            data-snap-stop
             className="pointer-events-none absolute left-0 w-px"
             style={{
               top: `calc(${i} * ${slot})`,
               height: `calc${slot}`,
-              // The page's scroll padding allows for one bar; a case study holds under two.
-              scrollMarginTop: bars === 2 ? "var(--bar-h)" : undefined,
-              ...(cssDepthOn && i < items.length - 1
-                ? {
-                    viewTimelineName: timeline(i),
-                    viewTimelineAxis: "block",
-                    viewTimelineInset: `calc(var(--bar-h) * ${bars}) 0px`,
-                  }
-                : {}),
+              viewTimelineName: timeline(i),
+              viewTimelineAxis: "block",
+              viewTimelineInset: `calc(var(--bar-h) * ${bars}) 0px`,
             }}
           />
         ))}

@@ -18,7 +18,7 @@
 
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { Menu } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 
@@ -40,11 +40,13 @@ function DockLink({
   href,
   className,
   children,
+  onClick,
   ...rest
 }: {
   href: string;
   className?: string;
   children: ReactNode;
+  onClick?: () => void;
 } & React.AriaAttributes) {
   if (isExternal(href) || isFile(href)) {
     const external = isExternal(href);
@@ -53,6 +55,7 @@ function DockLink({
         href={href}
         {...(external ? { target: "_blank", rel: "noopener" } : {})}
         className={className}
+        onClick={onClick}
         {...rest}
       >
         {children}
@@ -60,7 +63,7 @@ function DockLink({
     );
   }
   return (
-    <Link href={href} className={className} {...rest}>
+    <Link href={href} className={className} onClick={onClick} {...rest}>
       {children}
     </Link>
   );
@@ -115,6 +118,7 @@ const ITEM_S = 0.25;
 export const FloatingDock = ({
   items,
   routes,
+  footer,
   desktopClassName,
   mobileClassName,
   activeHref,
@@ -128,6 +132,8 @@ export const FloatingDock = ({
    * chrome above it is already showing.
    */
   routes?: { title: string; href: string }[];
+  /** The phone menu's last block: the ways to get in touch. */
+  footer?: ReactNode;
   desktopClassName?: string;
   mobileClassName?: string;
   activeHref?: string | null;
@@ -145,6 +151,7 @@ export const FloatingDock = ({
       <FloatingDockMobile
         items={items}
         routes={routes}
+        footer={footer}
         className={mobileClassName}
         activeHref={activeHref}
         visible={visible}
@@ -153,15 +160,26 @@ export const FloatingDock = ({
   );
 };
 
+/*
+ * Phone navigation: a glass button in the corner that opens a full-screen
+ * menu. It used to open a column of tiles above the button, and that column
+ * sat inside the button's reveal clip, which is only the button wide — so the
+ * page links and every section's name were cut off at the button's edge, and
+ * what was left floated bare over the page text. The menu is its own layer
+ * now, outside the clip, on an opaque panel: the pages, then this page's
+ * sections as a numbered list, then the ways to get in touch.
+ */
 const FloatingDockMobile = ({
   items,
   routes,
+  footer,
   className,
   activeHref,
   visible,
 }: {
   items: DockItem[];
   routes?: { title: string; href: string }[];
+  footer?: ReactNode;
   className?: string;
   activeHref?: string | null;
   visible: boolean;
@@ -191,13 +209,14 @@ const FloatingDockMobile = ({
   const isOpen = open && visible;
   const expanded = isOpen && !closing;
 
+  const panelRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+
   /*
-   * Closing waits for the last tile to leave. The tiles go top-first, a
-   * stagger apart, so that is the stagger across the column plus one tile's
-   * own exit. A timer rather than `animationend`, which never fires when the
-   * animations are switched off.
+   * Closing waits for the panel's fade out. A timer rather than
+   * `animationend`, which never fires when the animations are switched off.
    */
-  const exitMs = reduce ? 0 : ((items.length - 1) * STAGGER_S + ITEM_S) * 1000;
+  const exitMs = reduce ? 0 : MENU_OUT_MS;
   const close = useCallback(() => {
     window.clearTimeout(closeTimer.current);
     if (exitMs === 0) {
@@ -214,11 +233,10 @@ const FloatingDockMobile = ({
   useEffect(() => () => window.clearTimeout(closeTimer.current), []);
 
   /*
-   * A disclosure that declares `aria-expanded` has to behave like one: Escape
-   * closes it and hands focus back to the trigger, and a tap outside dismisses
-   * it. Neither existed — the only way to close the sheet was the toggle
-   * itself, or an upward scroll, and the scroll path has just been removed in
-   * DockNav. Both listeners are attached only while the sheet is open.
+   * While the menu is open: Escape closes it and hands focus back to the
+   * button that opened it, focus starts on its close button, and the page
+   * underneath holds still — a swipe on the panel must not scroll the page
+   * it covers.
    */
   useEffect(() => {
     if (!expanded) return;
@@ -228,134 +246,166 @@ const FloatingDockMobile = ({
       close();
       toggleRef.current?.focus();
     };
-    const onPointerDown = (e: PointerEvent) => {
-      if (rootRef.current?.contains(e.target as Node)) return;
-      close();
-    };
+    const root = document.documentElement;
+    const overflow = root.style.overflow;
+    root.style.overflow = "hidden";
+    closeRef.current?.focus({ preventScroll: true });
 
     document.addEventListener("keydown", onKeyDown);
-    document.addEventListener("pointerdown", onPointerDown);
     return () => {
       document.removeEventListener("keydown", onKeyDown);
-      document.removeEventListener("pointerdown", onPointerDown);
+      root.style.overflow = overflow;
     };
   }, [expanded, close]);
 
+  const open_ = () => {
+    // Opening — or catching a menu that is still on its way out.
+    window.clearTimeout(closeTimer.current);
+    setClosing(false);
+    setOpen(true);
+  };
+
   return (
-    <div
-      ref={rootRef}
-      style={{
-        clipPath: visible ? CLIP_SHOWN : CLIP_HIDDEN,
-        opacity: visible ? 1 : 0,
-        transition: reduce ? "none" : `clip-path 0.5s ${SETTLE}, opacity 0.3s ease-out`,
-      }}
-      className={cn("block md:hidden", className, !visible && "pointer-events-none")}
-    >
+    <>
+      <div
+        ref={rootRef}
+        style={{
+          clipPath: visible ? CLIP_SHOWN : CLIP_HIDDEN,
+          opacity: visible ? 1 : 0,
+          transition: reduce ? "none" : `clip-path 0.5s ${SETTLE}, opacity 0.3s ease-out`,
+        }}
+        className={cn("block md:hidden", className, !visible && "pointer-events-none")}
+      >
+        <button
+          type="button"
+          ref={toggleRef}
+          onClick={() => (expanded ? close() : open_())}
+          aria-expanded={expanded}
+          aria-controls="site-menu"
+          aria-label={expanded ? "Close navigation" : "Open navigation"}
+          className="relative flex h-12 w-12 items-center justify-center focus-visible:-outline-offset-4"
+        >
+          <GlassPane />
+          <Menu className="relative h-5 w-5 text-ink" />
+        </button>
+      </div>
+
       {isOpen && (
         <div
-          /*
-           * Its own box, and capped. Eleven tiles stand ~490px off the
-           * bottom of the screen; a landscape phone has about 330px of
-           * height, so the first items ran off the top of a `fixed` wrapper
-           * with nothing to scroll. `w-max` keeps the labels inside the
-           * scroll box so only the vertical axis moves, and `svh` is the same
-           * unit the pinned sections measure in.
-           */
-          className="absolute bottom-full right-0 mb-3 flex max-h-[calc(100svh-9rem)] w-max flex-col items-end gap-2 overflow-y-auto overscroll-contain"
+          ref={panelRef}
+          id="site-menu"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Menu"
+          className="fixed inset-0 z-80 flex flex-col bg-paper-deep md:hidden"
+          style={{
+            animation: reduce ? "none" : `${closing ? "menu-out" : "menu-in"} ${MENU_OUT_MS / 1000}s ${SETTLE} both`,
+          }}
         >
-          {/*
-           * Pages first, then sections of a page. Below `sm` the utility bar
-           * has room for the status tag and one link, so without this row the
-           * only route to /work, /services and /about on a phone is the
-           * footer — thirteen sections down. One row of chips rather than
-           * three more tiles: the sheet already stands eight items tall and a
-           * short phone cannot afford another 150px of column.
-           */}
-          {routes && routes.length > 0 && (
-            <>
-              <div className="flex items-center gap-2">
-                {routes.map((route) => (
-                  <DockLink
-                    key={route.href}
-                    href={route.href}
-                    aria-current={activeHref === route.href ? "page" : undefined}
-                    className="label relative flex h-11 items-center px-3 text-cobalt focus-visible:-outline-offset-4"
+          <div className="wrap flex h-(--bar-h) shrink-0 items-center justify-between rule-b">
+            <span className="label text-ink-muted">[MENU]</span>
+            <button
+              type="button"
+              ref={closeRef}
+              onClick={() => {
+                close();
+                toggleRef.current?.focus({ preventScroll: true });
+              }}
+              aria-label="Close navigation"
+              className="-mr-2.5 flex h-11 w-11 items-center justify-center text-ink hover:text-cobalt"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          <div className="wrap flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain pb-[max(2rem,env(safe-area-inset-bottom))]">
+            {/* The site's pages: below `sm` the utility bar has no room for them. */}
+            {routes && routes.length > 0 && (
+              <ul className="mt-6 grid grid-cols-3 gap-2">
+                {routes.map((route) => {
+                  const current = activeHref === route.href;
+                  return (
+                    <li key={route.href}>
+                      <DockLink
+                        href={route.href}
+                        onClick={close}
+                        aria-current={current ? "page" : undefined}
+                        className={cn(
+                          "label flex h-11 items-center justify-center border transition-colors",
+                          current ? "border-cobalt text-cobalt" : "border-[var(--hairline)] text-ink hover:border-cobalt hover:text-cobalt",
+                        )}
+                      >
+                        {route.title}
+                      </DockLink>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+
+            <p className="label mt-8 text-ink-muted">[ON THIS PAGE]</p>
+            <ol className="mt-2 rule-t">
+              {items.map((item, idx) => {
+                const active = activeHref === item.href;
+                return (
+                  <li
+                    key={item.title}
+                    className="dock-item rule-b"
+                    style={{
+                      animation: reduce ? "none" : `dock-item-in ${ITEM_S}s ${SETTLE} ${0.06 + idx * STAGGER_S * 0.7}s both`,
+                    }}
                   >
-                    <GlassPane />
-                    <span className="relative">[{route.title}]</span>
-                  </DockLink>
-                ))}
+                    <DockLink
+                      href={item.href}
+                      onClick={close}
+                      aria-current={active ? "page" : undefined}
+                      className="group flex items-center gap-4 py-3"
+                    >
+                      <span
+                        className={cn(
+                          "flex h-5 w-7 shrink-0 items-center text-sm",
+                          active ? "text-cobalt" : "text-ink-muted group-hover:text-cobalt",
+                        )}
+                      >
+                        <span className="flex h-5 w-5 items-center justify-center">{item.icon}</span>
+                      </span>
+                      <span
+                        className={cn(
+                          "display text-[2rem] leading-none transition-colors",
+                          active ? "text-cobalt" : "text-ink group-hover:text-cobalt",
+                        )}
+                      >
+                        {item.title}
+                      </span>
+                      <span
+                        aria-hidden
+                        className={cn(
+                          "ml-auto text-lg transition-[color,translate]",
+                          active ? "text-cobalt" : "text-ink-muted group-hover:translate-x-1 group-hover:text-cobalt",
+                        )}
+                      >
+                        {active ? "●" : "→"}
+                      </span>
+                    </DockLink>
+                  </li>
+                );
+              })}
+            </ol>
+
+            {footer && (
+              <div className="mt-auto pt-8" onClick={close}>
+                {footer}
               </div>
-              <span aria-hidden className="my-1 h-px w-11 bg-[var(--hairline)]" />
-            </>
-          )}
-          {items.map((item, idx) => {
-            const active = activeHref === item.href;
-            // In from the bottom up, out from the top down.
-            const delay = (closing ? idx : items.length - 1 - idx) * STAGGER_S;
-            return (
-              <div
-                key={item.title}
-                className="dock-item flex items-center gap-2"
-                style={{
-                  animation: `${closing ? "dock-item-out" : "dock-item-in"} ${ITEM_S}s ${SETTLE} ${delay}s both`,
-                }}
-              >
-                <span className="label border border-[var(--hairline)] bg-paper-deep/90 px-2 py-1 text-cobalt backdrop-blur-md">
-                  [{item.title}]
-                </span>
-                <DockLink
-                  href={item.href}
-                  aria-label={item.title}
-                  aria-current={active ? "page" : undefined}
-                  // Ring pulled inside the pane: the default 3px offset draws
-                  // it on whatever is behind the dock, which over the footer
-                  // is white on white.
-                  className="relative flex h-11 w-11 shrink-0 items-center justify-center focus-visible:-outline-offset-4"
-                >
-                  <GlassPane />
-                  <span
-                    className={cn(
-                      "relative flex h-[18px] w-[18px] items-center justify-center text-[13px] transition-colors",
-                      active ? "text-cobalt" : "text-ink",
-                    )}
-                  >
-                    {item.icon}
-                  </span>
-                </DockLink>
-              </div>
-            );
-          })}
+            )}
+          </div>
         </div>
       )}
-      <button
-        type="button"
-        ref={toggleRef}
-        onClick={() => {
-          if (expanded) {
-            close();
-            return;
-          }
-          // Opening — or catching a sheet that is still on its way out.
-          window.clearTimeout(closeTimer.current);
-          setClosing(false);
-          setOpen(true);
-        }}
-        aria-expanded={expanded}
-        aria-label={expanded ? "Close navigation" : "Open navigation"}
-        className="relative flex h-12 w-12 items-center justify-center focus-visible:-outline-offset-4"
-      >
-        <GlassPane />
-        <Menu
-          className={cn(
-            "relative h-5 w-5 transition-[color,transform] duration-300",
-            expanded ? "rotate-90 text-cobalt" : "text-ink",
-          )}
-        />
-      </button>
-    </div>
+    </>
   );
 };
+
+/** The phone menu's fade in and out, in ms. */
+const MENU_OUT_MS = 280;
 
 /*
  * Desktop rail — a slim vertical column in the page's own margin, not a wide

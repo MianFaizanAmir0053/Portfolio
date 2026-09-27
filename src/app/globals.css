@@ -451,6 +451,21 @@
   }
 }
 
+/* The phone menu's panel, in and out. */
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 16px, 0);
+  }
+}
+
+@keyframes menu-out {
+  to {
+    opacity: 0;
+    transform: translate3d(0, 16px, 0);
+  }
+}
+
 /* Skip link: off-screen until focused, then pinned to the top-left in the
    site's own palette. Not `display: none` — a hidden link is not focusable, and
    an unfocusable skip link is decoration. */
@@ -740,24 +755,6 @@ html[data-ready] .intro-status > [data-stage]:not([data-stage="ready"]) {
   to {
     transform: scaleX(1);
   }
-}
-
-/*
- * Snapping under a finger is the browser's own: it folds the snap into the
- * fling, which glides to a stop mark (`data-snap-stop`, in the held rail and
- * the deck). Settled from script, a fling had to end first and the page was
- * then carried on, or back, to the stop — two motions, the second one against
- * the hand. Proximity, so the page only snaps near a mark; there are none
- * outside those sections. On only after a touch (`data-touch-snap`, see
- * `ScrollFxRoot`): a wheel is stepped by Lenis, a move at a time, and a snap
- * would catch every one of them.
- */
-html[data-touch-snap] {
-  scroll-snap-type: y proximity;
-}
-
-html[data-touch-snap] [data-snap-stop] {
-  scroll-snap-align: start;
 }
 
 /* Route curtain. Mounts covering the screen, holds long enough to paint once,

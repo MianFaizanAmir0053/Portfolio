@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { GithubIcon, LinkedinIcon } from "./BrandIcons";
+import { SOCIAL } from "@/data/social";
 import { Briefcase } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -52,10 +55,58 @@ const links: DockItem[] = [
  * footer. Mobile sheet only; the desktop bar already shows them.
  */
 const routes = [
-  { title: "Work", href: "/work" },
+  { title: "Case studies", href: "/work" },
   { title: "Services", href: "/services" },
   { title: "About", href: "/about" },
 ];
+
+/*
+ * The phone menu's last block: the two doors the hero opens with, and the
+ * profiles. On a phone the utility bar only has room for one of them.
+ */
+const menuFooter = (
+  <div className="pt-2">
+    <div className="grid grid-cols-2 gap-3">
+      <Link
+        href="/contact"
+        className="flex h-12 items-center justify-center border border-cobalt bg-cobalt text-sm font-medium text-paper"
+      >
+        Let&apos;s connect →
+      </Link>
+      <a
+        href="/resume.pdf"
+        className="flex h-12 items-center justify-center border border-ink text-sm font-medium text-ink"
+      >
+        Résumé ↓
+      </a>
+    </div>
+    <div className="mt-5 flex items-center justify-between">
+      <a href="mailto:faizanamir0053@gmail.com" className="label text-ink-muted hover:text-cobalt">
+        faizanamir0053@gmail.com
+      </a>
+      <div className="flex items-center gap-1">
+        <a
+          href={SOCIAL.github}
+          target="_blank"
+          rel="me noopener"
+          aria-label="GitHub profile"
+          className="flex h-10 w-10 items-center justify-center text-ink hover:text-cobalt"
+        >
+          <GithubIcon className="h-4 w-4" />
+        </a>
+        <a
+          href={SOCIAL.linkedin}
+          target="_blank"
+          rel="me noopener"
+          aria-label="LinkedIn profile"
+          className="flex h-10 w-10 items-center justify-center text-ink hover:text-cobalt"
+        >
+          <LinkedinIcon className="h-4 w-4" />
+        </a>
+      </div>
+    </div>
+  </div>
+);
 
 /** Below this the dock stays hidden — the hero should be uncluttered. */
 const REVEAL_AFTER = 80;
@@ -169,6 +220,7 @@ export function DockNav() {
       <FloatingDock
         items={links}
         routes={routes}
+        footer={menuFooter}
         activeHref={activeHref}
         visible={visible}
         desktopClassName="fixed right-5 top-1/2 z-60 -translate-y-1/2"
