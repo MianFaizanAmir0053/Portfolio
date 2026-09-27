@@ -683,6 +683,83 @@ html[data-ready] .intro-status > [data-stage]:not([data-stage="ready"]) {
   content: var(--pct, "");
 }
 
+/*
+ * Scroll-linked motion the browser runs itself, on the compositor, in step
+ * with the scroll — used wherever it is supported (see `scrollTimelines` in
+ * scroll-fx). Moved from script, the same motion trailed a phone's finger by a
+ * frame or more: the main thread is at its busiest while the page scrolls.
+ */
+
+/*
+ * The experience rail held on a phone: the track slides sideways across the
+ * section's held stretch — from the section reaching the bar (the start of
+ * its `exit-crossing` range, inset by the bar) for the length of the travel.
+ */
+[data-travel="css"] {
+  view-timeline: --h-rail block;
+  view-timeline-inset: var(--bar-h) 0px;
+}
+
+[data-travel="css"] [data-track] {
+  animation: h-rail-travel linear both;
+  animation-timeline: --h-rail;
+  animation-range: exit-crossing 0% exit-crossing var(--h-travel, 0px);
+}
+
+@keyframes h-rail-travel {
+  to {
+    transform: translate3d(calc(-1 * var(--h-travel, 0px)), 0, 0);
+  }
+}
+
+/* The deck's depth: a panel dims and shrinks as the next one climbs over it, on its stop mark's timeline. */
+.deck-depth {
+  animation: deck-depth linear both;
+  animation-range: exit-crossing 0% exit-crossing 100%;
+}
+
+@keyframes deck-depth {
+  to {
+    scale: 0.94;
+    opacity: 0.5;
+  }
+}
+
+/* The reading-progress hairline, across the whole page. */
+@supports (animation-timeline: scroll()) {
+  .scroll-progress {
+    animation: scroll-progress linear both;
+    animation-timeline: scroll(root block);
+  }
+}
+
+@keyframes scroll-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/*
+ * Snapping under a finger is the browser's own: it folds the snap into the
+ * fling, which glides to a stop mark (`data-snap-stop`, in the held rail and
+ * the deck). Settled from script, a fling had to end first and the page was
+ * then carried on, or back, to the stop — two motions, the second one against
+ * the hand. Proximity, so the page only snaps near a mark; there are none
+ * outside those sections. On only after a touch (`data-touch-snap`, see
+ * `ScrollFxRoot`): a wheel is stepped by Lenis, a move at a time, and a snap
+ * would catch every one of them.
+ */
+html[data-touch-snap] {
+  scroll-snap-type: y proximity;
+}
+
+html[data-touch-snap] [data-snap-stop] {
+  scroll-snap-align: start;
+}
+
 /* Route curtain. Mounts covering the screen, holds long enough to paint once,
    then wipes off to the right; RouteCurtain unmounts it on `animationend`.
    `both` keeps it covering during the hold. */

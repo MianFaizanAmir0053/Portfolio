@@ -230,16 +230,19 @@ function Hero() {
             filled button and the first position; the client with a project
             gets the second door, still one click from a brief. */}
         <FadeIn delay={0.35}>
-          <div className="mt-8 flex flex-wrap gap-3">
+          {/* On a phone the two wrapped onto two lines at two different
+              widths; stacked full width they read as a matched pair. Both
+              carry a 1px border, so their heights match everywhere. */}
+          <div className="mt-8 grid gap-3 sm:flex sm:flex-wrap">
             <a
               href="/resume.pdf"
-              className="bg-cobalt px-6 py-3 text-sm font-medium text-paper transition-colors hover:bg-cobalt-deep"
+              className="border border-cobalt bg-cobalt px-6 py-3 text-center text-sm font-medium text-paper transition-colors hover:border-cobalt-deep hover:bg-cobalt-deep"
             >
               Hiring? Get my resume ↓
             </a>
             <Link
               href="/contact"
-              className="border border-ink px-6 py-3 text-sm font-medium text-ink transition-colors hover:bg-ink hover:text-paper"
+              className="border border-ink px-6 py-3 text-center text-sm font-medium text-ink transition-colors hover:bg-ink hover:text-paper"
             >
               Have a project? Start here →
             </Link>

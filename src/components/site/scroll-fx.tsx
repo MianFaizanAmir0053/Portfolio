@@ -276,6 +276,30 @@ export function ScrollFxRoot() {
     };
     gsap.ticker.add(decay);
 
+    /*
+     * Snapping under a finger (`data-touch-snap`, see the stylesheet): on at
+     * a touch, off at a wheel — a trackpad on a tablet, a wheel in a phone
+     * emulator, where Lenis steps the page — and off while Lenis glides the
+     * page itself for an anchor link, which a snap mark on the way would
+     * otherwise catch and hold.
+     */
+    const root = document.documentElement;
+    const snapOn = () => {
+      if (!root.hasAttribute("data-touch-snap")) root.setAttribute("data-touch-snap", "");
+    };
+    const snapOff = () => {
+      if (root.hasAttribute("data-touch-snap")) root.removeAttribute("data-touch-snap");
+    };
+    window.addEventListener("touchstart", snapOn, { passive: true });
+    window.addEventListener("wheel", snapOff, { passive: true });
+    const unLenis = onLenis((lenis) => {
+      const onScroll = () => {
+        if (lenis.isScrolling === "smooth") snapOff();
+      };
+      lenis.on("scroll", onScroll);
+      return () => lenis.off("scroll", onScroll);
+    });
+
     return () => {
       cancelled = true;
       window.clearTimeout(fallback);
@@ -284,6 +308,10 @@ export function ScrollFxRoot() {
       resized.disconnect();
       gsap.ticker.remove(decay);
       page.kill();
+      window.removeEventListener("touchstart", snapOn);
+      window.removeEventListener("wheel", snapOff);
+      unLenis();
+      snapOff();
     };
   }, []);
 
@@ -946,6 +974,43 @@ function smallViewportHeight() {
 }
 
 /**
+ * The resizes a layout decision has to hear. A phone fires `resize` as its
+ * URL bar slides in and out — at every change of scroll direction, so while
+ * the reader is scrolling back up — and nothing laid out in `svh` changes
+ * with it; re-measuring then forced a full layout in the middle of the
+ * scroll. On a screen without hover, only a change of width gets through
+ * (turning the phone). A desktop window's height is a real resize, and
+ * passes.
+ */
+function onLayoutResize(fn: () => void) {
+  const touch = window.matchMedia("(hover: none)").matches;
+  let width = window.innerWidth;
+  const handler = () => {
+    if (touch && window.innerWidth === width) return;
+    width = window.innerWidth;
+    fn();
+  };
+  window.addEventListener("resize", handler);
+  return () => window.removeEventListener("resize", handler);
+}
+
+/**
+ * Whether the browser can run a scroll-linked animation itself: a transform
+ * tied to the scroll position, moved on the compositor in step with the
+ * scroll. Anything moved from script lands a frame or more behind the finger
+ * on a phone, whose main thread is busiest exactly while it scrolls. Checks
+ * the named timeline ranges and insets used below, not just the property.
+ */
+function scrollTimelines() {
+  return (
+    typeof CSS !== "undefined" &&
+    CSS.supports("animation-timeline: --a") &&
+    CSS.supports("animation-range: exit-crossing 0% exit-crossing 1px") &&
+    CSS.supports("view-timeline-inset: 1px 0px")
+  );
+}
+
+/**
  * Turns downward scrolling into horizontal travel.
  *
  * Four modes, read from the user's own settings and the screen rather than
@@ -988,6 +1053,8 @@ export function HorizontalScroll({
 }) {
   const { pinned, reduce } = useFxMode();
   const [fits, setFits] = useState(false);
+  // Whether the stylesheet slides the held row (see `scrollTimelines`), decided with the fit.
+  const [cssTravel, setCssTravel] = useState(false);
   const mode: HMode = pinned ? "pinned" : reduce ? "stack" : fits ? "sticky" : "swipe";
   const held = mode === "pinned" || mode === "sticky";
 
@@ -1022,6 +1089,12 @@ export function HorizontalScroll({
    * screen changes size, so turning the phone on its side drops back to the
    * swipe row and turning it back holds again. Decided before the first
    * paint (see `useIsomorphicLayoutEffect`).
+   *
+   * Held only where the browser can slide the row itself. From script the
+   * row trailed the finger by a frame or more on a phone — the main thread is
+   * at its busiest mid-scroll — so a touch screen without scroll timelines
+   * gets the swipe row, native all the way through. A desktop in lite mode
+   * still holds either way: its wheel is the page's own and the gap is small.
    */
   useIsomorphicLayoutEffect(() => {
     if (pinned || reduce) return;
@@ -1030,20 +1103,23 @@ export function HorizontalScroll({
     if (!header || !track) return;
     const contents = Array.from(track.querySelectorAll<HTMLElement>("[data-hpanel] > *"));
     if (!contents.length) return;
+    const css = scrollTimelines();
+    const canHold = css || !window.matchMedia("(hover: none)").matches;
+    setCssTravel(css);
 
     const check = () => {
       const room = smallViewportHeight() - barHeight() - header.offsetHeight;
       const tallest = Math.max(...contents.map((el) => el.offsetHeight));
-      setFits(tallest + 24 <= room);
+      setFits(canHold && tallest + 24 <= room);
     };
 
     check();
     const ro = new ResizeObserver(check);
     contents.forEach((el) => ro.observe(el));
-    window.addEventListener("resize", check);
+    const off = onLayoutResize(check);
     return () => {
       ro.disconnect();
-      window.removeEventListener("resize", check);
+      off();
     };
   }, [pinned, reduce]);
 
@@ -1121,13 +1197,24 @@ export function HorizontalScroll({
     const stickAt = () => parseFloat(getComputedStyle(viewport).top) || 0;
 
     const ctx = gsap.context(() => {
+      const vars: ScrollTrigger.Vars = {
+        trigger: outer,
+        start: () => `top top+=${stickAt()}`,
+        end: () => `+=${travel()}`,
+        invalidateOnRefresh: true,
+        onUpdate: (self) => report(self.progress),
+        onRefresh: (self) => report(self.progress),
+      };
+      // The stylesheet slides the track (`data-travel`); this only keeps count.
+      if (cssTravel) {
+        stRef.current = ScrollTrigger.create(vars);
+        return;
+      }
       const tween = gsap.to(track, {
         x: () => -travel(),
         ease: "none",
         scrollTrigger: {
-          trigger: outer,
-          start: () => `top top+=${stickAt()}`,
-          end: () => `+=${travel()}`,
+          ...vars,
           /*
            * Locked to the scroll, no catch-up. The cards are the scroll here:
            * they move with the finger, glide with the fling, and stop when it
@@ -1135,9 +1222,6 @@ export function HorizontalScroll({
            * every scroll and blurred the settle onto a panel into it.
            */
           scrub: true,
-          invalidateOnRefresh: true,
-          onUpdate: (self) => report(self.progress),
-          onRefresh: (self) => report(self.progress),
         },
       });
       stRef.current = tween.scrollTrigger ?? null;
@@ -1149,7 +1233,7 @@ export function HorizontalScroll({
       stRef.current = null;
       outer.style.removeProperty("--h-travel");
     };
-  }, [mode, report]);
+  }, [mode, report, cssTravel]);
 
   /*
    * held: come to rest on a checkpoint, pinned or sticky alike. The stops are
@@ -1241,6 +1325,8 @@ export function HorizontalScroll({
           className,
         )}
         data-fx={mode}
+        // The stylesheet slides the track off the scroll (`h-rail-travel`).
+        data-travel={mode === "sticky" && cssTravel ? "css" : undefined}
       >
         <div
           ref={viewportRef}
@@ -1284,14 +1370,17 @@ export function HorizontalScroll({
               "min-h-0 flex-1",
               mode === "swipe" &&
                 "snap-x snap-mandatory overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+              // The row, as tall as its tallest panel, centred in the held screen.
+              mode === "sticky" && "flex flex-col justify-center",
             )}
           >
             <div
               ref={trackRef}
+              data-track
               className={cn(
                 "relative flex px-5 md:px-10",
-                mode === "stack" ? "flex-col" : "w-max flex-row items-stretch gap-8 md:h-full md:gap-14",
-                mode === "sticky" && "h-full",
+                mode === "stack" ? "flex-col" : "w-max flex-row items-stretch gap-8 md:gap-14",
+                mode === "pinned" && "h-full",
                 /*
                  * Clearance for the fixed dock rail. This track is not inside
                  * `.wrap`, so it never got the right-hand allowance the rest of
@@ -1315,12 +1404,37 @@ export function HorizontalScroll({
             </div>
           </div>
         </div>
+        {/*
+         * Where a finger's fling comes to rest while held: one mark per
+         * checkpoint, down the travel. The browser snaps to them itself (see
+         * `data-touch-snap` in the stylesheet), so a fling glides into a stop
+         * instead of stopping and being carried back to it. After the screen
+         * in the markup, which stays this box's first child.
+         */}
+        {mode === "sticky" &&
+          steps.map((_, i) => (
+            <span
+              key={i}
+              aria-hidden
+              data-snap-stop
+              className="pointer-events-none absolute left-0 h-px w-px"
+              style={{ top: `calc(var(--h-travel, 0px) * ${total > 1 ? i / (total - 1) : 0})` }}
+            />
+          ))}
       </div>
     </HScrollContext.Provider>
   );
 }
 
-/** One panel of a `HorizontalScroll`. Sizing follows the active mode. */
+/**
+ * One panel of a `HorizontalScroll`. Sizing follows the active mode.
+ *
+ * On a phone, held or swiped, every panel is as tall as the tallest and its
+ * content fills it, so a row of bordered cards reads as one even band — tops
+ * and bottoms level — instead of each card sized to its own text and centred
+ * on its own. Pinned on a desktop, panels fill the screen and centre their
+ * content as before.
+ */
 export function HPanel({
   children,
   className,
@@ -1337,7 +1451,9 @@ export function HPanel({
       className={cn(
         "relative",
         mode === "stack" ? "w-full rule-t py-10 last:rule-b" : cn("shrink-0 snap-center", width),
-        (mode === "pinned" || mode === "sticky") && "flex h-full flex-col justify-center",
+        mode === "pinned" && "flex h-full flex-col justify-center",
+        // Stretched to the row's height by the track; the content grows into it.
+        (mode === "sticky" || mode === "swipe") && "flex flex-col *:grow",
         // One panel a swipe, like the held rail: a hard fling stops at the next
         // panel instead of skating past it.
         mode === "swipe" && "snap-always py-8",
@@ -1870,10 +1986,10 @@ export function PinnedLitText({
     check();
     const ro = new ResizeObserver(check);
     ro.observe(column);
-    window.addEventListener("resize", check);
+    const off = onLayoutResize(check);
     return () => {
       ro.disconnect();
-      window.removeEventListener("resize", check);
+      off();
     };
   }, [pinned, reduce]);
 
@@ -2410,11 +2526,11 @@ function useRevealed(ref: RefObject<HTMLElement | null>, rootMargin = "0px 0px -
       if (el.getBoundingClientRect().top < window.innerHeight) setRevealed(true);
     };
     check();
-    window.addEventListener("resize", check);
+    const off = onLayoutResize(check);
 
     return () => {
       io.disconnect();
-      window.removeEventListener("resize", check);
+      off();
     };
   }, [ref, rootMargin, revealed]);
 
@@ -2476,6 +2592,19 @@ export function CardStack({
   const goToRef = useRef<((index: number) => void) | null>(null);
   const [inDeck, setInDeck] = useState(false);
   const [current, setCurrent] = useState(0);
+  /*
+   * Depth run by the browser from the scroll (see `scrollTimelines`): each
+   * panel's timeline is its stop mark's (below), shared up the deck with
+   * `timeline-scope` so the panel can read it. Names are this deck's own.
+   */
+  const [cssDepth, setCssDepth] = useState(false);
+  const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
+  const depth = pinned && fx.motion;
+  const timeline = (i: number) => `--deck${uid}-${i}`;
+
+  useIsomorphicLayoutEffect(() => {
+    setCssDepth(scrollTimelines() && CSS.supports("timeline-scope: --a"));
+  }, []);
 
   // Decided before the first paint (see `useIsomorphicLayoutEffect`).
   useIsomorphicLayoutEffect(() => {
@@ -2495,9 +2624,19 @@ export function CardStack({
        * the box.
        */
       const was = root.dataset.fx;
-      root.dataset.fx = "stacked";
+      if (was !== "stacked") root.dataset.fx = "stacked";
+      // Their own heights, without the shared one below holding them up.
+      root.style.removeProperty("--card-h");
       const tallest = Math.max(0, ...contents.map((el) => el.offsetHeight));
-      if (was) root.dataset.fx = was;
+      if (was && was !== "stacked") root.dataset.fx = was;
+      /*
+       * On a phone every slide's content is held to the tallest one's height,
+       * top-aligned, so the frames and rules in it sit at the same place from
+       * one slide to the next — sized each to its own and centred, they
+       * stepped up and down as the deck went by.
+       */
+      // A pixel over: `offsetHeight` rounds, and the tallest has to be held to it too or it sits half a pixel off.
+      root.style.setProperty("--card-h", `${tallest + 1}px`);
       /*
        * Against `100svh`, the height the slots are drawn at, not `innerHeight`.
        * On a phone `innerHeight` grows when the URL bar slides away and shrinks
@@ -2510,16 +2649,20 @@ export function CardStack({
     check();
     const ro = new ResizeObserver(check);
     contents.forEach((el) => ro.observe(el));
-    window.addEventListener("resize", check);
+    const off = onLayoutResize(check);
     return () => {
       ro.disconnect();
-      window.removeEventListener("resize", check);
+      off();
     };
   }, [fit, bars, fx.reduce]);
 
-  /* depth: the covered panel dims and shrinks — skipped in lite mode */
+  /*
+   * depth: the covered panel dims and shrinks — skipped in lite mode. From
+   * script only where the browser cannot run it from the scroll itself: read
+   * and written every frame, it trailed the finger on a phone.
+   */
   useEffect(() => {
-    if (!pinned || !fx.motion) return;
+    if (!depth || cssDepth) return;
     const root = rootRef.current;
     if (!root) return;
 
@@ -2607,7 +2750,7 @@ export function CardStack({
       window.removeEventListener("resize", markDirty);
       cards.forEach((card) => gsap.set(card, { scale: 1, opacity: 1 }));
     };
-  }, [pinned, fx.motion]);
+  }, [depth, cssDepth]);
 
   /*
    * Settle on a whole panel (see `settleOnStops`). Stopping part-way through
@@ -2684,9 +2827,21 @@ export function CardStack({
   }, [pinned, bars, items.length]);
 
   const showNav = pinned && items.length > 1;
+  const cssDepthOn = depth && cssDepth;
+  // A held panel's height, the distance between two stops.
+  const slot = `(100svh - var(--bar-h) * ${bars})`;
 
   return (
-    <div ref={rootRef} className={cn("relative", className)} data-fx={pinned ? "stacked" : "flow"}>
+    <div
+      ref={rootRef}
+      className={cn("relative", className)}
+      data-fx={pinned ? "stacked" : "flow"}
+      style={
+        cssDepthOn
+          ? { timelineScope: items.slice(0, -1).map((_, i) => timeline(i)).join(", ") }
+          : undefined
+      }
+    >
       {/*
        * Where you are in the deck, and a way to jump. Sits in the left gutter,
        * which the dock rail on the right leaves free, and only while the deck
@@ -2752,14 +2907,51 @@ export function CardStack({
           <div
             data-card
             className={cn(
-              "relative flex h-full flex-col justify-center overflow-hidden bg-paper will-change-transform",
+              "relative flex h-full flex-col justify-center overflow-hidden bg-paper",
+              // Scaled from script every frame; the browser promotes it itself for its own animation.
+              depth && !cssDepth && "will-change-transform",
+              cssDepthOn && i < items.length - 1 && "deck-depth",
+              // One height for every slide's content on a phone (`--card-h`, from the fit check).
+              pinned && "max-md:*:min-h-(--card-h)",
               cardClassName,
             )}
+            style={cssDepthOn && i < items.length - 1 ? { animationTimeline: timeline(i) } : undefined}
           >
             {item.content}
           </div>
         </div>
       ))}
+      {/*
+       * A mark per stop, one held panel apart. Under a finger the browser
+       * snaps to them itself (see `data-touch-snap` in the stylesheet), so a
+       * fling glides into the next panel instead of stopping short and being
+       * carried there after. Each also times the depth of the panel it
+       * belongs to: from its top reaching the bars, as the next panel starts
+       * to climb, to its bottom doing so, as that panel covers it. Last in
+       * the markup, so the panels keep their places among the children.
+       */}
+      {pinned &&
+        items.map((item, i) => (
+          <span
+            key={`${item.key}-stop`}
+            aria-hidden
+            data-snap-stop
+            className="pointer-events-none absolute left-0 w-px"
+            style={{
+              top: `calc(${i} * ${slot})`,
+              height: `calc${slot}`,
+              // The page's scroll padding allows for one bar; a case study holds under two.
+              scrollMarginTop: bars === 2 ? "var(--bar-h)" : undefined,
+              ...(cssDepthOn && i < items.length - 1
+                ? {
+                    viewTimelineName: timeline(i),
+                    viewTimelineAxis: "block",
+                    viewTimelineInset: `calc(var(--bar-h) * ${bars}) 0px`,
+                  }
+                : {}),
+            }}
+          />
+        ))}
     </div>
   );
 }

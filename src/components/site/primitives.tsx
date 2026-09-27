@@ -656,6 +656,9 @@ export function ScrollProgress() {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    // Where the browser can run it off the scroll (`.scroll-progress` in the stylesheet), it does, on the
+    // compositor; nothing here then updates on every scrolled frame.
+    if (typeof CSS !== "undefined" && CSS.supports("animation-timeline: scroll()")) return;
     gsap.registerPlugin(ScrollTrigger);
 
     // The same measurement ScrollFxRoot already makes for the page, expressed
@@ -686,7 +689,7 @@ export function ScrollProgress() {
     <div aria-hidden className="fixed inset-x-0 top-0 z-70 h-px bg-transparent">
       <div
         ref={ref}
-        className="h-full w-full origin-left bg-cobalt"
+        className="scroll-progress h-full w-full origin-left bg-cobalt"
         style={{ transform: "scaleX(0)" }}
       />
     </div>
