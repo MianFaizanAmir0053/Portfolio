@@ -3,6 +3,8 @@
 import { useRef, useState, type FormEvent } from "react";
 import { Turnstile } from "./Turnstile";
 import { PERSON } from "@/lib/site";
+import { BUTTON } from "@/lib/typography";
+import { cn } from "@/lib/utils";
 
 type Errors = { name?: string; email?: string; message?: string };
 type Status = "idle" | "sending" | "success" | "error";
@@ -231,14 +233,11 @@ export function ContactForm() {
           type="submit"
           disabled={status === "sending"}
           aria-busy={status === "sending"}
-          className="bg-cobalt px-6 py-3 text-sm font-medium text-paper transition-colors hover:bg-cobalt-deep disabled:opacity-60"
+          className={cn(BUTTON.primary, "disabled:opacity-60 disabled:active:scale-100")}
         >
           {status === "sending" ? "Sending…" : "Send message"}
         </button>
-        <a
-          href="/resume.pdf"
-          className="border border-ink px-6 py-3 text-sm font-medium text-ink transition-colors hover:bg-ink hover:text-paper"
-        >
+        <a href="/resume.pdf" className={BUTTON.secondary}>
           Download resume (PDF) ↓
         </a>
       </div>

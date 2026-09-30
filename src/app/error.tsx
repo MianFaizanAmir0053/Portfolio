@@ -3,6 +3,8 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { Tag } from "@/components/site/primitives";
+import { BUTTON, TYPE } from "@/lib/typography";
+import { cn } from "@/lib/utils";
 
 export default function Error({
   error,
@@ -27,27 +29,20 @@ export default function Error({
          * that did not look like the site.
          */}
         <Tag className="mb-6 block text-cobalt">[ERROR]</Tag>
-        <h1 className="display text-3xl md:text-4xl">This page didn&rsquo;t load</h1>
+        <h1 className={TYPE.title}>This page didn&rsquo;t load</h1>
         {/*
          * First person, like the rest of the site. "Our end" implied a company;
          * there is one person here and he owns the fault.
          */}
-        <p className="mt-3 text-sm leading-7 text-ink-muted">
+        <p className={cn(TYPE.body, "mt-3")}>
           Something broke on my side. Try again, or take one of the links below — the case studies
           and the contact details are still there.
         </p>
         <div className="mt-8 flex flex-wrap gap-4">
-          <button
-            type="button"
-            onClick={reset}
-            className="bg-cobalt px-6 py-3 text-sm font-medium text-paper transition-colors hover:bg-cobalt-deep"
-          >
+          <button type="button" onClick={reset} className={BUTTON.primary}>
             Try again
           </button>
-          <Link
-            href="/"
-            className="border border-ink px-6 py-3 text-sm font-medium text-ink transition-colors hover:bg-ink hover:text-paper"
-          >
+          <Link href="/" className={BUTTON.secondary}>
             Go home
           </Link>
         </div>

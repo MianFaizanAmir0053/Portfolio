@@ -35,12 +35,15 @@ export function Tag({ children, className }: { children: ReactNode; className?: 
 export function CurtainText({
   lines,
   className,
+  id,
   as: As = "h2",
   delay = 0,
   immediate = false,
 }: {
   lines: ReactNode[];
   className?: string;
+  /** For a section that names itself by its heading (`aria-labelledby`). */
+  id?: string;
   as?: "h1" | "h2" | "h3" | "p" | "div";
   delay?: number;
   /**
@@ -93,7 +96,7 @@ export function CurtainText({
   }, [immediate]);
 
   return (
-    <As className={className} ref={ref as never}>
+    <As id={id} className={className} ref={ref as never}>
       {lines.map((line, i) => (
         <Fragment key={i}>
           {/*

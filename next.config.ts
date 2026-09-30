@@ -39,6 +39,11 @@ const nextConfig: NextConfig = {
        which generates variants nobody requests. */
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    /* 75 for photographs, 90 for interface screenshots. At 75, AVIF smears the
+       small type inside a screenshot — the case studies' phone and editor
+       captures read as soft even at full resolution. Next 16 serves only the
+       qualities listed here and coerces anything else to the nearest one. */
+    qualities: [75, 90],
     minimumCacheTTL: 60 * 60 * 24 * 30,
   },
 

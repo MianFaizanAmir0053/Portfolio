@@ -7,6 +7,8 @@ import { SOCIAL } from "@/data/social";
 import { services } from "@/data/services";
 import { JsonLd } from "@/components/site/JsonLd";
 import { PERSON } from "@/lib/site";
+import { BUTTON, SPACE, TYPE } from "@/lib/typography";
+import { cn } from "@/lib/utils";
 import { faqSchema, graph, itemListSchema, webPageSchema } from "@/lib/schema";
 import { UtilityBar } from "@/components/site/UtilityBar";
 import { Footer } from "@/components/site/Footer";
@@ -206,7 +208,7 @@ function Hero() {
         <CurtainText
           as="h1"
           immediate
-          className="display text-[13vw] md:text-[clamp(3.5rem,7.4vw,7.5rem)]"
+          className={TYPE.hero}
           lines={[
             <span key="0" className="label mb-4 block text-ink">
               Faizan Amir — Senior Software Engineer
@@ -219,7 +221,7 @@ function Hero() {
           ]}
         />
         <FadeIn delay={0.25}>
-          <p className="mt-8 max-w-xl text-base leading-7 text-ink-muted">
+          <p className={cn(TYPE.intro, SPACE.intro, "max-w-xl")}>
             Four years shipping React, Next.js, Python and Node.js applications for teams in the
             US, UK, Middle East and Europe.
           </p>
@@ -234,16 +236,10 @@ function Hero() {
               widths; stacked full width they read as a matched pair. Both
               carry a 1px border, so their heights match everywhere. */}
           <div className="mt-8 grid gap-3 sm:flex sm:flex-wrap">
-            <a
-              href="/resume.pdf"
-              className="border border-cobalt bg-cobalt px-6 py-3 text-center text-sm font-medium text-paper transition-colors hover:border-cobalt-deep hover:bg-cobalt-deep"
-            >
+            <a href="/resume.pdf" className={BUTTON.primary}>
               Hiring? Get my resume ↓
             </a>
-            <Link
-              href="/contact"
-              className="border border-ink px-6 py-3 text-center text-sm font-medium text-ink transition-colors hover:bg-ink hover:text-paper"
-            >
+            <Link href="/contact" className={BUTTON.secondary}>
               Have a project? Start here →
             </Link>
           </div>
@@ -314,9 +310,11 @@ function Hero() {
 
         <div className="mt-6 flex justify-end md:absolute md:-bottom-8 md:right-0 md:mt-0">
           <MagneticSurface strength={0.35} radius={60} lift={4}>
+            {/* Set as a label, the site's smallest size: at 10px it was the one
+                piece of text on the page below the scale. */}
             <a
               href="/resume.pdf"
-              className="flex h-24 w-24 items-center justify-center rounded-full bg-cobalt text-center text-[10px] font-medium uppercase leading-tight tracking-[0.08em] text-paper transition-colors hover:bg-cobalt-deep"
+              className="label flex h-24 w-24 items-center justify-center rounded-full bg-cobalt text-center text-paper transition-colors hover:bg-cobalt-deep"
             >
               Download
               <br />
@@ -352,7 +350,7 @@ function About() {
                 would sit here half-scattered. This one runs on its own clock
                 off an observer, so the pin cannot strand it. */}
             <CurtainText
-              className="display mt-5 text-[12vw] leading-[0.9] md:text-[clamp(2.75rem,5.5vw,5rem)]"
+              className={cn(TYPE.section, "mt-6")}
               lines={[
                 <Fragment key="about">
                   It’s about <span className="accent-word">shipping</span>
@@ -383,7 +381,7 @@ function Experience() {
         <HPanel width="w-[84vw] sm:w-[58vw] md:w-[38vw] lg:w-[30vw]">
           <div className="flex flex-col justify-center md:min-h-[58vh]">
             <CurtainText
-              className="display text-[12vw] md:text-[clamp(2.5rem,3.6vw,3.5rem)]"
+              className={TYPE.section}
               lines={[
                 <Fragment key="1">Where</Fragment>,
                 <Fragment key="2">
@@ -391,7 +389,7 @@ function Experience() {
                 </Fragment>,
               ]}
             />
-            <p className="mt-8 max-w-sm text-sm leading-7 text-ink-muted">
+            <p className={cn(TYPE.body, SPACE.intro, "max-w-sm")}>
               Four years across three teams, three continents, and one consistent job: turn the
               requirement into something that survives production.
             </p>
@@ -414,16 +412,21 @@ function Experience() {
                   short screens get a tighter setting rather than a scrollbar
                   inside a pinned panel. */}
               <div>
-                <p className="outline-num text-[16vw] md:text-[5vw] [@media(max-height:680px)]:md:text-[3.4vw]">
+                <p className={cn(TYPE.index, "[@media(max-height:680px)]:md:text-[3.4vw]")}>
                   [{e.n}]
                 </p>
                 {/* Role and company in one heading. Three panels each headed
                     "Senior Software Engineer" with the employer demoted to a
                     paragraph gave the page three identical h3s and no way to
                     tell them apart from the outline alone. */}
-                <h3 className="display mt-6 text-2xl md:text-4xl [@media(max-height:680px)]:md:mt-3 [@media(max-height:680px)]:md:text-3xl">
+                <h3
+                  className={cn(
+                    TYPE.title,
+                    "mt-6 [@media(max-height:680px)]:md:mt-3 [@media(max-height:680px)]:md:text-3xl",
+                  )}
+                >
                   {e.role}
-                  <span className="accent-word block text-2xl md:text-3xl">{e.company}</span>
+                  <span className={TYPE.subtitle}>{e.company}</span>
                 </h3>
                 <p className="label mt-4 [@media(max-height:680px)]:mt-2">
                   {e.dates} · {e.place}
@@ -452,7 +455,7 @@ function Experience() {
         <HPanel width="w-[84vw] sm:w-[58vw] md:w-[34vw] lg:w-[26vw]">
           <div className="flex flex-col justify-center md:min-h-[58vh]">
             <Tag className="block">[TODAY]</Tag>
-            <p className="display mt-6 text-[22vw] leading-[0.8] text-cobalt md:text-[7vw]">(4+)</p>
+            <p className={cn(TYPE.stat, "mt-6")}>(4+)</p>
             <p className="label mt-4">* YEARS IN PRODUCTION</p>
             <dl className="mt-10 rule-t">
               {[
@@ -490,7 +493,7 @@ function FeaturedWork() {
         <div>
           <Tag className="mb-6 block">[FEATURED WORK]</Tag>
           <KineticHeadline
-            className="display text-[12vw] md:text-[clamp(3rem,6vw,5.5rem)]"
+            className={TYPE.section}
             lines={["Selected", "case studies"]}
             accent={["case", "studies"]}
           />
@@ -590,7 +593,10 @@ function ProjectAside({ project: p, href }: { project: Project; href?: string })
           entrance for the same kind of text. */}
       <CurtainText
         as="h3"
-        className="display mt-4 text-3xl md:text-5xl [@media(min-width:768px)_and_(max-height:700px)]:mt-2 [@media(min-width:768px)_and_(max-height:700px)]:text-4xl"
+        className={cn(
+          TYPE.cardTitle,
+          "mt-4 [@media(min-width:768px)_and_(max-height:700px)]:mt-2 [@media(min-width:768px)_and_(max-height:700px)]:text-4xl",
+        )}
         delay={0.15}
         lines={[
           <Fragment key={p.slug}>
@@ -603,7 +609,12 @@ function ProjectAside({ project: p, href }: { project: Project; href?: string })
           [IN DEVELOPMENT]
         </span>
       )}
-      <p className="mt-4 max-w-lg text-sm leading-7 text-ink-muted [@media(max-height:700px)]:mt-3 [@media(max-height:700px)]:leading-6 max-md:in-data-[fx=stacked]:line-clamp-3">
+      <p
+        className={cn(
+          TYPE.body,
+          "mt-4 max-w-lg [@media(max-height:700px)]:mt-3 [@media(max-height:700px)]:leading-6 max-md:in-data-[fx=stacked]:line-clamp-3",
+        )}
+      >
         {p.summary}
       </p>
 
@@ -625,7 +636,7 @@ function ProjectAside({ project: p, href }: { project: Project; href?: string })
        */}
       <div className="mt-6 rule-t pt-4 [@media(max-height:760px)]:mt-4 [@media(max-height:760px)]:pt-3 max-md:in-data-[fx=stacked]:hidden">
         <p className="label">[KEY DECISION]</p>
-        <p className="mt-2 max-w-lg text-sm leading-7 text-ink-muted [@media(max-height:760px)]:leading-6">
+        <p className={cn(TYPE.body, "mt-2 max-w-lg [@media(max-height:760px)]:leading-6")}>
           {p.decisions[0]}
         </p>
       </div>
@@ -675,10 +686,10 @@ function Faq() {
             and the horizontal rail already use for a section header. */}
         <div className="md:sticky md:top-24 md:self-start">
           <Tag className="mb-6 block">[FAQ]</Tag>
-          <h2 className="display text-[11vw] leading-[0.9] md:text-[clamp(2.25rem,4vw,3.5rem)]">
+          <h2 className={TYPE.section}>
             The <span className="accent-word">short</span> answers
           </h2>
-          <p className="mt-6 max-w-sm text-sm leading-7 text-ink-muted">
+          <p className={cn(TYPE.body, SPACE.intro, "max-w-sm")}>
             Longer versions live on{" "}
             <Link href="/about" className="text-cobalt hover:underline">
               about
@@ -694,10 +705,10 @@ function Faq() {
           {HOME_FAQS.map((faq, index) => (
             <AccordionItem key={faq.q} value={`home-faq-${index}`}>
               <AccordionTrigger className="rounded-none py-5 hover:no-underline">
-                <span className="display pr-4 text-left text-xl md:text-2xl">{faq.q}</span>
+                <span className={cn(TYPE.item, "pr-4 text-left")}>{faq.q}</span>
               </AccordionTrigger>
               <AccordionContent className="pb-6">
-                <p className="max-w-2xl text-sm leading-7 text-ink-muted">{faq.a}</p>
+                <p className={cn(TYPE.body, "max-w-2xl")}>{faq.a}</p>
               </AccordionContent>
             </AccordionItem>
           ))}
@@ -732,7 +743,7 @@ function Contact() {
         <div>
           <Tag className="mb-6 block">[06] CONTACT</Tag>
           <KineticHeadline
-            className="display text-[12vw] md:text-[clamp(2.5rem,5vw,4.5rem)]"
+            className={TYPE.section}
             lines={["Let’s build", "something real."]}
             accent={["real."]}
             scatter={1.4}
@@ -740,14 +751,17 @@ function Contact() {
           {/* Grouped by who is writing: a hiring manager, or a client with a
               project — hiring first, as the larger share of readers. Each
               group leads with the thing that reader needs. */}
-          <dl className="mt-10 space-y-8">
+          {/* Every way to reach him at one size: the résumé, email and
+              WhatsApp links were 16px and LinkedIn and GitHub 14px, inside the
+              same group. */}
+          <dl className={cn(SPACE.content, "space-y-8")}>
             <div>
               <dt className="label">[HIRING]</dt>
               <dd className="mt-2 space-y-2">
                 <a href="/resume.pdf" className="block text-cobalt hover:underline">
                   Download resume (PDF) ↓
                 </a>
-                <span className="flex gap-4 text-sm">
+                <span className="flex gap-4 text-base">
                   <a href={SOCIAL.linkedin} target="_blank" rel="noopener" className="hover:text-cobalt">
                     LinkedIn ↗
                   </a>
@@ -760,9 +774,7 @@ function Contact() {
             <div>
               <dt className="label">[PROJECTS]</dt>
               <dd className="mt-2 space-y-2">
-                <p className="text-sm leading-6 text-ink-muted">
-                  Send a short brief with the form, or message directly:
-                </p>
+                <p className={TYPE.compact}>Send a short brief with the form, or message directly:</p>
                 <a href="mailto:faizanamir0053@gmail.com" className="block text-cobalt hover:underline">
                   faizanamir0053@gmail.com
                 </a>

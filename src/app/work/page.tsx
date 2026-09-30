@@ -13,6 +13,8 @@ import {
 import { JsonLd } from "@/components/site/JsonLd";
 import { breadcrumbSchema, graph, itemListSchema, webPageSchema } from "@/lib/schema";
 import { OG_IMAGE } from "@/lib/site";
+import { BUTTON, SPACE, TYPE } from "@/lib/typography";
+import { cn } from "@/lib/utils";
 
 const TITLE = "Work — 6 full-stack and AI engineering case studies";
 const DESCRIPTION =
@@ -94,8 +96,8 @@ export default function WorkIndex() {
       </nav>
 
       <main id="main">
-        <section className="wrap py-16 md:py-24">
-          <h1 className="display text-[13vw] leading-[0.9] md:text-[clamp(3.5rem,7vw,7rem)]">
+        <section className={cn("wrap", SPACE.pageHead)}>
+          <h1 className={TYPE.hero}>
             <span className="label mb-6 block">Full-stack and AI case studies</span>{" "}
             Six projects, <span className="accent-word">problem to result</span>.
           </h1>
@@ -105,7 +107,7 @@ export default function WorkIndex() {
            * able to lift this paragraph out and have the answer, with no
            * surrounding page required.
            */}
-          <p className="mt-8 max-w-2xl text-base leading-7 text-ink-muted">
+          <p className={cn(TYPE.intro, SPACE.intro, "max-w-2xl")}>
             Each case study covers the problem, architecture, key decisions and results. Four
             products are live; the two still in development report what is built and tested, not
             business outcomes. The work spans legal RAG, telehealth commerce, multi-role fintech,
@@ -134,7 +136,7 @@ export default function WorkIndex() {
                   <div>
                     <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
                       <span className="label text-cobalt">[{project.index}]</span>
-                      <h2 className="display text-2xl md:text-4xl">
+                      <h2 className={TYPE.title}>
                         {project.name} — <span className="accent-word">{project.tagline}</span>
                       </h2>
                       {/* The same badge the index uses. Three of these six are
@@ -144,9 +146,7 @@ export default function WorkIndex() {
                         <span className="label bg-cobalt px-2 py-1 text-paper">[IN DEVELOPMENT]</span>
                       )}
                     </div>
-                    <p className="mt-3 max-w-xl text-sm leading-7 text-ink-muted">
-                      {project.summary}
-                    </p>
+                    <p className={cn(TYPE.body, "mt-3 max-w-xl")}>{project.summary}</p>
                     <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
                       {project.indexMetrics.map((metric) => (
                         <span key={metric} className="label text-ink">
@@ -184,19 +184,19 @@ export default function WorkIndex() {
 
         {/* Everything shipped that does not have a full write-up, so nothing is
             reachable only from the homepage. */}
-        <section className="wrap py-16 md:py-24">
+        <section className={cn("wrap", SPACE.section)}>
           {/* No bracket eyebrow here: it would have read [ALSO SHIPPED] over
               "Also shipped", and a label that repeats the heading word for
               word is a marker that has stopped marking anything. */}
-          <h2 className="display mb-6 text-2xl md:text-4xl">Also shipped</h2>
-          <ul className="grid gap-8 md:grid-cols-3">
+          <h2 className={TYPE.section}>Also shipped</h2>
+          <ul className={cn("grid gap-8 md:grid-cols-3", SPACE.content)}>
             {/* Case studies are already listed above; only work without a
                 write-up belongs here. */}
             {otherWork.filter((work) => work.external).map((work) => (
               <li key={work.name} className="rule-t pt-5">
-                <h3 className="display text-xl md:text-2xl">{work.name}</h3>
+                <h3 className={TYPE.item}>{work.name}</h3>
                 <p className="label mt-1 text-cobalt">{work.tagline}</p>
-                <p className="mt-3 text-sm leading-7 text-ink-muted">{work.note}</p>
+                <p className={cn(TYPE.body, "mt-3")}>{work.note}</p>
                 {work.external ? (
                   <a
                     href={work.href}
@@ -216,30 +216,33 @@ export default function WorkIndex() {
           </ul>
         </section>
 
-        <section className="wrap rule-t py-16 md:py-24" aria-labelledby="in-build-heading">
-          <Tag className="mb-3 block">[IN BUILD]</Tag>
-          <h2 id="in-build-heading" className="display text-2xl md:text-4xl">
+        <section className={cn("wrap rule-t", SPACE.section)} aria-labelledby="in-build-heading">
+          <Tag className={cn(SPACE.tag, "block")}>[IN BUILD]</Tag>
+          <h2 id="in-build-heading" className={TYPE.section}>
             {comingSoon.name} — <span className="accent-word">{comingSoon.tagline}</span>
           </h2>
-          <p className="mt-4 max-w-2xl text-sm leading-7 text-ink-muted">{comingSoon.summary}</p>
-          <ul className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <p className={cn(TYPE.body, SPACE.intro, "max-w-2xl")}>{comingSoon.summary}</p>
+          {/* A row of results, set as the case studies set theirs. */}
+          <ul className={cn("grid gap-8 sm:grid-cols-2 lg:grid-cols-4", SPACE.content)}>
             {comingSoon.evidence.map((item) => (
               <li key={item.caption}>
-                <p className="display text-3xl text-cobalt md:text-4xl">{item.value}</p>
-                <p className="label mt-2 text-ink">{item.caption}</p>
+                <p className={TYPE.metric}>{item.value}</p>
+                <p className="label mt-4 text-ink">{item.caption}</p>
                 <p className="label mt-1 text-ink-muted">{item.note}</p>
               </li>
             ))}
           </ul>
-          <p className="label mt-10 text-cobalt">[BUGS FOUND AND FIXED IN BUILD]</p>
+          {/* A sub-heading, grey like the homepage's [KEY DECISION]: lime
+              is for what can be clicked and what is counted. */}
+          <p className="label mt-12">[BUGS FOUND AND FIXED IN BUILD]</p>
           <Accordion type="multiple" className="mt-3 max-w-3xl rule-t">
             {comingSoon.broke.map((item, index) => (
               <AccordionItem key={item.title} value={`mailagent-failure-${index}`}>
                 <AccordionTrigger className="rounded-none py-5 hover:no-underline">
-                  <span className="display pr-4 text-left text-lg md:text-xl">{item.title}</span>
+                  <span className={cn(TYPE.item, "pr-4 text-left")}>{item.title}</span>
                 </AccordionTrigger>
                 <AccordionContent className="pb-6">
-                  <p className="text-sm leading-7 text-ink-muted">{item.body}</p>
+                  <p className={TYPE.body}>{item.body}</p>
                 </AccordionContent>
               </AccordionItem>
             ))}
@@ -247,14 +250,11 @@ export default function WorkIndex() {
         </section>
 
         <section className="rule-t bg-paper-deep">
-          <div className="wrap flex flex-wrap items-center justify-between gap-6 py-14">
-            <p className="display text-2xl md:text-4xl">
+          <div className={cn("wrap flex flex-wrap items-end justify-between gap-8", SPACE.section)}>
+            <p className={TYPE.section}>
               Need something like one of these <span className="accent-word">built</span>?
             </p>
-            <Link
-              href="/contact"
-              className="bg-cobalt px-6 py-3 text-sm font-medium text-paper transition-colors hover:bg-cobalt-deep"
-            >
+            <Link href="/contact" className={BUTTON.primary}>
               Start a conversation →
             </Link>
           </div>

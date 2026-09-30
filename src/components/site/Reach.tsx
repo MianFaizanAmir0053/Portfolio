@@ -2,6 +2,8 @@ import { Fragment } from "react";
 import WorldMap, { type Arc } from "@/components/ui/world-map";
 import { buildReachMap, REACH_MAP_SRC } from "@/lib/reach-map";
 import { CurtainText, FadeIn, Tag } from "./primitives";
+import { SPACE, TYPE } from "@/lib/typography";
+import { cn } from "@/lib/utils";
 
 /*
  * Server Component: `dotted-map` is only used here to read the map's own
@@ -51,12 +53,12 @@ const NODES = [LAHORE, ...ARCS.map((a) => a.end)];
 export function Reach() {
   return (
     <section id="reach" className="rule-t bg-paper-deep">
-      <div className="wrap py-20 md:py-28">
+      <div className={cn("wrap", SPACE.section)}>
         <div className="grid gap-10 md:grid-cols-[1fr_0.9fr] md:items-end">
           <div>
-            <Tag className="mb-6 block">[05] REACH</Tag>
+            <Tag className={cn(SPACE.tag, "block")}>[05] REACH</Tag>
             <CurtainText
-              className="display text-[11vw] md:text-[clamp(2.5rem,4.6vw,4rem)]"
+              className={TYPE.section}
               lines={[
                 <Fragment key="1">Built in Lahore,</Fragment>,
                 <Fragment key="2">
@@ -66,14 +68,16 @@ export function Reach() {
             />
           </div>
           <FadeIn delay={0.15}>
-            <p className="max-w-xl text-base leading-7 text-ink-muted">
+            {/* A section's opening paragraph is body size, as FAQ's and
+                Experience's are; 16px is for the one under a page's title. */}
+            <p className={cn(TYPE.body, "max-w-xl")}>
               Four years of client work spanning the US, UK, Middle East, and Europe — built
               from Lahore, used by hundreds of people across those markets.
             </p>
           </FadeIn>
         </div>
 
-        <div className="mt-12 md:mt-16">
+        <div className={SPACE.block}>
           <WorldMap src={REACH_MAP_SRC} image={image} dots={ARCS} />
           {/* Nothing about a dot says it can be hovered, and the tooltip is the
               only place the route behind each one is named. */}
@@ -99,7 +103,7 @@ export function Reach() {
                     : ""
               }`}
             >
-              <dt className="display text-lg md:text-xl">{n.label}</dt>
+              <dt className={TYPE.term}>{n.label}</dt>
               <dd className="label mt-2">{n.note}</dd>
             </div>
           ))}

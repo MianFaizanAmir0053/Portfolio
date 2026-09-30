@@ -2071,7 +2071,9 @@ export function PinnedLitText({
           )}
         >
           <dt className="label text-cobalt">[{f.k}]</dt>
-          <dd className="mt-1.5 text-[13px] leading-5 text-ink-muted">{f.v}</dd>
+          {/* The compact text role (see `TYPE`): at 13px this was the only
+              text on the homepage off the site's scale. */}
+          <dd className="mt-1.5 text-sm leading-6 text-ink-muted">{f.v}</dd>
         </div>
       ))}
     </dl>

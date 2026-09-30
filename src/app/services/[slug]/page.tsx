@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/accordion";
 import { JsonLd } from "@/components/site/JsonLd";
 import { PERSON, OG_IMAGE } from "@/lib/site";
+import { BUTTON, SPACE, TYPE } from "@/lib/typography";
+import { cn } from "@/lib/utils";
 import {
   breadcrumbSchema,
   faqSchema,
@@ -136,8 +138,8 @@ export default async function ServicePage({ params }: PageProps<"/services/[slug
 
       <main id="main">
         {/* Headline + the extractable answer block. */}
-        <section className="wrap py-16 md:py-24">
-          <h1 className="display text-[12vw] leading-[0.9] md:text-[clamp(3rem,6.4vw,6.5rem)]">
+        <section className={cn("wrap", SPACE.pageHead)}>
+          <h1 className={TYPE.hero}>
             {/* The service leads the h1, as the homepage's name and role do: the
                 headline alone never named what the page offers. */}
             <span className="label mb-6 block">{service.name} services</span>{" "}
@@ -147,32 +149,29 @@ export default async function ServicePage({ params }: PageProps<"/services/[slug
             <span className="accent-word">{service.accent}</span>
             {service.headline[1].split(service.accent)[1]}
           </h1>
-          <p className="mt-8 max-w-2xl text-base leading-7 text-ink-muted">{service.answer}</p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link
-              href="/contact"
-              className="bg-cobalt px-6 py-3 text-sm font-medium text-paper transition-colors hover:bg-cobalt-deep"
-            >
+          <p className={cn(TYPE.intro, SPACE.intro, "max-w-2xl")}>{service.answer}</p>
+          <div className={cn(SPACE.intro, "flex flex-wrap gap-3")}>
+            <Link href="/contact" className={BUTTON.primary}>
               Start a project →
             </Link>
-            <Link
-              href="/work"
-              className="border border-ink px-6 py-3 text-sm font-medium text-ink transition-colors hover:bg-ink hover:text-paper"
-            >
+            <Link href="/work" className={BUTTON.secondary}>
               See the case studies
             </Link>
           </div>
         </section>
 
         {/* What the engagement includes. */}
-        <section className="wrap rule-t py-16 md:py-24">
+        <section className={cn("wrap rule-t", SPACE.section)}>
           {/* The eyebrows on this template are index terms, not a second copy
               of the heading — the device only works as a register shift from
               machine voice to human voice, which it cannot do when both lines
               are the same words. */}
-          <Tag className="mb-3 block">[01] SCOPE</Tag>
-          <h2 className="display mb-8 text-2xl md:text-4xl">What this includes</h2>
-          <Accordion type="multiple" className="grid gap-x-12 rule-b md:grid-cols-2">
+          <Tag className={cn(SPACE.tag, "block")}>[01] SCOPE</Tag>
+          <h2 className={TYPE.section}>What this includes</h2>
+          <Accordion
+            type="multiple"
+            className={cn("grid gap-x-12 rule-b md:grid-cols-2", SPACE.content)}
+          >
             {service.includes.map((item, index) => (
               <AccordionItem
                 key={item.title}
@@ -180,10 +179,10 @@ export default async function ServicePage({ params }: PageProps<"/services/[slug
                 className="rule-t not-last:border-b-0"
               >
                 <AccordionTrigger className="rounded-none py-5 hover:no-underline">
-                  <span className="display pr-4 text-left text-xl md:text-2xl">{item.title}</span>
+                  <span className={cn(TYPE.item, "pr-4 text-left")}>{item.title}</span>
                 </AccordionTrigger>
                 <AccordionContent className="pb-6">
-                  <p className="text-sm leading-7 text-ink-muted">{item.body}</p>
+                  <p className={TYPE.body}>{item.body}</p>
                 </AccordionContent>
               </AccordionItem>
             ))}
@@ -191,16 +190,21 @@ export default async function ServicePage({ params }: PageProps<"/services/[slug
         </section>
 
         {/* Process, ordered — a list an answer engine can lift as steps. */}
-        <section className="wrap rule-t py-16 md:py-24">
-          <Tag className="mb-3 block">[02] PROCESS</Tag>
-          <h2 className="display mb-8 text-2xl md:text-4xl">How the work runs</h2>
-          <ol className="space-y-8">
+        <section className={cn("wrap rule-t", SPACE.section)}>
+          <Tag className={cn(SPACE.tag, "block")}>[02] PROCESS</Tag>
+          <h2 className={TYPE.section}>How the work runs</h2>
+          <ol className={cn("space-y-8", SPACE.content)}>
             {service.process.map((step, i) => (
-              <li key={step.step} className="grid gap-3 md:grid-cols-[auto_1fr] md:gap-8">
-                <span className="label pt-1 text-cobalt">*[{String(i + 1).padStart(2, "0")}]</span>
+              // The index sits on the step's baseline rather than nudged
+              // towards it: 12px caps beside 24px display.
+              <li
+                key={step.step}
+                className="grid gap-3 md:grid-cols-[auto_1fr] md:items-baseline md:gap-8"
+              >
+                <span className="label text-cobalt">*[{String(i + 1).padStart(2, "0")}]</span>
                 <div>
-                  <h3 className="display text-xl md:text-2xl">{step.step}</h3>
-                  <p className="mt-2 max-w-[64ch] text-sm leading-7 text-ink-muted">{step.body}</p>
+                  <h3 className={TYPE.item}>{step.step}</h3>
+                  <p className={cn(TYPE.body, "mt-3 max-w-[64ch]")}>{step.body}</p>
                 </div>
               </li>
             ))}
@@ -209,7 +213,7 @@ export default async function ServicePage({ params }: PageProps<"/services/[slug
 
         {/* Proof, each item linking to the case study that carries it. */}
         <section className="rule-t bg-paper-deep">
-          <div className="wrap py-16 md:py-24">
+          <div className={cn("wrap", SPACE.section)}>
             {/*
              * Not "shipped": three of the six projects this section draws on
              * are still in development, and on the e-commerce page both proofs
@@ -218,19 +222,19 @@ export default async function ServicePage({ params }: PageProps<"/services/[slug
              * says what is true of all of them and each unfinished build says
              * so on its own line.
              */}
-            <Tag className="mb-3 block">[03] PROOF</Tag>
-            <h2 className="display mb-8 text-2xl md:text-4xl">Where this has been built</h2>
-            <ul className="grid gap-8 md:grid-cols-3">
+            <Tag className={cn(SPACE.tag, "block")}>[03] PROOF</Tag>
+            <h2 className={TYPE.section}>Where this has been built</h2>
+            <ul className={cn("grid gap-8 md:grid-cols-3", SPACE.content)}>
               {service.evidence.map((proof) => {
                 const project = getProject(proof.slug);
                 return (
                   <li key={proof.slug} className="rule-t pt-5">
-                    <h3 className="display text-xl md:text-2xl">{proof.project}</h3>
+                    <h3 className={TYPE.item}>{proof.project}</h3>
                     {project && <p className="label mt-1 text-cobalt">{project.tagline}</p>}
                     {project?.inDevelopment && (
                       <p className="label mt-1 text-ink-muted">* IN DEVELOPMENT</p>
                     )}
-                    <p className="mt-3 text-sm leading-7 text-ink-muted">{proof.claim}</p>
+                    <p className={cn(TYPE.body, "mt-3")}>{proof.claim}</p>
                     <Link
                       href={`/work/${proof.slug}`}
                       className="label mt-4 inline-block text-cobalt hover:underline"
@@ -244,8 +248,10 @@ export default async function ServicePage({ params }: PageProps<"/services/[slug
           </div>
         </section>
 
+        {/* A short list under a label heading, as the homepage sets its
+            [WHAT I DO] row, rather than a display heading over six tags. */}
         <section className="wrap rule-t py-12">
-          <h2 className="display mb-4 text-xl md:text-2xl">Stack</h2>
+          <h2 className="label mb-4">[STACK]</h2>
           <ul className="flex flex-wrap gap-2">
             {service.stack.map((tech) => (
               <li key={tech} className="label border border-ink px-2 py-1 text-ink">
@@ -257,17 +263,17 @@ export default async function ServicePage({ params }: PageProps<"/services/[slug
 
         {/* FAQ — the questions clients actually ask, phrased the way they ask
             them, and mirrored into FAQPage structured data above. */}
-        <section className="wrap rule-t py-16 md:py-24">
-          <Tag className="mb-3 block">[04] QUESTIONS</Tag>
-          <h2 className="display mb-8 text-2xl md:text-4xl">Questions about {inSentence(service.name)}</h2>
-          <Accordion type="multiple" className="max-w-3xl rule-t">
+        <section className={cn("wrap rule-t", SPACE.section)}>
+          <Tag className={cn(SPACE.tag, "block")}>[04] QUESTIONS</Tag>
+          <h2 className={TYPE.section}>Questions about {inSentence(service.name)}</h2>
+          <Accordion type="multiple" className={cn("max-w-3xl rule-t", SPACE.content)}>
             {service.faqs.map((faq, index) => (
               <AccordionItem key={faq.q} value={`faq-${index}`}>
                 <AccordionTrigger className="rounded-none py-5 hover:no-underline">
-                  <span className="display pr-4 text-left text-xl md:text-2xl">{faq.q}</span>
+                  <span className={cn(TYPE.item, "pr-4 text-left")}>{faq.q}</span>
                 </AccordionTrigger>
                 <AccordionContent className="pb-6">
-                  <p className="max-w-[64ch] text-sm leading-7 text-ink-muted">{faq.a}</p>
+                  <p className={cn(TYPE.body, "max-w-[64ch]")}>{faq.a}</p>
                 </AccordionContent>
               </AccordionItem>
             ))}
@@ -275,8 +281,10 @@ export default async function ServicePage({ params }: PageProps<"/services/[slug
         </section>
 
         <section className="wrap rule-t py-12">
-          <h2 className="display mb-4 text-xl md:text-2xl">Related</h2>
-          <ul className="flex flex-wrap gap-x-8 gap-y-3">
+          <h2 className="label mb-4">[RELATED]</h2>
+          {/* 14px, as every other list of links on the site is; these were
+              the one set at the body's 16px. */}
+          <ul className="flex flex-wrap gap-x-8 gap-y-3 text-sm">
             {related.map((other) => (
               <li key={other!.slug}>
                 <Link href={`/services/${other!.slug}`} className="text-cobalt hover:underline">

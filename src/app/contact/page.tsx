@@ -15,6 +15,8 @@ import {
 import { JsonLd } from "@/components/site/JsonLd";
 import { PERSON, OG_IMAGE } from "@/lib/site";
 import { breadcrumbSchema, faqSchema, graph, webPageSchema } from "@/lib/schema";
+import { SPACE, TYPE } from "@/lib/typography";
+import { cn } from "@/lib/utils";
 
 const TITLE = "Contact — hire a senior full-stack and AI engineer";
 const DESCRIPTION =
@@ -91,13 +93,13 @@ export default function Contact() {
       </nav>
 
       <main id="main">
-        <section className="wrap grid gap-12 py-16 md:grid-cols-2 md:py-24">
+        <section className={cn("wrap grid gap-12 md:grid-cols-2", SPACE.pageHead)}>
           <div>
-            <Tag className="mb-6 block">[CONTACT]</Tag>
-            <h1 className="display text-[13vw] leading-[0.9] md:text-[clamp(3rem,6vw,5.5rem)]">
+            <Tag className={cn(SPACE.tag, "block")}>[CONTACT]</Tag>
+            <h1 className={TYPE.hero}>
               Let&rsquo;s build <span className="accent-word">something real</span>.
             </h1>
-            <p className="mt-8 max-w-xl text-base leading-7 text-ink-muted">
+            <p className={cn(TYPE.intro, SPACE.intro, "max-w-xl")}>
               Available for scoped builds and embedded contract work in React, Next.js, Node.js,
               Python and applied AI. Based in {PERSON.locality} (UTC+5), working with teams in the
               US, UK, Middle East and Europe. Replies usually arrive within one working day.
@@ -106,13 +108,13 @@ export default function Contact() {
             {/* Grouped by who is writing, each group leading with what that
                 reader needs: a brief channel for clients, the résumé for
                 hiring managers. */}
-            <dl className="mt-10 space-y-8">
+            {/* Every way to reach him at one size, as on the homepage's contact
+                block: links and plain values alike. */}
+            <dl className={cn(SPACE.content, "space-y-8")}>
               <div>
                 <dt className="label">[PROJECTS]</dt>
                 <dd className="mt-2 space-y-2">
-                  <p className="text-sm leading-6 text-ink-muted">
-                    Send a short brief with the form, or message directly:
-                  </p>
+                  <p className={TYPE.compact}>Send a short brief with the form, or message directly:</p>
                   <a href={`mailto:${PERSON.email}`} className="block text-cobalt hover:underline">
                     {PERSON.email}
                   </a>
@@ -132,7 +134,7 @@ export default function Contact() {
                   <a href="/resume.pdf" className="block text-cobalt hover:underline">
                     Download resume (PDF) ↓
                   </a>
-                  <span className="flex gap-4 text-sm">
+                  <span className="flex gap-4 text-base">
                     <a href={SOCIAL.linkedin} target="_blank" rel="me noopener" className="hover:text-cobalt">
                       LinkedIn ↗
                     </a>
@@ -144,7 +146,7 @@ export default function Contact() {
               </div>
               <div>
                 <dt className="label">[BASED IN]</dt>
-                <dd className="text-sm">
+                <dd className="mt-2 text-base">
                   {PERSON.locality}, {PERSON.countryName} — remote, UTC+5
                 </dd>
               </div>
@@ -156,25 +158,26 @@ export default function Contact() {
           </div>
         </section>
 
-        <section className="wrap rule-t py-16 md:py-24">
-          <Tag className="mb-3 block">[FAQ]</Tag>
-          <h2 className="display mb-8 text-2xl md:text-4xl">Before you write</h2>
-          <Accordion type="multiple" className="max-w-3xl rule-t">
+        <section className={cn("wrap rule-t", SPACE.section)}>
+          <Tag className={cn(SPACE.tag, "block")}>[FAQ]</Tag>
+          <h2 className={TYPE.section}>Before you write</h2>
+          <Accordion type="multiple" className={cn("max-w-3xl rule-t", SPACE.content)}>
             {FAQS.map((faq, index) => (
               <AccordionItem key={faq.q} value={`contact-faq-${index}`}>
                 <AccordionTrigger className="rounded-none py-5 hover:no-underline">
-                  <span className="display pr-4 text-left text-xl md:text-2xl">{faq.q}</span>
+                  <span className={cn(TYPE.item, "pr-4 text-left")}>{faq.q}</span>
                 </AccordionTrigger>
                 <AccordionContent className="pb-6">
-                  <p className="max-w-[64ch] text-sm leading-7 text-ink-muted">{faq.a}</p>
+                  <p className={cn(TYPE.body, "max-w-[64ch]")}>{faq.a}</p>
                 </AccordionContent>
               </AccordionItem>
             ))}
           </Accordion>
         </section>
 
+        {/* The homepage's [WHAT I DO] row, set the same way. */}
         <section className="wrap rule-t py-12">
-          <h2 className="display mb-4 text-xl md:text-2xl">What I do</h2>
+          <h2 className="label mb-4">[WHAT I DO]</h2>
           <ul className="flex flex-wrap gap-x-8 gap-y-3 text-sm">
             {services.map((service) => (
               <li key={service.slug}>

@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { projects } from "@/data/projects";
 import { Tag } from "@/components/site/primitives";
+import { TYPE } from "@/lib/typography";
+import { cn } from "@/lib/utils";
 
 /**
  * A 404 that inherits the homepage's title tells a crawler this page is the
@@ -20,8 +22,9 @@ export default function NotFound() {
       <main id="main" className="w-full max-w-xl">
         <Tag className="mb-6 block text-cobalt">[404]</Tag>
         <p className="display text-[22vw] leading-[0.8] text-ink md:text-[9rem]">404</p>
-        <h1 className="display mt-6 text-2xl md:text-3xl">Page not found</h1>
-        <p className="mt-3 text-sm leading-7 text-ink-muted">
+        {/* A card-level title, as the error page's is: under the numeral, not competing with it. */}
+        <h1 className={cn(TYPE.title, "mt-6")}>Page not found</h1>
+        <p className={cn(TYPE.body, "mt-3")}>
           The page you&apos;re looking for doesn&apos;t exist or has been moved. Everything the site
           does have is one link away.
         </p>

@@ -17,6 +17,8 @@ import {
 import { JsonLd } from "@/components/site/JsonLd";
 import { PERSON, CONTENT_REVIEWED, OG_IMAGE } from "@/lib/site";
 import { breadcrumbSchema, faqSchema, graph, webPageSchema } from "@/lib/schema";
+import { BUTTON, SPACE, TYPE } from "@/lib/typography";
+import { cn } from "@/lib/utils";
 
 const TITLE = "About — senior software engineer in Lahore";
 const DESCRIPTION =
@@ -106,43 +108,39 @@ export default function About() {
       </nav>
 
       <main id="main">
-        <section className="wrap py-16 md:py-24">
-          <Tag className="mb-6 block">[ABOUT]</Tag>
-          <h1 className="display text-[13vw] leading-[0.9] md:text-[clamp(3.5rem,7vw,7rem)]">
+        <section className={cn("wrap", SPACE.pageHead)}>
+          <Tag className={cn(SPACE.tag, "block")}>[ABOUT]</Tag>
+          <h1 className={TYPE.hero}>
             {PERSON.name}, <span className="accent-word">in full</span>.
           </h1>
           {/*
            * The definition block. First paragraph, no preamble, self-contained:
            * who, what, where, with what. Everything after this expands on it.
            */}
-          <p className="mt-8 max-w-2xl text-base leading-7 text-ink-muted">{FAQS[0].a}</p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link
-              href="/contact"
-              className="bg-cobalt px-6 py-3 text-sm font-medium text-paper transition-colors hover:bg-cobalt-deep"
-            >
+          <p className={cn(TYPE.intro, SPACE.intro, "max-w-2xl")}>{FAQS[0].a}</p>
+          <div className={cn(SPACE.intro, "flex flex-wrap gap-3")}>
+            <Link href="/contact" className={BUTTON.primary}>
               Get in touch →
             </Link>
-            <a
-              href="/resume.pdf"
-              className="border border-ink px-6 py-3 text-sm font-medium text-ink transition-colors hover:bg-ink hover:text-paper"
-            >
+            <a href="/resume.pdf" className={BUTTON.secondary}>
               Download résumé (PDF)
             </a>
           </div>
         </section>
 
-        <section className="wrap rule-t py-16 md:py-24">
+        <section className={cn("wrap rule-t", SPACE.section)}>
           <div className="grid gap-8 md:grid-cols-[0.8fr_1.2fr]">
             <div>
-              <Tag className="mb-4 block">[01] IN HIS OWN WORDS</Tag>
-              <h2 className="display text-2xl md:text-4xl">
+              <Tag className={cn(SPACE.tag, "block")}>[01] IN HIS OWN WORDS</Tag>
+              <h2 className={TYPE.section}>
                 It&rsquo;s about <span className="accent-word">shipping</span>
               </h2>
             </div>
+            {/* The same words the homepage stops for in its About section, set
+                the way it sets them: the statement, not body copy. */}
             <div className="space-y-5">
               {BIO.map((paragraph) => (
-                <p key={paragraph} className="text-base leading-7 text-ink-muted">
+                <p key={paragraph} className={TYPE.statement}>
                   {paragraph}
                 </p>
               ))}
@@ -151,11 +149,11 @@ export default function About() {
         </section>
 
         {/* Experience, as a plain readable list rather than a horizontal scroll.
-            Same three roles the homepage animates. */}
-        <section className="wrap rule-t py-16 md:py-24">
-          <Tag className="mb-3 block">[02] EXPERIENCE</Tag>
-          <h2 className="display mb-8 text-2xl md:text-4xl">Where I have shipped</h2>
-          <ol className="space-y-12">
+            Same three roles the homepage animates, titled the way its cards are. */}
+        <section className={cn("wrap rule-t", SPACE.section)}>
+          <Tag className={cn(SPACE.tag, "block")}>[02] EXPERIENCE</Tag>
+          <h2 className={TYPE.section}>Where I have shipped</h2>
+          <ol className={cn("space-y-12", SPACE.content)}>
             {EXPERIENCE.map((role) => (
               <li key={role.company} className="grid gap-4 md:grid-cols-[0.6fr_1.4fr] md:gap-10">
                 <div>
@@ -163,9 +161,9 @@ export default function About() {
                   <p className="label mt-1 text-ink-muted">{role.place}</p>
                 </div>
                 <div>
-                  <h3 className="display text-xl md:text-3xl">{role.role}</h3>
-                  <p className="accent-word text-lg md:text-2xl">{role.company}</p>
-                  <p className="mt-3 max-w-[64ch] text-sm leading-7 text-ink-muted">{role.body}</p>
+                  <h3 className={TYPE.title}>{role.role}</h3>
+                  <p className={TYPE.subtitle}>{role.company}</p>
+                  <p className={cn(TYPE.body, "mt-3 max-w-[64ch]")}>{role.body}</p>
                 </div>
               </li>
             ))}
@@ -173,25 +171,25 @@ export default function About() {
         </section>
 
         <section className="rule-t bg-paper-deep">
-          <div className="wrap grid gap-10 py-16 md:grid-cols-2 md:py-24">
+          <div className={cn("wrap grid gap-10 md:grid-cols-2", SPACE.section)}>
             <div>
-              <Tag className="mb-3 block">[03] THE STACK</Tag>
-              <h2 className="display mb-6 text-2xl md:text-3xl">The stack, grouped</h2>
-              <dl className="space-y-6">
+              <Tag className={cn(SPACE.tag, "block")}>[03] THE STACK</Tag>
+              <h2 className={TYPE.section}>The stack, grouped</h2>
+              {/* Keys grey, as in the facts beside it and every key-value list
+                  on the homepage. */}
+              <dl className={cn("space-y-6", SPACE.content)}>
                 {SKILLS.map((group) => (
                   <div key={group.label}>
-                    <dt className="label text-cobalt">{group.label}</dt>
-                    <dd className="mt-2 text-sm leading-7 text-ink-muted">
-                      {group.items.join(" · ")}
-                    </dd>
+                    <dt className="label">{group.label}</dt>
+                    <dd className={cn(TYPE.body, "mt-2")}>{group.items.join(" · ")}</dd>
                   </div>
                 ))}
               </dl>
             </div>
             <div>
-              <Tag className="mb-3 block">[04] FACTS</Tag>
-              <h2 className="display mb-6 text-2xl md:text-3xl">Facts, in one place</h2>
-              <dl className="rule-t">
+              <Tag className={cn(SPACE.tag, "block")}>[04] FACTS</Tag>
+              <h2 className={TYPE.section}>Facts, in one place</h2>
+              <dl className={cn("rule-t", SPACE.content)}>
                 {[
                   { k: "BASED IN", v: `${PERSON.locality}, ${PERSON.countryName} (UTC+5)` },
                   { k: "MARKETS", v: PERSON.markets.join(" · ") },
@@ -215,14 +213,12 @@ export default function About() {
           </div>
         </section>
 
-        <section className="wrap rule-t grid gap-10 py-16 md:grid-cols-[0.7fr_1.3fr] md:py-24">
+        <section className={cn("wrap rule-t grid gap-10 md:grid-cols-[0.7fr_1.3fr]", SPACE.section)}>
           {/* Travels with the answers, as on the home page's FAQ, instead of
               sitting above a column the reader has already scrolled past. */}
           <div className="md:sticky md:top-24 md:self-start">
-            <Tag className="mb-3 block">[05] FAQ</Tag>
-            <h2 className="display text-2xl md:text-[clamp(2.25rem,4vw,3.5rem)] md:leading-[0.9]">
-              Questions people ask first
-            </h2>
+            <Tag className={cn(SPACE.tag, "block")}>[05] FAQ</Tag>
+            <h2 className={TYPE.section}>Questions people ask first</h2>
           </div>
           <Accordion type="multiple" className="rule-t">
             {/* The first answer is already set as this page's lead paragraph
@@ -232,26 +228,26 @@ export default function About() {
             {FAQS.slice(1).map((faq, index) => (
               <AccordionItem key={faq.q} value={`about-faq-${index}`}>
                 <AccordionTrigger className="rounded-none py-5 hover:no-underline">
-                  <span className="display pr-4 text-left text-xl md:text-2xl">{faq.q}</span>
+                  <span className={cn(TYPE.item, "pr-4 text-left")}>{faq.q}</span>
                 </AccordionTrigger>
                 <AccordionContent className="pb-6">
-                  <p className="max-w-[64ch] text-sm leading-7 text-ink-muted">{faq.a}</p>
+                  <p className={cn(TYPE.body, "max-w-[64ch]")}>{faq.a}</p>
                 </AccordionContent>
               </AccordionItem>
             ))}
           </Accordion>
         </section>
 
-        <section className="wrap rule-t py-12" aria-labelledby="beyond-code-heading">
-          <Tag className="mb-3 block">[06] BEYOND CODE</Tag>
-          <h2 id="beyond-code-heading" className="display mb-6 text-xl md:text-2xl">
+        <section className={cn("wrap rule-t", SPACE.section)} aria-labelledby="beyond-code-heading">
+          <Tag className={cn(SPACE.tag, "block")}>[06] BEYOND CODE</Tag>
+          <h2 id="beyond-code-heading" className={TYPE.section}>
             Off the clock
           </h2>
-          <ul className="grid gap-4 md:grid-cols-3">
+          <ul className={cn("grid gap-8 md:grid-cols-3", SPACE.content)}>
             {BEYOND_CODE.map((activity) => (
-              <li key={activity.title} className="rule-t pt-4">
-                <h3 className="display text-lg md:text-xl">{activity.title}</h3>
-                <p className="mt-2 text-sm leading-6 text-ink-muted">{activity.detail}</p>
+              <li key={activity.title} className="rule-t pt-5">
+                <h3 className={TYPE.item}>{activity.title}</h3>
+                <p className={cn(TYPE.compact, "mt-3")}>{activity.detail}</p>
               </li>
             ))}
           </ul>
@@ -259,14 +255,15 @@ export default function About() {
             href={SOCIAL.instagram}
             target="_blank"
             rel="me noopener"
-            className="label mt-6 inline-block text-cobalt hover:underline"
+            className="label mt-8 inline-block text-cobalt hover:underline"
           >
             Training and hiking clips on Instagram ↗
           </a>
         </section>
 
+        {/* The homepage's [WHAT I DO] row, set the same way. */}
         <section className="wrap rule-t py-12">
-          <h2 className="display mb-4 text-xl md:text-2xl">Elsewhere</h2>
+          <h2 className="label mb-4">[ELSEWHERE]</h2>
           <ul className="flex flex-wrap gap-x-8 gap-y-3 text-sm">
             <li>
               <a href={SOCIAL.github} target="_blank" rel="me noopener" className="text-cobalt hover:underline">

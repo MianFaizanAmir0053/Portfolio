@@ -813,6 +813,44 @@ html[data-intro][data-ready] .line-rise {
 }
 
 /*
+ * Case-study zoom view (see `CaseFigure`). A native <dialog>, faded in and out
+ * with the display and top-layer transitions, so the close runs its fade
+ * instead of vanishing. The picture settles from a hair smaller as it opens.
+ */
+.lightbox {
+  opacity: 0;
+  transition:
+    opacity 0.2s ease-out,
+    overlay 0.2s ease-out allow-discrete,
+    display 0.2s ease-out allow-discrete;
+}
+
+.lightbox[open] {
+  opacity: 1;
+}
+
+.lightbox .lightbox-image {
+  transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@starting-style {
+  .lightbox[open] {
+    opacity: 0;
+  }
+
+  .lightbox[open] .lightbox-image {
+    transform: scale(0.97);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lightbox,
+  .lightbox .lightbox-image {
+    transition: none;
+  }
+}
+
+/*
  * Lite mode — a constrained device or connection (see src/lib/lite.ts). The
  * content is untouched; what goes is the work that never stops. No curtains
  * standing between a slow page and its reader, no loops that run for as long

@@ -5,16 +5,18 @@ import { Plus } from "lucide-react";
 import { CurtainText, Tag } from "./primitives";
 import { MagneticSurface } from "./scroll-fx";
 import { SKILLS, TOTAL_TOOLS, DAILY_DRIVERS } from "@/data/skills";
+import { SPACE, TYPE } from "@/lib/typography";
+import { cn } from "@/lib/utils";
 
 export function Skills() {
   const [open, setOpen] = useState<string | null>("01");
   return (
     <section id="skills" className="rule-t bg-paper-deep">
-      <div className="wrap grid gap-12 py-20 md:grid-cols-[1.1fr_0.9fr] md:py-28">
+      <div className={cn("wrap grid gap-12 md:grid-cols-[1.1fr_0.9fr]", SPACE.section)}>
         <div>
-          <Tag className="mb-6 block">[04] STACK</Tag>
+          <Tag className={cn(SPACE.tag, "block")}>[04] STACK</Tag>
           <CurtainText
-            className="display mb-10 text-[11vw] md:text-[clamp(2.5rem,4.6vw,4rem)]"
+            className={TYPE.section}
             lines={[
               <Fragment key="1">
                 An <span className="accent-word">inventory</span>
@@ -23,7 +25,7 @@ export function Skills() {
             ]}
           />
 
-          <ul>
+          <ul className={SPACE.content}>
             {SKILLS.map((s) => {
               const isOpen = open === s.n;
               return (
@@ -39,7 +41,7 @@ export function Skills() {
                       className="flex w-full items-center gap-4 py-5 text-left"
                     >
                       <span className="label">[{s.n}]</span>
-                      <span className="display text-xl md:text-2xl">{s.label}</span>
+                      <span className={TYPE.item}>{s.label}</span>
                       <span className="label ml-auto">({s.items.length})</span>
                       <span
                         className={`text-cobalt transition-transform duration-300 ${isOpen ? "rotate-45" : ""}`}
@@ -97,9 +99,7 @@ export function Skills() {
             </span>
 
             <Tag className="block">[INVENTORY]</Tag>
-            <p className="display mt-6 text-[18vw] leading-[0.8] text-cobalt md:text-[7vw]">
-              ({TOTAL_TOOLS})
-            </p>
+            <p className={cn(TYPE.stat, "mt-6")}>({TOTAL_TOOLS})</p>
             <p className="label mt-3">
               * TOOLS ACROSS {SKILLS.length} AREAS
             </p>

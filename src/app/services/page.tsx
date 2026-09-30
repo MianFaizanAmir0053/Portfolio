@@ -6,6 +6,8 @@ import { Footer } from "@/components/site/Footer";
 import { JsonLd } from "@/components/site/JsonLd";
 import { PERSON, OG_IMAGE } from "@/lib/site";
 import { breadcrumbSchema, graph, itemListSchema, webPageSchema } from "@/lib/schema";
+import { BUTTON, SPACE, TYPE } from "@/lib/typography";
+import { cn } from "@/lib/utils";
 
 const TITLE = "Services — full-stack, AI and backend engineering";
 const DESCRIPTION =
@@ -79,12 +81,12 @@ export default function ServicesIndex() {
       </nav>
 
       <main id="main">
-        <section className="wrap py-16 md:py-24">
-          <h1 className="display text-[13vw] leading-[0.9] md:text-[clamp(3.5rem,7vw,7rem)]">
+        <section className={cn("wrap", SPACE.pageHead)}>
+          <h1 className={TYPE.hero}>
             <span className="label mb-6 block">Full-stack and AI engineering services</span>{" "}
             Five ways to <span className="accent-word">work together</span>.
           </h1>
-          <p className="mt-8 max-w-2xl text-base leading-7 text-ink-muted">
+          <p className={cn(TYPE.intro, SPACE.intro, "max-w-2xl")}>
             {PERSON.name} is a senior full-stack and AI engineer building production systems for
             teams in the US, UK, Middle East and Europe. Each service below is backed by at least
             one detailed case study.
@@ -99,14 +101,11 @@ export default function ServicesIndex() {
                   href={`/services/${service.slug}`}
                   className="group grid gap-4 py-10 md:grid-cols-[auto_1.6fr_1fr] md:gap-10"
                 >
-                  <span className="outline-num text-[12vw] leading-none md:text-[4vw]">
-                    [{String(i + 1).padStart(2, "0")}]
-                  </span>
+                  {/* The homepage's outlined index, as on its experience cards. */}
+                  <span className={TYPE.index}>[{String(i + 1).padStart(2, "0")}]</span>
                   <div>
-                    <h2 className="display text-2xl md:text-4xl">{service.name}</h2>
-                    <p className="mt-3 max-w-xl text-sm leading-7 text-ink-muted">
-                      {service.description}
-                    </p>
+                    <h2 className={TYPE.title}>{service.name}</h2>
+                    <p className={cn(TYPE.body, "mt-3 max-w-xl")}>{service.description}</p>
                     <span className="label mt-4 inline-block text-cobalt group-hover:underline">
                       {service.name.toUpperCase()} DETAIL →
                     </span>
@@ -125,14 +124,11 @@ export default function ServicesIndex() {
         </section>
 
         <section className="rule-t bg-paper-deep">
-          <div className="wrap flex flex-wrap items-center justify-between gap-6 py-14">
-            <p className="display text-2xl md:text-4xl">
+          <div className={cn("wrap flex flex-wrap items-end justify-between gap-8", SPACE.section)}>
+            <p className={TYPE.section}>
               Not sure which one <span className="accent-word">fits</span>?
             </p>
-            <Link
-              href="/contact"
-              className="bg-cobalt px-6 py-3 text-sm font-medium text-paper transition-colors hover:bg-cobalt-deep"
-            >
+            <Link href="/contact" className={BUTTON.primary}>
               Describe the problem →
             </Link>
           </div>
