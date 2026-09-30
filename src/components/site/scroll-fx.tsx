@@ -24,6 +24,7 @@ import { gateWheel, onLenis } from "@/lib/lenis-instance";
 import { introHydrated, introReady } from "@/lib/intro";
 import { DESKTOP } from "@/lib/media";
 import { markReady, whenReady } from "@/lib/ready";
+import { runs } from "@/lib/emphasis";
 
 if (typeof window !== "undefined") gsap.registerPlugin(ScrollTrigger);
 
@@ -1782,6 +1783,9 @@ type LitFact = { k: string; v: string; anchor?: string; pos?: string };
 /** Stable empty default, so an effect keyed on `facts` does not re-run on every render. */
 const NO_FACTS: LitFact[] = [];
 
+/** How bright a word waits before the sweep reaches it, in both lit statements. */
+const LIT_DIM = 0.45;
+
 /**
  * The sweep, shared by the pinned and the sticky statement: every word rises
  * from dim to lit in reading order, and each fact's anchor word turns cobalt
@@ -1798,7 +1802,7 @@ function buildSweep(tl: gsap.core.Timeline, copy: HTMLElement, facts: LitFact[],
   const SWEEP = 2.6;
   tl.fromTo(
     words,
-    { opacity: 0.45 },
+    { opacity: LIT_DIM },
     { opacity: 1, ease: "none", duration: WORD_LIT, stagger: { amount: SWEEP } },
     0,
   );
@@ -2073,7 +2077,7 @@ export function PinnedLitText({
           <dt className="label text-cobalt">[{f.k}]</dt>
           {/* The compact text role (see `TYPE`): at 13px this was the only
               text on the homepage off the site's scale. */}
-          <dd className="mt-1.5 text-sm leading-6 text-ink-muted">{f.v}</dd>
+          <dd className="mt-1.5 text-sm leading-6 text-ink-soft">{f.v}</dd>
         </div>
       ))}
     </dl>
@@ -2176,6 +2180,133 @@ export function PinnedLitText({
       </div>
       {sticky && factList}
     </div>
+  );
+}
+
+/* ============================================================
+ * LIT PARAGRAPH — the statement, lit in passing
+ * ============================================================ */
+
+/**
+ * A paragraph whose words light from dim to white as it scrolls up the
+ * screen: the homepage's held statement, for pages that are read rather than
+ * held. Same sweep, same dim — but nothing is pinned, so the reader keeps
+ * scrolling at their own pace.
+ *
+ * The sweep runs from the paragraph's top at 90% of the screen to its bottom
+ * at 70%, which lights each word as it crosses the bottom third: the lighting
+ * is seen as the paragraph arrives, and every line is lit before it reaches
+ * the part of the screen people read from. Marked words (`**phrase**`,
+ * `==figure==`; see `@/lib/emphasis`) turn lime as the sweep reaches them, as
+ * the statement's anchor words do.
+ *
+ * Rendered lit on the server, with its marks already lime, so the words are
+ * all there without JavaScript; the sweep only dims what is still ahead of it
+ * once it is running. Under reduced motion and on lite devices it never runs.
+ */
+export function LitParagraph({ text, className }: { text: string; className?: string }) {
+  const { motion } = useFxMode();
+  const ref = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    if (!motion) return;
+    const el = ref.current;
+    if (!el) return;
+
+    const ctx = gsap.context(() => {
+      const words = gsap.utils.toArray<HTMLElement>("[data-lit-word]", el);
+      if (!words.length) return;
+      // Arms the stylesheet's dim (see the class below) now the sweep exists.
+      el.setAttribute("data-lit", "");
+
+      const root = getComputedStyle(document.documentElement);
+      const ink = root.getPropertyValue("--ink").trim() || "#ffffff";
+      const cobalt = root.getPropertyValue("--cobalt").trim() || "#c8ff3d";
+      // The held statement's timing, so the two sweeps read as one effect.
+      const WORD_LIT = 0.35;
+      const SWEEP = 2.6;
+
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: el,
+          start: "top 90%",
+          end: "bottom 70%",
+          // Lenis already smooths the wheel; a second layer would lag it.
+          scrub: true,
+          invalidateOnRefresh: true,
+        },
+      });
+      tl.fromTo(
+        words,
+        { opacity: LIT_DIM },
+        { opacity: 1, ease: "none", duration: WORD_LIT, stagger: { amount: SWEEP } },
+        0,
+      );
+      const step = words.length > 1 ? SWEEP / (words.length - 1) : 0;
+      words.forEach((word, i) => {
+        if (word.dataset.litMark === undefined) return;
+        tl.fromTo(word, { color: ink }, { color: cobalt, ease: "none", duration: WORD_LIT }, i * step);
+      });
+    }, el);
+
+    return () => {
+      ctx.revert();
+      el.removeAttribute("data-lit");
+    };
+  }, [motion, text]);
+
+  return (
+    <p
+      ref={ref}
+      className={cn(
+        "text-pretty",
+        /*
+         * Words ahead of the sweep wait dim in the stylesheet, not only as the
+         * sweep's starting value — the same guard the held statement needs,
+         * since a ScrollTrigger refresh clears the inline style of any word the
+         * sweep has not reached. Lit words carry an inline opacity, which wins.
+         *
+         * Keyed to `data-lit`, which only the running sweep sets, rather than
+         * to `motion`: the server renders with `motion` true, and a class
+         * decided in render would have shipped every word dim in the HTML,
+         * where without JavaScript nothing would ever light it.
+         */
+        "[&[data-lit]_[data-lit-word]]:opacity-45",
+        className,
+      )}
+    >
+      {runs(text).map((run, r) => {
+        const words = run.text.split(/(\s+)/).map((piece, i) =>
+          /*
+           * Whitespace stays a sibling of the words, never inside one: a space
+           * at the end of an inline box is stripped, which ran the words
+           * together.
+           */
+          /^\s*$/.test(piece) ? (
+            piece && <Fragment key={i}>{piece}</Fragment>
+          ) : (
+            <span key={i} data-lit-word data-lit-mark={run.mark ? "" : undefined}>
+              {piece}
+            </span>
+          ),
+        );
+        if (run.mark === "strong") {
+          return (
+            <strong key={r} className="font-medium text-cobalt">
+              {words}
+            </strong>
+          );
+        }
+        if (run.mark === "figure") {
+          return (
+            <mark key={r} className="bg-transparent font-medium text-cobalt">
+              {words}
+            </mark>
+          );
+        }
+        return <Fragment key={r}>{words}</Fragment>;
+      })}
+    </p>
   );
 }
 

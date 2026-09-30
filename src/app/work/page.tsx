@@ -242,7 +242,7 @@ export default function WorkIndex() {
                   <span className={cn(TYPE.item, "pr-4 text-left")}>{item.title}</span>
                 </AccordionTrigger>
                 <AccordionContent className="pb-6">
-                  <p className={TYPE.body}>{item.body}</p>
+                  <p className={cn(TYPE.prose, "max-w-[64ch]")}>{item.body}</p>
                 </AccordionContent>
               </AccordionItem>
             ))}

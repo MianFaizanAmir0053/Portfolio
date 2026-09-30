@@ -442,7 +442,7 @@ function Experience() {
                 {e.body.split(/(?<=\.)\s+/).map((claim) => (
                   <li
                     key={claim}
-                    className="mt-3 text-sm leading-6 text-ink-muted first:mt-0 [@media(max-height:680px)]:mt-2 [@media(max-height:680px)]:text-[13px] [@media(max-height:680px)]:leading-[1.45]"
+                    className="mt-3 text-sm leading-6 text-ink-soft first:mt-0 [@media(max-height:680px)]:mt-2 [@media(max-height:680px)]:text-[13px] [@media(max-height:680px)]:leading-[1.45]"
                   >
                     {claim}
                   </li>
@@ -708,7 +708,7 @@ function Faq() {
                 <span className={cn(TYPE.item, "pr-4 text-left")}>{faq.q}</span>
               </AccordionTrigger>
               <AccordionContent className="pb-6">
-                <p className={cn(TYPE.body, "max-w-2xl")}>{faq.a}</p>
+                <p className={cn(TYPE.prose, "max-w-2xl")}>{faq.a}</p>
               </AccordionContent>
             </AccordionItem>
           ))}

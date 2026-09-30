@@ -48,16 +48,27 @@ export const TYPE = {
   /** An outlined index numeral: the [01] on an experience card. */
   index: "outline-num text-[16vw] md:text-[5vw]",
 
-  /* ---- running text: Barlow ---- */
+  /* ---- running text: Barlow ----
+   *
+   * All of it in `ink-soft`, not the muted grey: the grey is for labels and
+   * meta. A phrase inside it that carries the sentence is set in full white,
+   * a figure in lime (see `Rich`), so a skim still lands on the point.
+   */
 
-  /** The one paragraph a page stops for: the homepage's About statement. */
+  /** The one paragraph a page stops for: the homepage's About statement, a chapter's opening. */
   statement: "text-[clamp(1.05rem,1.7vw,1.45rem)] leading-[1.5] text-ink",
   /** The paragraph under a page's title. */
-  intro: "text-base leading-7 text-ink-muted",
-  /** Running text, including a section's opening paragraph. */
-  body: "text-sm leading-7 text-ink-muted",
+  intro: "text-base leading-7 text-ink-soft",
+  /**
+   * Text that is read, not skimmed: a case study's paragraphs, an FAQ answer,
+   * a service's detail. At the intro's size — 14px was fine beside a card
+   * title and too small for paragraph after paragraph.
+   */
+  prose: "text-base leading-7 text-ink-soft",
+  /** A short paragraph beside a title: a card's, a row's, a section's blurb. */
+  body: "text-sm leading-7 text-ink-soft",
   /** Running text in lists and tight panels, and small print. */
-  compact: "text-sm leading-6 text-ink-muted",
+  compact: "text-sm leading-6 text-ink-soft",
 } as const;
 
 /**

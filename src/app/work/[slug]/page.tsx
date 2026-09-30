@@ -13,8 +13,9 @@ import {
 import { UtilityBar } from "@/components/site/UtilityBar";
 import { Footer } from "@/components/site/Footer";
 import { CurtainText, Scramble, Tag } from "@/components/site/primitives";
-import { LineDraw } from "@/components/site/scroll-fx";
+import { LineDraw, LitParagraph } from "@/components/site/scroll-fx";
 import { CaseFigure } from "@/components/site/case-study";
+import { Rich } from "@/components/site/rich-text";
 import { JsonLd } from "@/components/site/JsonLd";
 import { imageMeta } from "@/lib/image-meta";
 import { PERSON, CONTENT_REVIEWED } from "@/lib/site";
@@ -143,9 +144,14 @@ const METRIC_COLS: Record<number, string> = {
 /*
  * Type and spacing come from the site's shared roles (`@/lib/typography`),
  * which are the homepage's: a chapter headline here is a section headline
- * there, a constraint's title is an FAQ question's, a paragraph is the same
- * 14px everywhere. The case studies used to run a scale of their own, and
- * the difference was what read as "changed" between the homepage and them.
+ * there, a constraint's title is an FAQ question's. The case studies used to
+ * run a scale of their own, and the difference was what read as "changed"
+ * between the homepage and them.
+ *
+ * A case study is read, not skimmed, so its paragraphs are the reading role
+ * (`TYPE.prose`) rather than the 14px blurb, and each chapter opens on a
+ * statement that lights as it scrolls into view. Emphasis is authored in the
+ * data (`**phrase**`, `==figure==`) and rendered by `Rich`.
  */
 
 export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
@@ -380,26 +386,36 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
                   blocks ([KEY DECISION], [WHAT I DO]); in the margin, like
                   the chapters' labels, but unnumbered: it is the brief, not a
                   step in the story. */}
-              <h2 id="glance-heading" className="label lg:col-span-3">
+              {/* On the first row's baseline from `lg`: the 1px rule, the
+                  row's 20px of padding and the 16px text's 20px to its
+                  baseline, less the label's own 12px to its baseline. */}
+              <h2 id="glance-heading" className="label lg:col-span-3 lg:pt-[29px]">
                 [AT A GLANCE]
               </h2>
               <div className="lg:col-span-9">
                 {/*
-                 * Balanced columns rather than a row grid: the entries run
-                 * from four words to forty, and a grid of rows left a tall
-                 * entry beside a short one and a hole under the short one.
-                 * Keys are grey here as in the facts strip above: lime is
-                 * kept for what is counted and what is clicked.
+                 * A spec sheet: one fact to a ruled row, the key in the
+                 * margin and the value across the full measure at reading
+                 * size. It was two balanced columns of 14px grey, where seven
+                 * facts ran together into one block and nothing in it caught
+                 * the eye. Each value's point is marked in the data — the
+                 * phrase in white, a figure in lime — so a skim down the
+                 * right-hand side still gets the whole brief.
                  */}
-                <dl className="gap-x-8 sm:columns-2">
+                <dl className="rule-t">
                   {project.context.map((c) => (
-                    <div key={c.k} className="mb-8 break-inside-avoid">
-                      <dt className="label mb-2">{c.k}</dt>
-                      <dd className={TYPE.body}>{c.v}</dd>
+                    <div
+                      key={c.k}
+                      className="grid gap-y-2 rule-b py-5 md:grid-cols-[9rem_1fr] md:items-baseline md:gap-x-8"
+                    >
+                      <dt className="label">{c.k}</dt>
+                      <dd className={cn(TYPE.prose, "max-w-[70ch]")}>
+                        <Rich text={c.v} />
+                      </dd>
                     </div>
                   ))}
                 </dl>
-                <div className="mt-2 rule-t pt-6">
+                <div className="mt-10">
                   <h3 className="label mb-4">[STACK]</h3>
                   {/* The homepage's and /work's stack tags, exactly. */}
                   <ul className="flex flex-wrap gap-2">
@@ -415,12 +431,14 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
           </section>
         )}
 
-        {/* 6. problem — the claim, set large, and the case for it beneath */}
+        {/* 6. problem — the claim, set large, and the case for it beneath,
+            lit a word at a time as it comes up the screen */}
         <Chapter id="problem" n={n("problem")} name="The problem" headline={project.problemHeadline}>
           <Axis className={SPACE.intro}>
-            <p className={cn(TYPE.body, "max-w-[64ch] lg:col-span-7 lg:col-start-4")}>
-              {project.problem}
-            </p>
+            <LitParagraph
+              text={project.problem}
+              className={cn(TYPE.statement, "lg:col-span-7 lg:col-start-4")}
+            />
           </Axis>
         </Chapter>
 
@@ -444,26 +462,41 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
                     {pad(i + 1)}
                   </span>
                   <h3 className={cn(TYPE.item, "mt-6")}>{constraint.title}</h3>
-                  <p className={cn(TYPE.body, "mt-3 max-w-[64ch]")}>{constraint.body}</p>
+                  <p className={cn(TYPE.prose, "mt-3 max-w-[64ch]")}>
+                    <Rich text={constraint.body} />
+                  </p>
                 </li>
               ))}
             </ol>
           </Chapter>
         )}
 
-        {/* 7. approach — the account, its decisions beside it, then the map */}
+        {/* 7. approach — the account as the chapter's statement, the decisions
+            it rests on under it, then the map */}
         <Chapter id="approach" n={n("approach")} name="The approach" headline="How it was built">
-          <Axis className={cn("gap-y-12", SPACE.intro)}>
-            <p className={cn(TYPE.body, "lg:col-span-5 lg:col-start-4")}>{project.approach}</p>
-            <div className="lg:col-span-4 lg:col-start-9">
+          <Axis className={SPACE.intro}>
+            <LitParagraph
+              text={project.approach}
+              className={cn(TYPE.statement, "lg:col-span-7 lg:col-start-4")}
+            />
+          </Axis>
+          {/*
+           * Under the statement rather than squeezed beside it: in a third of
+           * the page the decisions ran four or five words to a line. Two
+           * across, each a numbered row at reading size.
+           */}
+          <Axis className={SPACE.block}>
+            <div className="lg:col-span-9 lg:col-start-4">
               <h3 className="label mb-4">[KEY DECISIONS]</h3>
-              <ol>
+              <ol className="grid md:grid-cols-2 md:gap-x-8">
                 {project.decisions.map((d, i) => (
                   // On the text's baseline, not nudged to it: the index is 12px
-                  // caps beside 14px sentence case.
-                  <li key={d} className={cn(TYPE.compact, "flex items-baseline gap-4 border-t py-4")}>
+                  // caps beside 16px sentence case.
+                  <li key={d} className={cn(TYPE.prose, "flex items-baseline gap-4 border-t py-4")}>
                     <span className="label shrink-0 text-cobalt">[{pad(i + 1)}]</span>
-                    <span>{d}</span>
+                    <span>
+                      <Rich text={d} />
+                    </span>
                   </li>
                 ))}
               </ol>
@@ -527,7 +560,11 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
                         <div key={k}>
                           {/* The column heads above carry these on a desktop. */}
                           <dt className={cn("label mb-2 lg:sr-only", gain && "text-cobalt")}>{k}</dt>
-                          <dd className={TYPE.compact}>{v}</dd>
+                          {/* What the choice bought is the row's answer, so it
+                              reads in full white beside the two it beat. */}
+                          <dd className={cn(TYPE.prose, gain && "text-ink")}>
+                            <Rich text={v} />
+                          </dd>
                         </div>
                       ))}
                     </dl>
@@ -569,7 +606,9 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
                       <h3 id={`build-${group.n}`} className={TYPE.title}>
                         {group.block.title}
                       </h3>
-                      <p className={cn(TYPE.body, "mt-3 max-w-[64ch]")}>{group.block.body}</p>
+                      <p className={cn(TYPE.prose, "mt-3 max-w-[64ch]")}>
+                        <Rich text={group.block.body} />
+                      </p>
                     </div>
                   </Axis>
                 </article>
@@ -598,7 +637,9 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
                         <LineDraw delay={(i % 2) * 0.1} />
                         <p className="label text-cobalt">[{pad(num)}]</p>
                         <h3 className={cn(TYPE.item, "mt-3")}>{block.title}</h3>
-                        <p className={cn(TYPE.body, "mt-3 max-w-[64ch]")}>{block.body}</p>
+                        <p className={cn(TYPE.prose, "mt-3 max-w-[64ch]")}>
+                          <Rich text={block.body} />
+                        </p>
                       </li>
                     ))}
                   </ul>
@@ -625,7 +666,9 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
                     <span aria-hidden className="absolute top-[3px] -left-[5px] h-[9px] w-[9px] bg-cobalt" />
                     <p className="label text-cobalt">!{pad(i + 1)}</p>
                     <h3 className={cn(TYPE.item, "mt-3")}>{item.title}</h3>
-                    <p className={cn(TYPE.body, "mt-3 max-w-[64ch]")}>{item.body}</p>
+                    <p className={cn(TYPE.prose, "mt-3 max-w-[64ch]")}>
+                      <Rich text={item.body} />
+                    </p>
                   </li>
                 ))}
               </ol>
@@ -674,7 +717,9 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
                   lime rule beside it is the accent, not the words. */}
               <div className="border-l-2 border-cobalt pl-6 lg:col-span-7 lg:col-start-4">
                 <h3 className="label mb-3">[HOW THESE WERE MEASURED]</h3>
-                <p className={TYPE.body}>{project.metricsNote}</p>
+                <p className={TYPE.prose}>
+                  <Rich text={project.metricsNote} />
+                </p>
               </div>
             </Axis>
           )}
@@ -691,7 +736,7 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
               >
                 “
               </span>
-              <p className={cn(TYPE.statement, "pt-10 lg:pt-0")}>{project.reflection}</p>
+              <LitParagraph text={project.reflection} className={cn(TYPE.statement, "pt-10 lg:pt-0")} />
             </div>
           </Axis>
         </Chapter>

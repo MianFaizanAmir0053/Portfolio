@@ -63,7 +63,7 @@ export default function NotFound() {
 
         <nav aria-label="Case studies" className="mt-6">
           <p className="label mb-3">[WORK]</p>
-          <ul className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-ink-muted">
+          <ul className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-ink-soft">
             {projects.map((project) => (
               <li key={project.slug}>
                 <Link href={`/work/${project.slug}`} className="hover:text-cobalt">

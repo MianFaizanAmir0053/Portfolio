@@ -168,7 +168,7 @@ export default function Contact() {
                   <span className={cn(TYPE.item, "pr-4 text-left")}>{faq.q}</span>
                 </AccordionTrigger>
                 <AccordionContent className="pb-6">
-                  <p className={cn(TYPE.body, "max-w-[64ch]")}>{faq.a}</p>
+                  <p className={cn(TYPE.prose, "max-w-[64ch]")}>{faq.a}</p>
                 </AccordionContent>
               </AccordionItem>
             ))}

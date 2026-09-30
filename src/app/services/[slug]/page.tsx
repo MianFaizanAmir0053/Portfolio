@@ -182,7 +182,7 @@ export default async function ServicePage({ params }: PageProps<"/services/[slug
                   <span className={cn(TYPE.item, "pr-4 text-left")}>{item.title}</span>
                 </AccordionTrigger>
                 <AccordionContent className="pb-6">
-                  <p className={TYPE.body}>{item.body}</p>
+                  <p className={TYPE.prose}>{item.body}</p>
                 </AccordionContent>
               </AccordionItem>
             ))}
@@ -204,7 +204,7 @@ export default async function ServicePage({ params }: PageProps<"/services/[slug
                 <span className="label text-cobalt">*[{String(i + 1).padStart(2, "0")}]</span>
                 <div>
                   <h3 className={TYPE.item}>{step.step}</h3>
-                  <p className={cn(TYPE.body, "mt-3 max-w-[64ch]")}>{step.body}</p>
+                  <p className={cn(TYPE.prose, "mt-3 max-w-[64ch]")}>{step.body}</p>
                 </div>
               </li>
             ))}
@@ -273,7 +273,7 @@ export default async function ServicePage({ params }: PageProps<"/services/[slug
                   <span className={cn(TYPE.item, "pr-4 text-left")}>{faq.q}</span>
                 </AccordionTrigger>
                 <AccordionContent className="pb-6">
-                  <p className={cn(TYPE.body, "max-w-[64ch]")}>{faq.a}</p>
+                  <p className={cn(TYPE.prose, "max-w-[64ch]")}>{faq.a}</p>
                 </AccordionContent>
               </AccordionItem>
             ))}

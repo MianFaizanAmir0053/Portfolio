@@ -23,7 +23,7 @@
 
 /*
  * FAIZAN AMIR — editorial design system.
- * Palette is locked: paper / paper-deep / ink / ink-muted / cobalt / cobalt-deep.
+ * Palette is locked: paper / paper-deep / ink / ink-soft / ink-muted / cobalt / cobalt-deep.
  * No other colors. No gradients. No shadows.
  *
  * shadcn/ui semantic tokens are mapped onto this palette below, so any ui/
@@ -34,6 +34,7 @@
   --color-paper: var(--paper);
   --color-paper-deep: var(--paper-deep);
   --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
   --color-ink-muted: var(--ink-muted);
   --color-ink-muted-light: var(--ink-muted-light);
   --color-cobalt: var(--cobalt);
@@ -89,6 +90,13 @@
   --paper: #060607;
   --paper-deep: #131316;
   --ink: #ffffff; /* 20.25:1 on paper */
+  /*
+   * Running text. Paragraphs were set in the muted grey, which passes on
+   * paper but reads as faint at 14–16px over long stretches; this is the
+   * step between it and white, so the text is easy to read and a phrase set
+   * in full white still stands out of it. The grey stays for labels and meta.
+   */
+  --ink-soft: #c5c5cc; /* 11.80 on paper · 10.80 on paper-deep */
   --ink-muted: #9f9fa7; /* 7.71 on paper · 7.06 on paper-deep */
   --ink-muted-light: #55555c; /* 7.39 on ink — muted text on light surfaces */
   --cobalt: #c8ff3d; /* 17.19 on paper */

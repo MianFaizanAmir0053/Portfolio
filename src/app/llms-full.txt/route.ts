@@ -4,6 +4,7 @@ import { EXPERIENCE, EDUCATION, BIO } from "@/data/experience";
 import { SKILLS } from "@/data/skills";
 import { SOCIAL } from "@/data/social";
 import { PERSON, SITE_URL, CONTENT_REVIEWED, absoluteUrl } from "@/lib/site";
+import { plain } from "@/lib/emphasis";
 
 /**
  * `/llms-full.txt` — the whole site as one document.
@@ -87,9 +88,11 @@ ${faqs}`;
 
   parts.push(`## Case studies\n\n${projects
     .map((project) => {
-      const decisions = project.decisions.map((d, i) => `${i + 1}. ${d}`).join("\n");
+      // The page's emphasis marks (`**phrase**`, `==figure==`) belong to the
+      // page; left in, they would read here as markdown the author never wrote.
+      const decisions = project.decisions.map((d, i) => `${i + 1}. ${plain(d)}`).join("\n");
       const build = project.build
-        .map((block) => `**${block.title}**\n\n${block.body}`)
+        .map((block) => `**${block.title}**\n\n${plain(block.body)}`)
         .join("\n\n");
       const metrics = project.metrics
         .map((m) => `- ${m.value} — ${m.caption}${m.note ? ` (${m.note.replace(/^\*\s*/, "")})` : ""}`)
@@ -97,22 +100,25 @@ ${faqs}`;
       // The sections the page collapses, and the caveats behind every figure —
       // without these the "full" corpus quoted numbers stripped of their method.
       const constraints = project.constraints
-        ? `\n\n**Constraints**\n\n${project.constraints.map((c) => `- **${c.title}**: ${c.body}`).join("\n")}`
+        ? `\n\n**Constraints**\n\n${project.constraints.map((c) => `- **${c.title}**: ${plain(c.body)}`).join("\n")}`
         : "";
       const tradeoffs = project.tradeoffs
         ? `\n\n**Trade-offs**\n\n${project.tradeoffs
-            .map((t) => `- **${t.decision}**, instead of: ${t.instead}. Cost: ${t.cost} Benefit: ${t.bought}`)
+            .map(
+              (t) =>
+                `- **${t.decision}**, instead of: ${plain(t.instead)}. Cost: ${plain(t.cost)} Benefit: ${plain(t.bought)}`,
+            )
             .join("\n")}`
         : "";
       const broke = project.broke
-        ? `\n\n**What broke**\n\n${project.broke.map((b) => `- **${b.title}**: ${b.body}`).join("\n")}`
+        ? `\n\n**What broke**\n\n${project.broke.map((b) => `- **${b.title}**: ${plain(b.body)}`).join("\n")}`
         : "";
       const measured = project.metricsNote
-        ? `\n\n**How these were measured**: ${project.metricsNote}`
+        ? `\n\n**How these were measured**: ${plain(project.metricsNote)}`
         : "";
       // Team, ownership and what was not his: the limits every claim sits inside.
       const context = project.context?.length
-        ? `\n${project.context.map((c) => `${c.k.charAt(0)}${c.k.slice(1).toLowerCase()}: ${c.v}`).join("\n")}`
+        ? `\n${project.context.map((c) => `${c.k.charAt(0)}${c.k.slice(1).toLowerCase()}: ${plain(c.v)}`).join("\n")}`
         : "";
       return `### ${project.name} — ${project.tagline}
 
@@ -126,11 +132,11 @@ Stack: ${project.stack.join(", ")}${context}
 
 **The problem — ${project.problemHeadline}**
 
-${project.problem}${constraints}
+${plain(project.problem)}${constraints}
 
 **The approach**
 
-${project.approach}
+${plain(project.approach)}
 
 ${decisions}${tradeoffs}
 
@@ -144,7 +150,7 @@ ${metrics}${measured}
 
 **What I would do differently**
 
-${project.reflection}`;
+${plain(project.reflection)}`;
     })
     .join("\n\n")}`);
 

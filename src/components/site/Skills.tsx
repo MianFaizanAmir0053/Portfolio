@@ -73,7 +73,7 @@ export function Skills() {
                     <div className="min-h-0 overflow-hidden">
                       <ul className="flex flex-wrap gap-x-6 gap-y-2 pb-6">
                         {s.items.map((i) => (
-                          <li key={i} className="text-sm text-ink-muted">
+                          <li key={i} className="text-sm text-ink-soft">
                             <span aria-hidden className="text-cobalt">
                               *
                             </span>{" "}
